@@ -589,9 +589,9 @@ Un ejemplo de un archivo de configuración `Upstart` se ve así:
 # started until it is shut down again. 
 
 start on stopped rc RUNLEVEL=[2345] and ( 
-					not-container or 
-					container CONTAINER=lxc or 
-					container CONTAINER=lxc-libvirt) 
+		not-container or 
+		container CONTAINER=lxc or 
+		container CONTAINER=lxc-libvirt) 
 stop on runlevel [!2345] 
 
 respawn 
