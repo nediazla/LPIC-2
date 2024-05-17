@@ -147,6 +147,7 @@ Sólo hay un puñado de configuraciones globales. La Tabla 1.1 muestra estas con
 | hiddenmenu  | No mostrar las opciones de selección del menú.                                                                                                                             |
 | splashimage | Apunta a un archivo de imagen para usar como fondo para el menú de inicio.                                                                                                 |
 | timeout     | Especifica la cantidad de tiempo que se debe esperar para una selección de menú antes de usar el valor predeterminado.                                                     |
+
 Para GRUB Legacy, para definir un valor para un comando, simplemente indique el valor como un parámetro de línea de comando:
 - predeterminado 0 tiempo de espera 10
 - color blanco/azul amarillo/azul
