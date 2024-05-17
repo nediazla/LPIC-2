@@ -300,7 +300,6 @@ Los niveles de ejecución están numerados del 0 al 6 y a cada uno se le asigna 
 ### Niveles de ejecución
 Si bien cada distribución de Linux define las aplicaciones que deben ejecutarse en niveles de ejecución específicos, existen algunas pautas generales que puede utilizar. La Tabla 1.2 muestra el uso general de los niveles de ejecución de Linux.
 
-
 | Runlevel | Descripcion                                        |
 | -------- | -------------------------------------------------- |
 | 0        | Shut down the system                               |
@@ -338,7 +337,9 @@ El campo de acción contiene una palabra clave que le dice al kernel qué hacer 
 | respawn     | The process is started when the runlevel is entered and restarted when-ever it terminates         |
 | sysinit     | The process is started at boot time before any boot or bootwait items                             |
 | wait        | The process is started once, and the system will wait for it to finish                            |
+
 La línea initdefault especifica el nivel de ejecución en el que normalmente se ejecuta el sistema después del arranque:
+
 ```bash
 id:3:initdefault:
 ```
@@ -369,7 +370,6 @@ Luego puede usar el parámetro `–-levels` para modificar los niveles de ejecuc
 Esto configura el programa de red para que se inicie en los niveles de ejecución 1, 2, 3, 4 y 5.
 La Tabla 1.4 muestra los diferentes formatos que puede usar con el comando `chkconfig`. 
 
-
 | Format                                   | Descripción                                                  |
 | ---------------------------------------- | ------------------------------------------------------------ |
 | `chkconfig program`                      | Check if the program is set to start at the current runlevel |
@@ -379,6 +379,7 @@ La Tabla 1.4 muestra los diferentes formatos que puede usar con el comando `chkc
 | `chkconfig –-del program`                | Remove the program from starting at boot                     |
 | `chkconfig –-levels [levels] program on` | Set the program to start at the specified runlevels          |
 | `chkconfig –-list program`               | Display the current runlevel settings for the program        |
+
 Para distribuciones de Linux basadas en Debian, necesitará utilizar el comando `update-rc.d` para controlar los niveles de ejecución de la aplicación. Para iniciar un programa en el nivel de ejecución predeterminado, simplemente use el siguiente formato:
 
 ```
@@ -536,7 +537,9 @@ En el método `systemd`, utiliza el programa `systemctl` para controlar servicio
 | `status name`  | Displays the status of the named unit (You can pass a PID value rather than a name, if you like.) |
 | `enable name`  | Configures the unit to start when the computer next boots                                         |
 | `disable name` | Configures the unit not to start when the computer next boots                                     |
+
 En lugar de utilizar scripts de shell para iniciar y detener servicios, utilice los comandos de inicio y detención:
+
 ```
 # systemctl stop sshd.service
 # systemctl status sshd.service sshd.service - OpenSSH server daemon
