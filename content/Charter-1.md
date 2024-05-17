@@ -1,4 +1,5 @@
 # Sistema de Arranque
+
 Antes de que pueda iniciar sesión y comenzar a usar su sistema Linux, debe realizarse un complicado proceso de inicio del sistema operativo. Suceden muchas cosas detrás de escena en el proceso de arranque de Linux. Es útil saber todo lo que está sucediendo en caso de que algo salga mal.
 Este capítulo examina los procesos de arranque e inicio en sistemas Linux. Primero, analiza el papel que desempeña el firmware de la computadora a la hora de iniciar el proceso. Después de eso, analiza los cargadores de arranque de Linux y examina cómo configurarlos. A continuación, el capítulo analiza el proceso de inicialización de Linux y muestra cómo Linux decide qué aplicaciones en segundo plano iniciar durante el arranque. El capítulo termina analizando algunas opciones de recuperación del sistema que tiene disponibles para ayudar a salvar un sistema que no arranca.
 ### El proceso de arranque de Linux
