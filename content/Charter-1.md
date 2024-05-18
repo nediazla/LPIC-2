@@ -21,7 +21,7 @@ El comando `dmesg` muestra los mensajes de arranque más recientes que están al
 
 ### Listing 1.1: Salida del comando `dmsg`
 
-```bash
+```sh
 $ dmesg
 
 [    0.000000] Linux version 6.6.15-amd64 (devel@kali.org) (gcc-13 (Debian 13.2.0-13) 13.2.0, GNU ld (GNU Binutils for Debian) 2.42) #1 SMP PREEMPT_DYNAMIC Kali 6.6.15-2kali1 (2024-04-09)
@@ -169,7 +169,7 @@ El Listado 1.2 muestra un archivo de configuración heredado de GRUB de muestra 
 
 **Listado 1.2:** Ejemplo de archivo de configuración de GRUB Legacy
 
-```bash
+```sh
 default 0
 timeout 10
 color white/blue yellow/blue 
@@ -190,21 +190,21 @@ Una vez que cree el archivo de configuración de GRUB Legacy, debe instalar el p
 El comando `grub-install` utiliza un único parámetro que indica la partición en la que instalar GRUB. Puede especificar la partición utilizando el formato Linux o GRUB Legacy. Por ejemplo, para usar el formato Linux, escribirías
 
 ```bash
-# grub-install /dev/sda
+grub-install /dev/sda
 ```
 
 para instalar GRUB en el MBR del primer disco duro. Para utilizar el formato GRUB Legacy, debe incluir el formato del disco duro entre comillas:
 
 ```bash
-# grub-install '(hd0)'
+grub-install '(hd0)'
 ```
 
 Si está utilizando el método `chainloading` y prefiere instalar una copia de GRUB Legacy en el sector de arranque de una partición en lugar de en el MBR de un disco duro, debe especificar la partición, nuevamente usando el formato Linux o GRUB. :
 
 ```bash
-# grub-install /dev/sda1
+grub-install /dev/sda1
 
-# grub-install 'hd(0,0)'
+grub-install 'hd(0,0)'
 ```
 
 No es necesario reinstalar GRUB Legacy en el MBR después de realizar cambios en el archivo de configuración, porque GRUB Legacy lee el archivo de configuración cada vez que se ejecuta.
@@ -355,16 +355,15 @@ El comando `chkconfig` se utiliza en la mayoría de las distribuciones de Linux 
 Cuando se usa con el parámetro `–-list`, el comando `chkconfig` muestra todas las aplicaciones definidas, junto con los niveles de ejecución en los que se inician. Alternativamente, puede enumerar una aplicación específica para ver cómo está configurada:
 
 ```bash
-$ chkconfig –-list network
+chkconfig –-list network
 network 0:off 1:off 2:on 3:on 4:on 5:on 6:off 
-$
 ```
 
 En este ejemplo, la aplicación de red está configurada para iniciarse en los niveles de ejecución 2, 3, 4 y 5.
 Luego puede usar el parámetro `–-levels` para modificar los niveles de ejecución:
 
 ```bash
-# chkconfig –-levels 12345 network on
+chkconfig –-levels 12345 network on
 ```
 
 Esto configura el programa de red para que se inicie en los niveles de ejecución 1, 2, 3, 4 y 5.
@@ -382,34 +381,33 @@ La Tabla 1.4 muestra los diferentes formatos que puede usar con el comando `chkc
 
 Para distribuciones de Linux basadas en Debian, necesitará utilizar el comando `update-rc.d` para controlar los niveles de ejecución de la aplicación. Para iniciar un programa en el nivel de ejecución predeterminado, simplemente use el siguiente formato:
 
-```
+```sh
 update-rc.d program defaults
 ```
 Para evitar que el programa se inicie en el nivel de ejecución predeterminado, utilice el siguiente formato: 
 
-```
+```sh
 update-rc.d program remove
 ```
 Si desea especificar en qué niveles de ejecución comienza y se detiene el programa, deberá utilizar el siguiente formato:
 
-```
+```sh
 update-rc.d –f program start 40 2 3 4 5 . stop 80 0 1 6 .
 ```
 40 y 80 especifican el orden relativo dentro del nivel de ejecución cuando el programa debe iniciarse o detenerse (de 0 a 99). Esto le permite personalizar exactamente cuándo se inician o detienen programas específicos durante la secuencia de inicio.
 ### Comprobación del nivel de ejecución del sistema
 Ha visto que el archivo `/etc/inittab` indica el nivel de ejecución predeterminado con la acción `initdefault`, pero no hay garantía de que ese sea el nivel de ejecución en el que se está ejecutando actualmente su sistema Linux. El comando `runlevel` muestra tanto el nivel de ejecución actual como el nivel de ejecución anterior del sistema:
 
-```
-$ runlevel
+```sh
+runlevel
 N 2
-$
 ```
 El primer personaje es el nivel de ejecución anterior. El carácter N significa que el sistema está en el nivel de ejecución de inicio original. El segundo carácter es el nivel de ejecución actual.
 ### Cambiar niveles de ejecución
 Puede cambiar el nivel de ejecución actual de su sistema Linux usando el comando `init` o `telinit`. Simplemente especifique el número del nivel de ejecución como parámetro de la línea de comandos. Por ejemplo, para reiniciar su sistema puede ingresar este comando:
 
-```
-# init 6
+```sh
+init 6
 ```
 
 La desventaja de usar el comando `init` es que cambia inmediatamente el sistema al nivel de ejecución especificado. Puede que eso no sea un problema si usted es la única persona en su sistema Linux, pero en un entorno Linux multiusuario, esto puede tener efectos adversos para los demás usuarios.
@@ -437,8 +435,9 @@ En lugar de utilizar scripts de shell y niveles de ejecución, el método `syste
 - target
 El programa `systemd` identifica las unidades por su nombre y tipo utilizando el formato `nombre.tipo`. Utilice el comando `systemctl` para enumerar las unidades actualmente cargadas en su sistema Linux:
 
-```
-# systemctl list-units 
+```sh
+systemctl list-units 
+
 UNIT LOAD ACTIVE SUB DESCRIPTION 
 ... 
 crond.service loaded active running Command Scheduler 
@@ -452,7 +451,6 @@ remote-fs.target loaded active active Remote File Systems
 slices.target loaded active active Slices 
 sockets.target loaded active active Sockets 
 ... 
-#
 ```
 
 Las distribuciones de Linux pueden tener cientos de unidades diferentes cargadas y activas. Simplemente seleccionamos algunos del resultado para mostrarle cómo se ven. El método `systemd` utiliza unidades de tipo de servicio para administrar los demonios en el sistema Linux. Las unidades de tipo objetivo son importantes porque agrupan varias unidades para que puedan iniciarse al mismo tiempo. Por ejemplo, la unidad `network.target` agrupa todas las unidades necesarias para iniciar las interfaces de red del sistema.
@@ -463,8 +461,8 @@ Para que la transición de `SysV` a `systemd` sea más fluida, existen objetivos
 ### Configurar unidades
 Cada unidad requiere un archivo de configuración que define qué programa inicia y cómo debe iniciarlo. El sistema `systemd` almacena los archivos de configuración de la unidad en la carpeta `/lib/systemd/system`. A continuación se muestra un ejemplo del archivo de configuración de la unidad `sshd.service` utilizado en CentOS:
 
-```
-# cat sshd.service 
+```sh
+cat sshd.service 
 [Unit] 
 Description=OpenSSH server daemon 
 After=syslog.target network.target auditd.service 
@@ -480,21 +478,20 @@ RestartSec=42s
 
 [Install] 
 WantedBy=multi-user.target 
-#
 ```
 
 El archivo de configuración `sshd.service` define el programa que se iniciará (`/usr/sbin/sshd`), junto con algunas otras características, como qué servicios deben ejecutarse antes de que se inicie el servicio sshd (la línea Después), qué nivel objetivo debe tener el sistema en (la línea WantedBy) y cómo recargar el programa (la línea Reiniciar).
 Las unidades de destino también utilizan archivos de configuración. No definen programas, sino que definen qué unidades de servicio iniciar. A continuación se muestra un ejemplo del archivo de configuración de la unidad `Graphical.target` utilizado en CentOS:
 
-```
-# cat graphical.target 
+```sh
+cat graphical.target 
 #  This file is part of systemd.
-#
 
 # systemd is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
 #  the Free Software Foundation; either version 2.1 of the License, or
 #  (at your option) any later version.
+
 [Unit]
 Description=Graphical Interface
 Documentation=man:systemd.special(7)
@@ -506,18 +503,16 @@ AllowIsolate=yes
 
 [Install]
 Alias=default.target
-#
 ```
 
 La configuración del objetivo define qué objetivos deben cargarse primero (la línea Después), qué objetivos son necesarios para que este objetivo se inicie (la línea Requiere), qué objetivos entran en conflicto con este objetivo (la línea Conflictos) y qué objetivos o servicios tiene el objetivo. requiere estar ejecutándose (la línea Wants).
 ### Establecer el objetivo predeterminado
 El destino predeterminado utilizado cuando se inicia el sistema Linux se define en la carpeta `/etc/systemd/system` como el archivo `default.target`. Este es el archivo que busca el programa `systemd` cuando se inicia. Este archivo normalmente se configura como un enlace a un archivo de destino estándar en la carpeta `/lib/systemd/system`:
 
-```
-# ls -al default.target
+```sh
+ls -al default.target
 lrwxrwxrwx. 1 root root 36 Oct  1 09:14 default.target ->
  /lib/systemd/system/graphical.target
-#
 ```
 
 En este sistema CentOS, el objetivo predeterminado está configurado en la unidad `Graphical.target`.
@@ -540,7 +535,7 @@ En el método `systemd`, utiliza el programa `systemctl` para controlar servicio
 
 En lugar de utilizar scripts de shell para iniciar y detener servicios, utilice los comandos de inicio y detención:
 
-```
+```sh
 # systemctl stop sshd.service
 # systemctl status sshd.service sshd.service - OpenSSH server daemon
 Loaded: loaded (/usr/lib/systemd/system/sshd.service; disabled)
@@ -548,8 +543,9 @@ Active: inactive (dead)
 
 Oct 04 10:33:33 localhost.localdomain systemd[1]: Stopped OpenSSH server  daemon.
 
-# systemctl start sshd.service
-# systemctl status sshd.service 
+systemctl start sshd.service
+systemctl status sshd.service 
+
 sshd.service - OpenSSH server daemon
 Loaded: loaded (/usr/lib/systemd/system/sshd.service; disabled)
 Active: active (running) since Thu 2014-10-04 10:34:08 EDT; 4s ago
@@ -568,8 +564,8 @@ Oct 04 10:34:08 localhost.localdomain sshd[3889]: Server listening on  0.0.0.0 
 
 Para cambiar el objetivo que se está ejecutando actualmente, debe usar el comando `isolate`. Por ejemplo, para ingresar al modo de usuario único, usaría lo siguiente:
 
-```
-# systemctl isolate rescue.target
+```sh
+systemctl isolate rescue.target
 ```
 
 Para volver al destino predeterminado del sistema, simplemente use el comando `default`.
@@ -582,8 +578,8 @@ El método `Upstart` reemplaza el archivo `/etc/inittab` y todos los scripts de 
 
 Un ejemplo de un archivo de configuración `Upstart` se ve así:
 
-```
-# tty1 - getty 
+```sh
+tty1 - getty 
 # 
 # This service maintains a getty on tty1 from the point the system is 
 # started until it is shut down again. 
@@ -596,7 +592,6 @@ stop on runlevel [!2345]
 
 respawn 
 exec /sbin/getty -8 38400 tty1 
-$
 ```
 
 El archivo de configuración `tty1.conf` especifica cuándo se debe habilitar el puerto de consola tty1. Observe que el archivo de configuración especifica los niveles de ejecución cuando debe comenzar (2, 3, 4 y 5).
@@ -605,15 +600,14 @@ Una de las grandes características de `Upstart` es que puede activar un script 
 Para cambiar el nivel de ejecución o evento que inicia o detiene un programa, simplemente modifica el archivo de configuración del programa en la carpeta `/etc/init`.
 Para detener un programa o servicio usando `Upstart`, simplemente use el comando de línea de comando stop, junto con el nombre del programa o servicio:
 
-```
-$ sudo stop bluetooth 
+```sh
+sudo stop bluetooth 
 bluetooth stop/waiting 
-$ 
+ 
 	Likewise, to start up a program or service, you use the start command: 
 	
-$ sudo start bluetooth
+sudo start bluetooth
 bluetooth start/running, process 2635 
-$
 ```
 
 ### Recuperación del sistema
@@ -644,22 +638,22 @@ Quizás la peor sensación que puede experimentar un administrador de un sistema
 Muchas distribuciones de Linux proporcionan lo que se llama un disco de rescate que se utiliza cuando se producen errores fatales en el disco. El disco de rescate normalmente arranca desde la unidad de CD/DVD o como una memoria USB, y carga un pequeño sistema Linux en la memoria. Dado que el sistema Linux se ejecuta completamente en la memoria, puede dejar todos los discos duros de la estación de trabajo libres para su examen y reparación. Desde la línea de comandos del sistema, puede realizar algunas tareas de diagnóstico y reparación en los discos duros del sistema.
 La herramienta elegida para comprobar y corregir errores del disco duro es el comando `fsck`. El comando `fsck` no es un programa. Más bien, es un alias para una familia de comandos específicos de diferentes tipos de sistemas de archivos (como ext2, ext3 y ext4). Debe ejecutar el comando `fsck` con el nombre del dispositivo de la partición que contiene el directorio raíz de su sistema Linux. Por ejemplo, si el directorio raíz está en la partición /dev/sda1, ejecutaría este comando:
 
-```
-#fsck /dev/sda1
+```sh
+fsck /dev/sda1
 ```
 
 El comando `fsck` examinará la tabla de inodos, junto con los bloques de archivos almacenados en el disco duro, e intentará reconciliarlos. Si se produce algún error, se le preguntará si desea repararlo o no. Si hay muchos errores en la partición, puede agregar el parámetro `-y` para responder sí automáticamente a todas las preguntas de reparación. Después de una reparación exitosa, es una buena idea ejecutar el comando `fsck` una vez más para asegurarse de que se hayan encontrado y corregido todos los errores. Continúe ejecutando el comando `fsck` hasta que obtenga una ejecución limpia y sin errores.
 ### Montaje de una unidad raíz
 Cuando se complete la reparación de `fsck`, puede probar la partición reparada montándola en el directorio virtual creado en la memoria. Simplemente use el comando mount para montarlo en un directorio de montaje disponible:
 
-```
-# mount /dev/sda1 /media
+```sh
+mount /dev/sda1 /media
 ```
 
 Puede examinar el sistema de archivos almacenado en la partición para asegurarse de que no esté dañado. Antes de reiniciar, debes desmontar la partición usando el comando `umount`:
 
-```
-# umount /dev/sda1
+```sh
+umount /dev/sda1
 ```
 
 Después de desmontar con éxito la partición, puede reiniciar su sistema Linux usando el gestor de arranque estándar e intentar arrancar usando el kernel y los niveles de ejecución estándar.
