@@ -480,3 +480,52 @@ Puede instalar manualmente el archivo binario del kernel simplemente copiando el
 ```sh
 cp /usr/src/linux/arch/x86/boot/bzImage /boot/vmlinuz-4.3.3
 ```
+
+Además del archivo binario del kernel, también hay un archivo `System.map` en la carpeta `/usr/src/linux` asociado con el archivo binario del kernel generado. El archivo `System.map` se utiliza para depurar el kernel, por lo que no es necesario, pero también puede ser útil copiarlo en la carpeta `/boot`. Al igual que con el archivo binario del kernel, querrás agregar la versión del kernel al final del nombre del archivo `System.map`:
+
+```sh
+cp /usr/src/linux/System.map /boot/System.map-4.3.3
+```
+
+Como probablemente puedas adivinar, también hay un destino de script `make` para instalar automáticamente los archivos binarios del kernel y `System.map`:
+
+```sh
+make install
+```
+
+Esto copia automáticamente el nuevo binario del kernel desde la carpeta `/usr/src/linux` a la ubicación adecuada en la carpeta `/boot` de su gestor de arranque. Sin embargo, aún necesitará cambiar el nombre del nuevo archivo binario del kernel para agregarle la versión del kernel, separándolo de los archivos del kernel más antiguos instalados.
+### Compilación e instalación de módulos
+Después de compilar e instalar el kernel, querrás compilar e instalar la versión más nueva de los módulos necesarios para tu sistema. Al igual que con la compilación del kernel, utiliza la utilidad `make` para crear e instalar los nuevos archivos de la biblioteca de objetos del módulo.
+Primero, deberá crear los archivos de la biblioteca de objetos del módulo utilizando el destino del módulo:
+
+```sh
+make modules
+```
+
+Una vez que se complete, puede instalarlos usando el destino de instalación `make_modules`:
+
+```sh
+make modules_install
+```
+
+Este script instala los módulos en la carpeta `/lib/modules/kernel-version/`, donde la versión coincide con la versión del kernel. El kernel buscará en esta carpeta de forma predeterminada cuando
+necesita cargar módulos. Esto también se aplica a cualquier comando de línea de comandos utilizado para cargar módulos manualmente. 
+### Crear un disco RAM inicial
+Una desventaja de utilizar módulos del kernel es que el kernel debe cargar cada uno de los módulos en el momento del arranque para acceder a los dispositivos de hardware. Sin embargo, si hay módulos que controlan cómo el kernel lee el disco duro (como con un sistema RAID) o módulos para leer un sistema de archivos específico (como ReiserFS), esa situación causará un problema. (¿Cómo puede el kernel cargar un módulo necesario para leer el sistema de archivos en el que está almacenado el módulo?)
+
+Para resolver ese problema, los desarrolladores de Linux crearon la idea de un disco RAM inicial (también llamado `initrd`). El disco RAM inicial es un sistema de archivos contenido en un archivo que el kernel carga en la memoria en el momento del arranque como un disco. El kernel puede leer y cargar cualquier archivo contenido en el disco RAM inicial mientras arranca. Todo lo que necesita hacer es crear un archivo de disco RAM inicial que contenga los archivos del módulo necesarios para iniciar el sistema. Una vez que se inicia el sistema, el disco RAM inicial se elimina de la memoria para liberar espacio en la memoria.
+
+Hay dos utilidades comunes que se utilizan para crear un archivo de disco RAM inicial, según la distribución de Linux que utilice. 
+### La utilidad `mkinitrd`
+Las distribuciones de Linux basadas en Red Hat (como Red Hat Enterprise Linux, Fedora y CentOS) utilizan la utilidad `mkinitrd` para generar un archivo de disco RAM inicial y copiar los archivos del módulo en él. El formato general del comando es:
+
+```sh
+mkinitrd outputfile version
+```
+
+donde archivo de salida es el nombre del archivo de disco RAM inicial que se creará y versión es la versión del kernel para la cual se crea el archivo. Hay algunas opciones de línea de comandos que puede utilizar para el comando `mkinitrd`. Se muestran en la Tabla 3.3.
+
+
+|     |     |
+| --- | --- |
+|     |     |
