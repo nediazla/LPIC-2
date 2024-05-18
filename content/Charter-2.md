@@ -365,6 +365,7 @@ La Tabla 2.1 contiene directorios importantes que debe considerar incluir en su 
 | `/tmp`        | Temporary files.                                                                                                             | No                                                                                                                                                  |
 | `/usr`        | Stores binaries, documentation, source code, libraries, and so on.                                                           | Yes                                                                                                                                                 |
 | `/var`        | Contains log, lock, spool, mail, and temp files.                                                                             | Yes<br>(Some subdirectories, such as /var/run, can be excluded.)                                                                                    |
+
 Es posible que algunos de estos directorios no aparezcan en distribuciones de Linux más antiguas. Además, tenga en cuenta que algunas distribuciones se están alejando del Estándar de jerarquía de archivos (FHS), o no lo siguen por completo. Por lo tanto, asegúrese de comprender todos los directorios que utiliza su distribución particular y lo que se almacena en ellos antes de crear un plan de respaldo.
 ### Revisión de soluciones de software de respaldo
 Es mejor revisar las diversas soluciones de software que se utilizarán en su plan de respaldo al final. Una vez que haya recopilado y revisado sus requisitos de copia de seguridad y restauración, tendrá una idea más clara de qué software satisfará sus necesidades.
@@ -414,6 +415,7 @@ La Tabla 2.2 enumera varias, pero ciertamente no todas, las opciones del comando
 | `--gzip`                            | `-z`               | Compress tar archive file into a tarball using gzip compression.                                                                                           |
 | `--bzip2`                           | `-j`               | Compress tar archive file into a tarball using bzip2 compression.                                                                                          |
 | `--xz`                              | `-J`               | Compress tar archive file into a tarball using xz compression.                                                                                             |
+
 Lo más probable es que ya hayas creado archivos tar usando el comando `tar`. Sin embargo, tal vez convenga hacer un pequeño repaso. Aquí hay un ejemplo:
 
 ```sh
@@ -533,6 +535,7 @@ La Tabla 2.4 enumera algunas de las opciones que puede usar con el comando `tar`
 | `--gunzip`         | `-z`               | Uncompress the tar archive file from a tarball using the `gunzip` command.  |
 | `--bunzip2`        | `-j`               | Uncompress the tar archive file from a tarball using the `bunzip2` command. |
 | `--unxz`           | `-J`               | Uncompress the tar archive file from a tarball using the `unxz` command.    |
+
 Lo más probable es que haya extraído archivos de archivos tar y archivos tar. Sin embargo, una pequeña reseña puede resultar útil. A continuación se muestra un ejemplo en el que los archivos de copia de seguridad incrementales, creados anteriormente en este capítulo, se restauran en un nuevo directorio:
 
 ```sh
@@ -589,6 +592,7 @@ Algunas de las opciones de operación de dispositivos de cinta más relevantes s
 | rewind    | Rewind tape.                                                                                  |
 | eject     | Rewind and unload tape (if needed).                                                           |
 | offline   | Rewind and unload tape (if needed).                                                           |
+
 A continuación se muestra un ejemplo sencillo y resumido del uso del comando `mt`. Se carga una cinta dentro de una unidad de cinta SCSI, representada por el archivo de dispositivo `/dev/st0`, y se usa el comando `mt` para verificar su estado:
 
 ```sh
@@ -822,6 +826,7 @@ Afortunadamente, en un sistema Linux, puede emplear muchas herramientas de líne
 | uptime  | Shows how long the system has gone without a reboot, load averages, and current number of users.                                                                                                                    | static            | Uptime                           |
 | vmstat  | Shows swap (virtual memory) performance.                                                                                                                                                                            | Static or Dynamic | Memory                           |
 | w       | Shows current user information, including CPU consumption.                                                                                                                                                          | static            | CPU Process states               |
+
 No todas las utilidades de la Tabla 2.7 están instaladas de forma predeterminada en todas las distribuciones. 
 
 Varias utilidades en la Tabla 2.7 tienen recursos adicionales que monitorean además de los tipos abreviados enumerados en la columna Monitores. Consulte las páginas del manual para obtener una descripción completa de estas diversas utilidades. Tenga en cuenta que hay muchas más utilidades de línea de comandos de supervisión disponibles para instalar. Abra su navegador web favorito y escriba las palabras de búsqueda Monitoreo de Linux para obtener listas de utilidades de monitor adicionales.
@@ -896,3 +901,23 @@ Además de monitorear sus recursos, debe comprender cómo interactúan estas sol
 ***Memoria*** La memoria (también llamada RAM) se divide en fragmentos de 4 Kb llamados páginas. Cuando el sistema necesita más memoria, utilizando un esquema de administración de memoria, toma las páginas de memoria de un proceso inactivo y las copia en el disco. Esta ubicación del disco es una partición especial llamada espacio de intercambio o memoria de intercambio o virtual. Si el proceso inactivo ya no está inactivo, sus páginas de memoria se vuelven a copiar en la memoria. Este proceso de copiar páginas de memoria hacia y desde el espacio de intercambio del disco se llama intercambio.
 
 Puede ver estadísticas de memoria en un sistema utilizando herramientas de línea de comandos como free, sar y vmstat. Si su sistema no tiene la memoria del tamaño adecuado, debería ver un uso elevado de RAM. Además, debido a estos problemas de memoria, el sistema aumentará el intercambio y dará como resultado un aumento de E/S del disco. La herramienta vmstat es útil en este caso, porque le permite ver las E/S del disco específicas para el intercambio, así como los bloques totales de entrada y salida del dispositivo.
+
+***Procesos*** Es crucial identificar qué procesos están utilizando qué recursos, especialmente si un recurso en particular está teniendo problemas. Es posible que necesite determinar si los problemas de recursos están causando los problemas del proceso o viceversa. Las utilidades `ps`, `psmap` y `pstree` pueden resultar útiles para correlacionar procesos particulares con problemas de recursos particulares.
+
+Por ejemplo, si un disco experimenta una E/S inusualmente alta, puede deberse a un proceso en particular y puede estar causando problemas de rendimiento en un grupo de procesos. Esto se llama bloqueo de E/S. En este ejemplo particular, encontraríamos estos procesos en lo que se llama sueño ininterrumpido. La columna b de la utilidad `vmstat` muestra cuántos procesos hay en este estado. Para determinar los procesos reales, utilice la utilidad `ps` y busque un estado de proceso D.
+
+***CPU*** Para fines de resolución de problemas y monitoreo, debe comprender el hardware de su CPU. Primero, determine cuántas CPU hay en su sistema. Para cada CPU, necesita saber la cantidad de núcleos de procesador, si se utiliza Hyper-Threading, el tamaño de la caché, etc. El archivo `/proc/cpuinfo` y los comandos `lscpu` pueden resultar útiles aquí.
+
+Los diversos elementos de la CPU que se deben observar incluyen el tiempo de inactividad, las cargas de uso promedio, la longitud de la cola, las cargas de solicitudes de interrupción, etc. `Uptime`, `top`, `sar` y `mpstat` son algunas de las utilidades que le ayudarán en este caso.
+
+***E/S del dispositivo*** Para la E/S del dispositivo, que generalmente se centra en discos, es necesario comprender su hardware. ¿Es NAS, iSCSI o SAN? ¿Está utilizando LVM y cuál es el tipo de sistema de archivos empleado? Una vez que comprenda el hardware del disco subyacente de su sistema, podrá interpretar mejor los datos del software y las utilidades de monitoreo.
+
+Las utilidades de línea de comandos útiles aquí incluyen `iostat`, `iotop`, `lsof` y `sar`. Si se accede a sus discos a través de su red, no olvide incluir monitores de red como parte del kit de herramientas de solución de problemas de E/S de su dispositivo.
+
+***Rendimiento de la red*** El rendimiento de los paquetes de red y los cuellos de botella pueden ser una preocupación constante en la vida de un administrador de sistemas. Comprender el hardware y la topología de su red es el primer paso para solucionar problemas. Sin una imagen clara, estarás persiguiendo conejos en lugar de resolver problemas.
+
+***El tamaño***, el hardware y la topología de su red también determinarán qué herramientas funcionarán mejor para sus propósitos de resolución de problemas. Las utilidades de línea de comandos `iftop`, `ip`, `iptraf` y `ntop` pueden resultar útiles. Si se configura para capturar el tráfico de la red, también se puede utilizar la utilidad `sar`. Además, lsof puede mostrar qué servicios de red, como FTP, están en uso en su sistema, y `tcpdump` puede proporcionar análisis de paquetes de red. Y no olvidemos esas humildes y útiles utilidades como `ping`, `traceroute` e `ifconfig`.
+
+Tenga en cuenta que si administra una red grande, las diversas soluciones de software de monitoreo completo de recursos, como MRTG, pueden ser más útiles para solucionar problemas. Sus capacidades gráficas podrían resultar necesarias para localizar cuellos de botella.
+
+Como probablemente habrás notado, los distintos recursos pueden afectarse directamente entre sí. Por lo tanto, el uso de una variedad de herramientas de monitoreo de recursos y de línea de comandos lo ayudará a administrar el uso de recursos de su sistema.

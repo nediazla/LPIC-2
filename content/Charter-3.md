@@ -1,1 +1,5 @@
 # Dominar el Kernel
+
+Si bien normalmente nos referimos al sistema operativo Linux simplemente como Linux, en realidad, bastantes partes conforman un sistema Linux completo. El kernel de Linux es el componente principal que mantiene
+cosas juntas y ejecutándose en su sistema. Es el corazón del sistema Linux y controla el hardware, la memoria y las aplicaciones en ejecución.
+Este capítulo analiza primero las diferentes partes del kernel de Linux y cómo encajan entre sí para controlar la computadora. A continuación, el capítulo examina cómo se instala el kernel de Linux en diferentes distribuciones de Linux y dónde encontrar las diferentes partes del mismo. Después de eso, el capítulo analiza cómo crear un nuevo kernel para admitir nuevo hardware o simplemente para actualizar su sistema Linux a las últimas funciones. Finalmente, el capítulo examina cómo administrar el kernel y los módulos del kernel, junto con cómo solucionar problemas del kernel si algo sale mal.
