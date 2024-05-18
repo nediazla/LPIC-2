@@ -92,3 +92,117 @@ En otras distribuciones, como CentOS, al enviar mensajes a otros usuarios de GUI
 
 La Figura 2.8 utiliza los comandos grep y sed para extraer la configuración de la variable de entorno `DBUS_SESSION_BUS_ADDRESS` actual necesaria del archivo `/proc/proc_ID/environ`. `proc_ID` es el ID del proceso para el proceso gnome-Shell del usuario.
 El comando `notify-send` tiene varias opciones adicionales que pueden resultar útiles. Desafortunadamente, en algunas distribuciones, las páginas de manual para esta utilidad en particular no existen o, en el mejor de los casos, son escasas. Si necesita más información, utilice su motor de búsqueda favorito para buscar documentación adicional de `notify-send`.
+# Usando el comando `/sbin/shutdown`
+El comando `/sbin/shutdown` le permite detener, reiniciar o apagar su sistema, así como comunicarse con los usuarios de su sistema mientras lo hace. Lo más probable es que ya esté familiarizado con este comando.
+
+Como podría sospechar, el comando de apagado requiere privilegios de super usuario para su uso. La sintaxis general para el comando de apagado es tiempo de apagado [opciones] [mensaje en el muro]
+Las [opciones] incluyen opciones para detener el sistema (-H), apagar el sistema (-P) y reiniciar el sistema (-r), así como varias otras selecciones útiles. Una vez que haya iniciado un proceso de apagado, normalmente puede cancelarlo usando el comando `shutdown -c`. Consulte las páginas de manual para conocer opciones de apagado adicionales que quizás desee utilizar.
+
+El parámetro de tiempo le permite especificar una hora para implementar las opciones de apagado. Toma muchos formatos, como un diseño de hora militar especificado como hh:mm. Puede indicar el número de minutos desde la hora actual del sistema utilizando el formato +n o n. El comando de apagado permite que el parámetro de hora actual indique 0 minutos a partir de ahora (inmediatamente). En algunas distribuciones, si no se especifica el tiempo, se supone un +1. 
+
+El parámetro [wall messaje] le permite modificar el mensaje de comando de apagado enviado a cualquier usuario que haya iniciado sesión. Este parámetro funciona de manera similar al comando wall, con una diferencia importante: ignora la configuración de mensajería en una terminal. Por lo tanto, el mensaje se puede escribir en cualquier terminal, ya sea que se le conceda acceso de escritura o no.
+En la Figura 2.9 se muestra un ejemplo del uso del comando de apagado. Se incluyen los parámetros de hora y [wall messaje]. Este ejemplo en particular es de una distribución de Ubuntu.
+
+![](img/2.9.png)
+
+Observe en la Figura 2.9 que el parámetro [wall messaje] se muestra debajo del mensaje de comunicación de apagado del sistema: "¡El sistema se apagará en 5 minutos!" Las distintas distribuciones muestran diferentes mensajes de comunicación de apagado estándar, y su [wall messaje] puede aparecer encima o debajo del mensaje estándar. Incluso si no incluye un parámetro [wall messaje], el mensaje estándar del sistema aún se transmite a los usuarios de la terminal.
+
+Para la distribución que se muestra en la Figura 2.9, el usuario que emite el comando de apagado no recibe un símbolo del sistema. Por lo tanto, en este caso, en lugar de ingresar el comando `shutdown -c` para cancelar el apagado, se necesita la combinación de teclas Ctrl+C para cancelar. Cuando se utiliza este método para cancelar un apagado, no se envían mensajes. Cuando se utiliza el comando `Shutdown -c`, se transmite un mensaje en el muro a los usuarios de la terminal. Aquí se muestra una versión recortada:
+
+```
+# **shutdown -c**
+
+Broadcast message from root@localhost.localdomain ...
+The system shutdown has been canceled at Wed ...
+```
+
+Obviamente es importante saber cómo su distribución de Linux maneja el comando `/sbin/shutdown` antes de comenzar a usarlo en un sistema en vivo. Sería una buena práctica no sólo leer las páginas de manual de su distribución sino también probar el comando `shutdown` en un sistema de prueba.
+Hay algunas [opciones] de apagado adicionales que pueden ser útiles en relación con el parámetro [wall messaje]. La opción -k deshabilitará los inicios de sesión y enviará mensajes de advertencia, pero no derribará el sistema. Aquí se muestra un ejemplo recortado de esto:
+
+```
+$ sudo shutdown -k +20 "Please log out..."
+$
+Broadcast message from christine@server01
+	(/dev/tty2) at 8:43 ...
+
+The system is going down for maintenance in 20 minutes!
+Please log out...
+$
+```
+
+Tenga en cuenta que cuando se utiliza la opción -k, el [wall messaje] de apagado no se ve diferente de un mensaje de apagado normal. Tenga en cuenta que esta opción no obliga a nadie a cerrar sesión.
+
+Algunas distribuciones ofrecen la opción `--no-wall`. Permite que se realice un apagado sin mensajes en el muro para los usuarios del terminal. Sólo el super usuario que emita el comando recibirá un mensaje, similar al que se muestra aquí:
+
+```
+# **shutdown --no-wall +5**
+
+Shutdown scheduled for Wed 2016–12–02 09:02:48 EST, 
+use 'shutdown -c' to cancel.
+```
+
+Tenga en cuenta que si decide cancelar el apagado después de usar la opción `--no-wall`, los usuarios del terminal seguirán recibiendo el mensaje de cancelación. Por lo tanto, si utilizó esta opción en el comando de apagado original y necesita cancelar el apagado, asegúrese de suprimir el mensaje de cancelación como este:
+
+```
+# shutdown -c --no-wall
+```
+
+La mensajería fluida, como el uso del parámetro [wall messaje] del comando `/sbin/shutdown`, implica informar a los usuarios activos del sistema sobre los eventos que están sucediendo actualmente. También existen herramientas útiles que permiten automatizar la comunicación para futuros eventos.
+# Mirando la mensajería estática
+La mensajería estática implica comunicarse con los usuarios del sistema mediante archivos que se modifican sólo cuando es necesario cambiar el mensaje. Pueden contener información importante, como políticas de acceso al sistema de la empresa, o anuncios alegres, como cuándo está programado el próximo picnic de la empresa.
+Los usuarios del sistema ven estos mensajes cuando inician sesión en el sistema. Por lo tanto, este formulario de mensajería estática se denomina específicamente mensajería de inicio de sesión. Estas técnicas están destinadas a ser utilizadas como métodos de comunicación principales para situaciones planificadas. Hay varios archivos de Linux que pueden ayudar a emplear este estilo de comunicación automatizada:
+
+- `/etc/issue`
+- `/etc/issue.net`
+- `/etc/motd`
+
+Cada archivo tiene un propósito ligeramente diferente y es posible que no esté disponible para todos los tipos de usuarios o en todas las distribuciones. Como ocurre con la mayoría de las opciones, es mejor explorarlas y luego decidir qué archivo de mensajes de inicio de sesión implementar en su(s) sistema(s).
+# Usando el archivo `/etc/issue`
+El archivo `/etc/issue` permite mostrar texto en las pantallas de inicio de sesión del terminal tty. Por lo general, contiene la política de acceso al sistema de una empresa y rara vez cambia. También puede contener próximas interrupciones planificadas del sistema. Cuando no se modifica, el archivo `/etc/issue` generalmente simplemente contiene información del sistema, como qué versión del kernel de Linux se está ejecutando. Aquí se muestra un ejemplo de este archivo sin modificar de una distribución de CentOS:
+
+```
+$ cat /etc/issue
+\S
+Kernel \r on an \m
+$
+```
+
+Observe que se utilizan algunos caracteres especiales en el archivo. Puede utilizar los arreglos @character y \character siempre que sean compatibles con el programa getty de su distribución (el programa responsable de administrar terminales tty).
+Con privilegios de super usuario, puede modificar el archivo, por ejemplo, si los usuarios del sistema necesitan ser informados de una próxima interrupción:
+
+```
+# **cat /etc/issue**
+\S
+Kernel \r on an \m
+
+########################################################
+
+                       NOTICE
+
+        System will be down for maintenance
+
+        When:  December 26 1:00am through 1:30am ########################################################
+
+#
+```
+
+El archivo `/etc/issue` modificado hace que la pantalla de inicio de sesión de tty se vea como la que se muestra en la Figura 2.10. Observe cómo ahora se formatean los caracteres especiales en la pantalla.
+
+![](img/2.10.png)
+
+El archivo `/etc/issue` no contendrá comentarios útiles para que los lea detenidamente, porque todo su contenido se muestra en la pantalla de inicio de sesión. Normalmente puedes escribir `man issues` para obtener ayuda sobre cómo modificar este archivo.
+# Usando el archivo `/etc/issue.net`
+El archivo `/etc/issue.net` es muy similar al archivo `/etc/issue`. Su objetivo principal es mostrar mensajes de inicio de sesión para inicios de sesión remotos. De forma predeterminada, normalmente está habilitado sólo para conexiones Telnet. A continuación se muestra un ejemplo de un archivo `/etc/issue.net` predeterminado en una distribución de Ubuntu:
+
+```
+$ cat /etc/issue.net
+Ubuntu 14.04.3 LTS
+```
+
+No existe nada demasiado interesante en este archivo. Simplemente contiene la versión actual de la distribución.
+
+Para permitir que OpenSSH utilice el archivo `/etc/issue.net`, debe realizar un pequeño cambio en el archivo de configuración. Edite el archivo `/etc/ssh/sshd_config` en su sistema. (Este archivo de configuración no existirá si no tiene OpenSSH instalado en su sistema). Debería encontrar una línea similar a la siguiente:
+
+```
+#Banner  /etc/issue.net
+```
