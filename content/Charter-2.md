@@ -181,7 +181,9 @@ Kernel \r on an \m
 
         System will be down for maintenance
 
-        When:  December 26 1:00am through 1:30am ########################################################
+        When:  December 26 1:00am through 1:30am 
+        
+########################################################
 
 #
 ```
