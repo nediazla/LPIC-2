@@ -773,4 +773,126 @@ curl --version
 curl 7.46.0 (x86_64-pc-linux-gnu) libcurl/7.46.0
 [...]
 ```
+### Gestión del uso de recursos
+Administrar el uso de recursos de su sistema implica solucionar problemas de recursos a medida que ocurren. Sin embargo, medir mediante el monitoreo y la predicción del uso futuro de los recursos puede ayudar a minimizar los problemas de recursos con anticipación. 
 
+Desafortunadamente, muchos administradores de sistemas dedican más tiempo a solucionar problemas y menos tiempo a monitorear/predecir.
+Esta sección proporciona un vistazo a las diversas herramientas que puede utilizar para las tres actividades. También aborda cuándo se deben utilizar estas herramientas. Además, cubre la resolución de problemas de uso de recursos y la planificación de capacidad.
+### Medición del uso de recursos
+Hay un viejo dicho que dice: "No se puede gestionar lo que no se puede medir". Este dicho es apropiado para medir el uso de recursos. Debe medir los recursos con frecuencia, precisión y minuciosidad para recopilar los datos necesarios para gestionarlos adecuadamente. Además, debe medir con precisión antes de poder comenzar a solucionar problemas o planificar la capacidad del uso de recursos.
+
+La medición de recursos mediante monitoreo se presenta en un par de formas diferentes. A veces sólo necesitas estar atento a las cosas. En otras ocasiones, está monitoreando datos para descubrir por qué ocurren ciertos problemas. Además, es posible que deba recopilar datos periódicamente para la planificación de la capacidad del sistema.
+
+Puede resultar un poco abrumador intentar realizar un seguimiento de todas las estadísticas de datos de recursos del sistema. A continuación se detallan algunos elementos clave sobre los cuales debería medir y recopilar datos en cada sistema/red que administre: 
+- Tiempo de actividad del sistema
+- Estadísticas de carga y uso de CPU
+- Estadísticas de intercambio y uso de memoria
+- E/S de disco y estadísticas de carga
+- E/S de red y estadísticas de carga
+- Rendimiento del firewall
+- Rendimiento del enrutador
+- Uso del ancho de banda de la red
+
+Sin embargo, habrá ocasiones en las que necesitará monitorear elementos especiales de su sistema para solucionar problemas, aumentar aplicaciones específicas o planificar capacidades especiales. Por ejemplo, es posible que necesite determinar si la utilidad irqbalance (que distribuye las solicitudes de interrupción entre los múltiples procesadores del sistema) ayuda a mejorar el rendimiento de su sistema. En este caso, es necesario realizar un seguimiento de la carga de solicitudes de interrupción de cada núcleo del procesador antes y después de instalar la utilidad irqbalance.
+
+Afortunadamente, en un sistema Linux, puede emplear muchas herramientas de línea de comandos de medición. La Tabla 2.7 enumera algunos junto con una descripción general de cada uno.
+
+
+| Utility | Descripction                                                                                                                                                                                                        | Display Type      | Monitors                         |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | -------------------------------- |
+| free    | Shows the amount of free/used physical and swap memory.                                                                                                                                                             | static            | memory                           |
+| htop    | Enhancement of the top utility, which allows horizontal as well as vertical scrolling, and uses function keys for process control                                                                                   | Dynamic           | CPU Memory Process States Uptime |
+| iftop   | Similar to the top utility, it shows current network traffic information, including DNS.                                                                                                                            | Dynamic           | Network                          |
+| iostop  | Shows device I/O loading summary broken down per device                                                                                                                                                             | Static or Dynamic | CPU Device I/O                   |
+| iotop   | Similar to the top utility, it shows current I/O usage by processes (or threads).                                                                                                                                   | Dynamic           | Device I/O                       |
+| ip      | The -s link option and route option will display network and routing statistics. (Replaces the netstat command.)                                                                                                    | Static            | Network Routing                  |
+| iptraf  | Shows network information, and it is menu driven.                                                                                                                                                                   | Dynamic           | Network                          |
+| lsof    | Shows open files and network connections by process                                                                                                                                                                 | Static            | Network Process map              |
+| mpstst  | Shows multiple processor statistics.                                                                                                                                                                                | Static or Dynamic | CPU                              |
+| mtr     | Shows routing information for the URL parameter                                                                                                                                                                     | Dynamic           | Routing                          |
+| netstat | The netstat -i option and -r option will display network and routing statistics. This command is considered obsolete. Use ip instead.                                                                               | Static            | Network Routing                  |
+| ntop    | Gathers network statistics that can be viewed via a web browser via port 3000.                                                                                                                                      | Dynamic           | NetworkNetwork                   |
+| pmap    | Shows a processes map for the PID parameter.                                                                                                                                                                        | Static            | Process map                      |
+| ps      | Shows current process information, including CPU consumption                                                                                                                                                        | Static            | CPU Process states               |
+| pstree  | Shows current processes in a tree format                                                                                                                                                                            | Static            | Process map                      |
+| sar     | Acronym for System Activity Reporter: a multiple resource monitoring utility that collects and displays a wide variety of resource usage information                                                                | Static or Dynamic | CPU Memory Network Device I/O    |
+| ss      | Displays socket statistics directly from kernel space. Provides more information than the netstat utility                                                                                                           | Static            | Network                          |
+| tcpdump | A packet analyzer/sniffer that shows designated network interface captured packet content descriptions.                                                                                                             | Dynamic           | Network                          |
+| top     | Multiple display panels that show various resource usage data such as processes consuming the most CPU. Display can easily be changed on the fly. The atop and htop utilities are enhancements of the top command. | Dynamic           | CPU Memory Process states Uptime |
+| uptime  | Shows how long the system has gone without a reboot, load averages, and current number of users.                                                                                                                    | static            | Uptime                           |
+| vmstat  | Shows swap (virtual memory) performance.                                                                                                                                                                            | Static or Dynamic | Memory                           |
+| w       | Shows current user information, including CPU consumption.                                                                                                                                                          | static            | CPU Process states               |
+No todas las utilidades de la Tabla 2.7 están instaladas de forma predeterminada en todas las distribuciones. 
+
+Varias utilidades en la Tabla 2.7 tienen recursos adicionales que monitorean además de los tipos abreviados enumerados en la columna Monitores. Consulte las páginas del manual para obtener una descripción completa de estas diversas utilidades. Tenga en cuenta que hay muchas más utilidades de línea de comandos de supervisión disponibles para instalar. Abra su navegador web favorito y escriba las palabras de búsqueda Monitoreo de Linux para obtener listas de utilidades de monitor adicionales.
+
+La utilidad sar (acrónimo de System Activity Reporter) es especial porque puede recopilar datos durante un largo período de tiempo y proporcionar una gran cantidad de ellos. Debido a su facilidad de uso, también es una buena herramienta para quienes son nuevos en el monitoreo de recursos. 
+
+Normalmente se instala de forma predeterminada en la mayoría de las distribuciones, pero si por alguna razón no lo encuentra en la suya, se encuentra en el paquete `sysstat`.
+La utilidad sar utiliza datos almacenados por la utilidad `sadc` en `/var/log/sa/` y, de forma predeterminada, muestra datos del archivo actual, aunque puede cambiar este comportamiento mediante ciertas opciones de comando. Usado sin ninguna opción, el comando sar mostrará la información de uso de CPU almacenada hoy en intervalos de 10 minutos, como se muestra en este ejemplo recortado:
+
+```sh
+sar
+[...]
+12:20:01 PM   CPU   %user    %nice   %system   %iowait   %steal[...]
+12:20:01 PM   all   1.97      0.00      1.84      0.22     0.00[...]
+12:30:01 PM   all   0.29      0.00      1.37      0.16     0.00[...]
+[...]
+```
+
+Puede mostrar información actual de la CPU y cambiar los intervalos mostrados también. En este ejemplo recortado, `sar` muestra el uso de la CPU cuatro veces y con un intervalo de un segundo:
+
+```sh
+sar 1 4
+[...]
+06:49:50 PM   CPU   %user    %nice   %system   %iowait   %steal[...]
+06:49:51 PM   all   1.05      0.00      6.32      0.00     0.00[...]
+06:49:52 PM   all   1.02      0.00      2.04      0.00     0.00[...]
+06:49:53 PM   all   0.00      0.00      1.03      0.00     0.00[...]
+06:49:54 PM   all   0.00      0.00      4.08      0.00     0.00[...] 
+Average:      all   0.52      0.00      3.35      0.00     0.00[...]
+```
+
+La utilidad `sadc` (acrónimo de System Activity Data Collector) recopila varios datos de uso de recursos del sistema para `sar`. Almacena los datos en el directorio `/var/log/sa/` en el archivo `sadd`, donde `dd` es igual al día del mes, por defecto.
+
+La utilidad `sa1` almacena las actividades del sistema en archivos de datos binarios. El `sa2` crea un resumen diario de los datos recopilados por el `sa1`. Tanto `sa1` como `sa2` normalmente se ejecutan mediante cron.
+
+Tenga en cuenta que estas utilidades trabajan juntas para procesar y mostrar solo información del sistema local. Para obtener más información sobre `sar`, `sadc`, `sa1` y `sa2`, consulte sus páginas de manual.
+### Predecir el uso de recursos
+Predecir el uso de recursos se denomina formalmente planificación de capacidad. La planificación de la capacidad implica los siguientes pasos:
+1. Comprender las necesidades actuales de los usuarios del sistema
+2. Monitorear el uso de recursos del sistema actual
+3. Recopilar la dirección futura y las necesidades anticipadas de los usuarios y aplicaciones del sistema.
+4. Hacer predicciones y decisiones basadas en la información recopilada.
+
+Las predicciones de planificación de capacidad deben tener pruebas documentadas tanto del uso actual de recursos como de la tasa de crecimiento del uso actual de recursos a lo largo del tiempo. Sin estos datos, el crecimiento proyectado del uso de recursos y el punto de interrupción de la capacidad anticipado de una configuración serán extremadamente inexactos.
+
+Existen varias soluciones de software de monitoreo completo de recursos que puede utilizar para recopilar datos y producir los gráficos necesarios. Generalmente, estas soluciones se dividen en software de presentación, que produce cuadros y/o gráficos útiles, y software de recopilación (también llamado registrador de datos), que recopila datos de uso de recursos. Descubrirá que muchos de estos productos de software tienen la capacidad de funcionar juntos. Algunos de estos se tratan aquí:
+
+***Cacti*** Cacti es una solución de software de presentación de uso de recursos que brinda la capacidad de producir gráficos de uso a partir de plantillas. Es una interfaz para RRDTool. Cacti almacena sus datos en una base de datos MySQL y su interfaz se maneja a través de PHP. A menudo se utiliza para monitorear el tráfico de la red porque puede manejar redes bastante complejas. Además, permite utilizar estos datos recopilados en gráficos MRTG. 
+
+***Collectd*** Collectd es un demonio que le permite monitorear el uso de la infraestructura de TI. Escrito en C para mayor portabilidad, recopila estadísticas del sistema local (y remoto con un complemento de red). El demonio recopilado es bastante fácil de configurar. Usted configura los datos recopilados y cómo se recopilan a través de complementos y algunas otras configuraciones dentro del archivo de configuración `recopilado.conf` ubicado en `/etc/` o `/etc/collectd/`, dependiendo de su distribución. Las opciones LoadPlugin del archivo de configuración determinan qué complementos usar en recopilado.
+
+Se necesitan otras utilidades para mostrar las estadísticas recopiladas. Si una utilidad no está instalada de forma predeterminada en su distribución de Linux, está en el paquete recopilado.
+
+***MRTG*** El nombre de esta solución de software es un acrónimo de Multi Router Traffic Grapher, que casi lo dice todo. Recopila y grafica datos de tráfico de red. Escrito en Perl para mayor portabilidad, puede representar gráficamente las estadísticas de casi cualquier dispositivo de red. MRTG produce páginas HTML que ofrecen un gráfico de tráfico de red dinámico. También se puede utilizar junto con RRDTool. 
+
+***Nagios*** Este conjunto de soluciones de software muy popular viene en dos versiones: FOSS y propietario. Tendrás que pagar por la solución de software Nagios XI, pero el producto Nagios Core es gratuito. Nagios Core proporciona monitoreo de sistemas, dispositivos de red y diversos servicios. Utiliza un complemento que le permite crear comprobaciones de servicio personalizadas si lo desea.
+
+Nagios Core proporciona una vista centralizada de todos los elementos monitoreados en toda su empresa. Hay una interfaz web para ver datos y registros actuales y recopilados de cortes, eventos, alertas, etc. anteriores. Nagios Core es principalmente un recopilador de datos y no proporciona gráficos de uso o rendimiento. Sin embargo, los datos recopilados se pueden utilizar con herramientas gráficas de terceros, como PNP4Nagios y nagiosgraph.
+
+Una de las mejores características de Nagios Core es que puede enviar alertas de problemas por correo electrónico o mensajes de texto. Incluso puedes incorporar tu propio script de alerta personalizado. 
+
+***Icinga*** Icinga comenzó como una bifurcación de Nagios. Ahora está dividido en dos productos diferentes, Icinga1 (la bifurcación original de Nagios) e Icinga2 (una reescritura total). Icinga es compatible y similar a Nagios, pero incorpora una interfaz de usuario diferente (algunos creen que es mejor) y un ciclo de desarrollo más rápido.
+
+***RRDTool*** RRDTool, un estándar de la industria, significa herramienta de base de datos Round-Robin, porque los datos de uso de recursos recopilados se almacenan en una base de datos Round-Robin. El tamaño de esta base de datos no cambia porque los datos más antiguos se eliminan cada vez que se almacenan datos más nuevos en ella. Proporciona herramientas sobre cómo utilizar estos datos para producir gráficos de uso de recursos. Sin embargo, se utiliza a menudo en otras utilidades, como Cacti, MRTG y Nagios. 
+
+Al utilizar una o más de estas soluciones de software de monitoreo de recursos completos, puede predecir el crecimiento y evitar problemas de agotamiento de recursos. Además, estos programas, así como las herramientas de línea de comandos tratadas anteriormente, le permiten encontrar cuellos de botella de rendimiento actuales y diagnosticar problemas de uso de recursos, como se explica a continuación.
+### Solución de problemas de uso de recursos
+Una vez que haya implementado el monitoreo del uso de recursos y la planificación de la capacidad, minimizará la necesidad de solucionar problemas de uso de recursos. Sin embargo, cuando surjan problemas, serán mucho más fáciles de resolver.
+
+Además de monitorear sus recursos, debe comprender cómo interactúan estas soluciones de software de monitoreo de recursos. Un síntoma de recurso particular puede estar directamente relacionado con un problema con otro recurso. Por lo tanto, es importante correlacionar los síntomas del sistema con la causa probable del problema. Los siguientes son algunos elementos a considerar al solucionar problemas de uso de recursos:
+
+***Memoria*** La memoria (también llamada RAM) se divide en fragmentos de 4 Kb llamados páginas. Cuando el sistema necesita más memoria, utilizando un esquema de administración de memoria, toma las páginas de memoria de un proceso inactivo y las copia en el disco. Esta ubicación del disco es una partición especial llamada espacio de intercambio o memoria de intercambio o virtual. Si el proceso inactivo ya no está inactivo, sus páginas de memoria se vuelven a copiar en la memoria. Este proceso de copiar páginas de memoria hacia y desde el espacio de intercambio del disco se llama intercambio.
+
+Puede ver estadísticas de memoria en un sistema utilizando herramientas de línea de comandos como free, sar y vmstat. Si su sistema no tiene la memoria del tamaño adecuado, debería ver un uso elevado de RAM. Además, debido a estos problemas de memoria, el sistema aumentará el intercambio y dará como resultado un aumento de E/S del disco. La herramienta vmstat es útil en este caso, porque le permite ver las E/S del disco específicas para el intercambio, así como los bloques totales de entrada y salida del dispositivo.
