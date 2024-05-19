@@ -277,7 +277,7 @@ Verbose mode.
 Mount all filesystems (of the given types) mentioned in _fstab_.
 
 -F, --fork
-(Used in conjunction with -a.) Fork off a new incarnation of mount for each device. This will do the mounts on different devices or different NFS servers in parallel. This has the advantage that it is faster; also NFS timeouts go in parallel. A disadvantage is that the mounts are done in undefined order. Thus, you cannot use this option if you want to mount both _/usr_ and _/usr/spool_.
+(Usado junto con -a.) Bifurque una nueva encarnación de montaje para cada dispositivo. Esto hará los montajes en diferentes dispositivos o diferentes servidores NFS en paralelo. Esto tiene la ventaja de que es más rápido; También los tiempos de espera de NFS van en paralelo. Una desventaja es que las monturas se realizan en orden indefinido. Por lo tanto, no puede usar esta opción si desea montar tanto _/usr_ como _/usr/spool_.
 
 -f, --fake
 Causes everything to be done except for the actual system call; if it's not obvious, this ''fakes'' mounting the filesystem. This option is useful in conjunction with the -v flag to determine what the mount command is trying to do. It can also be used to add entries for devices that were mounted earlier with the -n option. The -f option checks for existing record in /etc/mtab and fails when the record already exists (with regular non-fake mount, this check is done by kernel).
@@ -560,3 +560,388 @@ curl-7.46.0.tar.gz         Shell_Scripts
 [...]
 ```
 
+Las unidades flash a menudo se formatean como VFAT o NTFS. El sistema de archivos EXT2 también es popular para las unidades flash. El almacenamiento óptico tiene diferentes sistemas de archivos, como se cubre más adelante en este capítulo.
+
+Si no conoce el tipo de sistema de archivos o el nombre del dispositivo para sus medios extraíbles, puede usar el comando `DMESG` o `BLKID` (o ambos). Aquí se muestra un ejemplo de estos dos comandos en acción:
+
+```sh
+dmesg
+[...]
+[ 3882.584572]  sdd: sdd1
+[ 3882.635207] sd 6:0:0:0: [sdd] No Caching mode page found
+[ 3882.635211] sd 6:0:0:0: [sdd] Assuming drive cache: write through
+[ 3882.635213] sd 6:0:0:0: [sdd] Attached SCSI removable disk
+[...]
+
+sudo blkid
+[...]
+/dev/sdd1**: SEC_TYPE="msdos" LABEL="TRAVELDRIVE" UUID="65AA-9655"
+ TYPE="vfat"
+```
+
+El uso de estos comandos le permite encontrar que el nombre de archivo del dispositivo de unidad flash es `/dev/sdd1` y que está formateado como un tipo de sistema de archivos VFAT. Observe que el comando `BLKID` también proporciona información de UUID y etiqueta para los medios extraíbles.
+Una útil utilidad para usar con medios extraíbles es el comando `Sync`. El comando `Sync` le permite "descargar" los buffers del sistema de archivos. En otras palabras, las actualizaciones de metadatos del sistema de archivos que residen en la memoria se escriben en las estructuras del sistema de archivos en los medios. La utilidad `sync` obliga al proceso de compromiso de datos a tener lugar de inmediato. Esto le permite separar los medios extraíbles de manera segura de la estructura del directorio sin preocuparse por la corrupción. Aquí se muestra un ejemplo de usar sincronización:
+
+```sh
+cp Documents/Listing_c04_Ubuntu_mount-t.odt Temp/
+
+sync 
+echo $?
+0
+sudo umount Temp 
+[sudo] password for christine:
+```
+
+En el ejemplo anterior, se copia un archivo a la unidad flash USB montada manualmente en TEMP. El comando `Sync` se usa para enjuagar los buffers del sistema de archivos. La utilidad `sync` proporciona un estado de salida, que puede ver utilizando el `Echo $?`. Un cero (0) indica que todo está bien, mientras que uno (1) indica que ha ocurrido un problema. Debido a que no hubo errores reportados por `Sync`, la unidad flash se desmoronó de forma segura utilizando el comando `Umount`.
+### Adjuntar un sistema de archivos de manera persistente
+En lugar de adjuntar manualmente sus sistemas de archivos después de cada reinicio del sistema, puede tenerlos adjuntos por el sistema cuando se inicia. Esto se realiza a través de un registro colocado en el archivo `/etc/fstab`, que se llama apropiadamente la tabla del sistema de archivos.
+
+En términos generales, cada registro `/ETC/FSTAB` consta de seis campos. Cualquier registro precedido por una marca hash (`#`) se considera una línea de comentarios. Los siguientes elementos describen estos campos.
+
+**Partition o volumen** Una partición de dispositivo, como `/dev/sda1`, generalmente se enumera aquí. Un volumen lógico también podría enumerarse aquí. Volúmenes lógicos comienzan con `/dev/mapper/`.
+
+Otro método para identificar una partición o volumen del dispositivo es mediante el uso de una etiqueta. Las etiquetas se pueden configurar en nombres fáciles de usar, como `TMPDIR`, en particiones cuyo nombre de archivo del dispositivo puede ser fácil de olvidar, como `/dev/sdf3`. Se asigna una etiqueta cuando la partición o volumen se formatean usando `MKFS`. Posiblemente puede determinar la etiqueta de un sistema de archivos utilizando el comando `E2Label`.
+
+En lugar de una partición o volumen del dispositivo, se puede usar un identificador universalmente único (`UUID`), y se están convirtiendo en el método preferido para la identificación de partición dentro de `/etc/fStab`. Un `UUID`, como su nombre lo indica, es un número de identificación único. Este número se asigna cuando la partición o volumen se formatean usando `MKFS`. Puede determinar el `UUID` de un sistema de archivos utilizando el comando `BLKID`. Este número es persistente, y es especialmente útil si tiene una gran cantidad de particiones adjuntas a su sistema.
+
+**Punto de montaje** El punto de montaje es la referencia de directorio absoluto para donde se va a conectar la partición o volumen a la estructura del directorio de Linux. Este es el mismo `Mount_Point` que usaría con el comando `mount`, si tuviera que montar el sistema de archivos temporalmente. Para un sistema de archivos de intercambio, verá el intercambio de palabras clave aquí. 
+
+**Tipo de sistema de archivos** El tipo de sistema de archivos es el código de tipo de sistema de archivos utilizado para identificar el formato del sistema de archivos o del sistema de volumen. Es el mismo `Fstype` que usaría con el comando `mount` si tuviera que montar el sistema de archivos temporalmente.
+Para un sistema de archivos de intercambio, verá el intercambio de palabras clave aquí. 
+
+**Opciones de montaje** Las palabras clave separadas por comas enumeradas aquí son las diversas opciones de montaje que puede configurar en el sistema de archivos. Son las mismas opciones que usaría con el comando `Mount -O` si montara el sistema de archivos temporalmente. 
+
+**Selección de copia de seguridad** Este campo es un campo booleano, ya que se puede establecer en 0 (falso) o 1 (verdadero). A 0 indica que la utilidad de volcado no realizará una copia de seguridad en este sistema de archivos. A 1 indica que la utilidad del volcado realizará una copia de seguridad. Si la utilidad de copia de seguridad de volcado no se usa en el sistema, esta configuración se ignora. No tiene ningún efecto en otras utilidades de respaldo.
+
+**Orden de verificación de integridad** Este campo se puede establecer en un blanco, 0, 1 o 2, y es utilizado por la utilidad `FSCK` en el arranque del sistema. Un en blanco o 0 indica que `FSCK` nunca debe ejecutarse en el sistema de archivos en el arranque del sistema.
+
+A 1 indica que este sistema de archivos tiene prioridad, y debe verificarse, si es necesario, antes de cualquier otro sistema de archivos. Por lo general, el sistema de archivos montado en root (`/`) es el único sistema de archivos establecido con este indicador.
+
+A 2 indica que este sistema de archivos debe verificarse, si es necesario, en el arranque del sistema. Sin embargo, él y cualquier otro sistema de archivos debido a una verificación y establecido en 2 se verificarán después de que se verifique los sistemas de archivos establecidos en 1.
+Se muestra un archivo de muestra `/etc/fstab` en el Listado 4.1. Este archivo de muestra no es de ninguna distribución en particular, sino que se creó solo con fines educativos. 
+
+```sh
+#partition          mount point fs type  options       dump  fsck
+/dev/sda1           /           ext4     defaults      0     1
+UUID=7e32f35e-[...] /boot       xfs      defaults      0     0
+Label=Temp          /home/temp  ext4     users, noauto 0     0 
+/dev/sdb3           /var        ext4     defaults      0     2 
+server01:/nfsshare  /tmp/share  nfs      users         0     0 
+/dev/mapper/a-swap  swap        swap     defaults      0     0
+```
+
+Veamos el archivo de muestra `/etc/fstab` línea por línea.
+
+**Línea 1** Cualquier línea precedida por una marca hash (`#`) en este archivo es una línea de comentarios. Por lo general, encontrará los encabezados de la columna enumerados como un comentario, lo cual es útil.
+
+**Línea 2** La partición, `/dev/sda1`, se debe montar en la raíz (`/`) en la estructura del directorio virtual. Es un sistema de archivos EXT4, y todas las opciones de montaje predeterminadas (`RW`, `Suid`, `Dev`, `Exec`, `Auto`, `Nouser` y `Async`) deben usarse. La utilidad de copia de seguridad del volcado no se usa en este sistema y, por lo tanto, se enumera un cero (0) en la columna de volcado para este sistema de archivos. Dado que este es el directorio raíz, este sistema de archivos tiene prioridad y debe verificarse, si es necesario, antes de cualquier otro sistema de archivos. Por lo tanto, un uno (1) se enumera en la columna `FSCK`.
+
+**Línea 3** Esta partición se identifica en `/etc/fStab` por su número UUID. El número se corta en el listado, y el UUID completo para esta partición es 7E32F35E -C9E1–4AA9–8BABDF362221D706. Un número UUID es largo, porque es un número de identificación único. Incluso con su larga longitud, los UUID se están convirtiendo en el método preferido para la identificación de partición dentro de `/etc/fstab`. Esta partición es un tipo de sistema de archivos `XFS`, y está montado en el punto de montaje `/boot`. La utilidad `FSCK` no se ejecuta en los sistemas de archivos `XFS` y, por lo tanto, se enumera un cero (0) en la columna `FSCK` para este sistema de archivos.
+
+**Línea 4** Esta partición en particular usa una etiqueta para identificación, `Label=temp`. Además, observe que tiene algunas opciones establecidas, `users` y `noauto`. La opción `users` permite a cualquier usuario autorizado usar este sistema, no solo aquellos con privilegios de súper usuario, para montar o desmontar esta partición etiquetada. Además, la opción `Noauto` evita que la partición se monte en el momento del arranque o cuando se emite un comando de `mount -a`.
+
+**Línea 5** La partición `/dev/sdb3` está montada en `/var`. Tenga en cuenta que en su columna `FSCK`, se usa un número dos (2). Esto significa que este sistema de archivos debe verificarse, si es necesario, en el arranque del sistema. Sin embargo, si `/dev/sda1` se debe verificar, `/dev/sdb3` se verificará después de `/dev/sda1` se ha verificado.
+
+**Línea 6** El `servidor01:/NFSSHare` es un sistema de sistema de archivo de red (`NFS`) compartido. 
+
+**Línea 7** La última línea en el listado de muestra `/etc/fstab`, `/dev/mapper/a-swap`, es un volumen lógico. Este volumen particular está montado como el sistema de archivos de intercambio. 
+Cuando el sistema se reinicia, emitirá el comando `Mount -A`. Cada sistema de archivos enumerado en `/etc/fStab`, que no tiene la opción `noauto` establecida, se montará a su punto de montaje designado en la estructura del directorio virtual del sistema.
+### Mirando las unidades de montaje `Systemd`
+Las distribuciones que usan `Systemd` tienen opciones adicionales para adjuntar persistentemente los sistemas de archivos.
+
+Los sistemas de archivos se pueden especificar dentro del archivo `/etc/fstab` o dentro de un archivo de unidad de montaje. Un archivo de unidad de montaje proporciona información de configuración para `SystemD`  para montar y controlar los sistemas de archivos designados.
+
+Se crea un solo archivo de unidad de montaje para cada punto de montaje, y el nombre del archivo contiene la referencia de directorio absoluto del punto de montaje. Sin embargo, la referencia del directorio absoluto tiene su corte hacia adelante (`/`); Las bases posteriores se convierten en guiones (`-`); y se elimina cualquier corte hacia adelante. Los nombres de los archivos de la unidad de montaje también tienen una extensión. `Mount`. Por ejemplo, el punto de montaje, `/home/temp/`, tendría un archivo de unidad de montaje llamado `Home-Temp.mount`.
+
+El contenido de un archivo de unidades de montaje imita otros archivos de la unidad `Systemd`, con algunas secciones y opciones especiales. Usando el punto `/home/temp/mount`, aquí hay un archivo de unidad de montaje de ejemplo para ello:
+
+```sh
+cat /etc/systemd/system/home-temp.mount
+[Unit]
+Description=Test Mount Units
+
+[Mount]
+What=/dev/sdo1
+Where=/home/temp
+Type=ext4
+Options=defaults
+SloppyOptions=on
+TimeOutSec=4
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Hay tres secciones necesarias como mínimo para este punto de montaje particular: [Unidad], [Monte] e [Instalar]. La opción qué opción dentro de la sección [MONTACIÓN] puede usar el nombre del archivo del dispositivo o un UUID, como `/dev/disk/by-uuid/uuid`.
+
+El `sloppyOptions` es útil, ya que si se establece en `On`, ignora cualquier opción de montaje que no sea compatible con un tipo de sistema de archivos en particular. Por defecto, está configurado en `OFF`. Otra opción útil es el tiempo de espera. Si el comando de montaje no se completa por el número de segundos designados, el soporte se considera una operación fallida.
+
+Asegúrese de incluir la sección [Install] y configure las opciones `WantedBy` o las Opciones requeridas. Si no hace esto, el sistema de archivos no se montará en un reinicio del servidor.
+Se debe probar cualquier archivo de unidad de montaje recién configurado, especialmente antes de realizar un reinicio del sistema. Primero pruebe un montaje manual del sistema de archivos como se muestra cortado aquí:
+
+```sh
+blkid | grep /dev/sdo1 
+/dev/sdo1: UUID="474c1322-[...]" TYPE="ext4"
+
+mkdir /home/temp
+
+touch /home/temp/test_mount_units.txt
+
+ls /home/temp 
+test_mount_units.txt
+
+mount -t ext4 /dev/sdo1 /home/temp
+
+ls /home/temp 
+lost+found
+
+umount /home/temp
+
+ls /home/temp 
+test_mount_units.txt 
+```
+
+Una vez que haya probado el nuevo sistema de archivos a través del montaje manual y desmontándolo, se prueba el archivo de la unidad de montaje. Usando el archivo de unidad de montaje de ejemplo, lo siguiente demuestra probarlo en una distribución de CentOS:
+
+```sh
+systemctl daemon-reload
+
+systemctl start home-temp.mount
+
+ls /home/temp 
+lost+found #
+```
+
+En el ejemplo anterior, el primer comando vuelve a cargar `Systemd` y el segundo comando tiene `Systemd` de montar el sistema de archivos utilizando el archivo de la unidad de montaje `home-Temp.Mount`. El segundo comando `SystemCTL` es similar a cómo se inicia un servicio, ya que utiliza el comando `Start`.
+
+A continuación, asegúrese de que el sistema de archivos esté montado correctamente. El comando `mount` funciona en esta situación, y también lo hace el comando `SystemCTL`. Al igual que un servicio, utiliza el comando `SystemCTL` para obtener el estado de un sistema de archivos montado como se muestra cortado aquí:
+
+```sh
+mount | grep /home/temp 
+/dev/sdo1 on /home/temp type ext4 (rw,relatime,data=ordered)
+
+systemctl status home-temp.mount
+• home-temp.mount - Test Mount Units
+   Loaded: loaded (/etc/systemd/system/home-temp.mount; [...]
+   Active: active (mounted) since Sat 2017-06-11 16:34:2[...]
+    Where: /home/temp
+     What: /dev/sdo1
+  Process: 3990 ExecMount=/bin/mount /dev/sdo1 /home/temp[...]
+[...]
+```
+
+Se requiere un paso adicional. Para garantizar que `Systemd` monte el sistema de archivos de manera persistente, el archivo de la unidad de montaje debe habilitarse como se muestra aquí:
+
+```sh
+systemctl enable home-temp.mount
+Created symlink from
+/etc/systemd/system/multi-user.target.wants/home-temp.mount to /etc/systemd/system/home-temp.mount.
+```
+
+Tenga en cuenta que solo debe usar archivos de Unidad de montaje si necesita ajustar la configuración del sistema de archivos persistente. Si no lo hace, es mejor usar el registro A `/ETC/FSTAB` para montar el sistema de archivos de manera persistente. Para obtener más información sobre el archivo de la unidad de montaje, consulte las páginas `Systemd.Mount Man`.
+### Visualización de sistemas de archivos adjuntos
+Si desea ver la estructura de accesorio del sistema de archivos actual de su sistema o ver los atributos de varios dispositivos de bloque, hay varias herramientas útiles disponibles. Cada uno proporciona un punto de vista diferente de la estructura del directorio virtual y sus medios de almacenamiento subyacentes.
+
+Un comando simple para comenzar es el comando `MountPoint`. No requiere privilegios de súper usuario. Simplemente escriba en `MountPoint Directory_Reference` en la línea de comandos, y si recibe el mensaje es un punto de montaje, entonces se ha montado un sistema de archivos en esa ubicación de directorio en particular, como se muestra en la distribución de Ubuntu aquí:
+
+```sh
+mountpoint  / 
+/ is a mountpoint
+
+mountpoint /home
+/home is not a mountpoint
+```
+
+Otro buen comando es `Blkid`. Con el comando `BLKID`, puede ver los diversos dispositivos de bloque y sus atributos. No se requieren privilegios de súper usuario para ver parte de la información; Sin embargo, las cuentas sin privilegios de súper usuario reciben información en caché no verificada o ninguna. Aquí hay un ejemplo recortado de usar el comando `BLKID` en una distribución de Ubuntu:
+
+```sh
+blkid
+
+sudo blkid 
+[sudo] password for christine:
+/dev/sda1: UUID="0dc214d2-[...] TYPE="ext4"
+/dev/sda5: UUID="1b0f22a2-[...] TYPE="swap"
+/dev/sdb1: UUID="06c41b8c-[...] TYPE="ext4"
+/dev/sdc1: UUID="14ca54ba-[...] TYPE="ext4"
+/dev/sdc2: LABEL="Extra" UUID="82558d44-[...]" TYPE="ext4"
+
+sudo blkid -L Extra
+/dev/sdc2
+
+sudo blkid -U 14ca54ba-ee44–4588-a32c-dee848a0435f
+/dev/sdc1
+
+$
+```
+
+Observe en el ejemplo anterior de que el uso de privilegios de súper usuario con el comando `BLKID` generalmente proporciona información más exhaustiva (y, por lo tanto, es una buena idea usarla con privilegios de súper usuarios). Observe también que puede mostrar información sobre un dispositivo de bloque particular utilizando su etiqueta (`opción -l`) o su UUID (`-U opción`). Si lo desea, puede especificar un solo nombre de archivo de dispositivo con el comando `BLKID`, como se muestra aquí en una distribución de CentOS:
+
+```sh
+blkid /dev/sda1 
+/dev/sda1: UUID="7e32f35e-[...] TYPE="xfs"
+```
+
+El comando `LSBLK` también puede ser una utilidad útil. Funciona de manera similar al comando `BLKID` en el sentido de que también muestra la información del dispositivo de bloque. Dado que algunas de sus opciones extraen información del comando `BLKID`, es mejor tener privilegios de súper usuarios al emplearla. Aquí hay dos ejemplos de comando `LSBLK SNPED` en una distribución de CentOS:
+
+```sh
+lsblk
+NAME            MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT 
+sda               8:0    0    8G  0 disk
+
+├─sda1            8:1    0  500M  0 part /boot 
+└─sda2            8:2    0  7.5G  0 part
+  ├─centos-root 253:0    0  6.7G  0 lvm  /
+  └─centos-swap 253:1    0  820M  0 lvm  [SWAP]
+[...]
+
+lsblk -f
+NAME         FSTYPE      LABEL UUID             MOUNTPOINT 
+sda
+
+├─sda1       xfs               7e32f35e-[...]   /boot
+└─sda2       LVM2_member       YlVA3C-[...]
+  ├─centos-root
+             xfs               1ea0c68f-[...]   /
+  └─centos-swap
+             swap              09502922-[...]   [SWAP]
+[...]
+```
+
+La opción `-f` utilizada con `LSBLK` mostrará los UUID y etiquetas del dispositivo de bloque, si se usa. Tenga en cuenta que no todas las distribuciones muestran UUID del dispositivo de bloque con el comando y opción `LSBLK -F`.
+
+Otra utilidad que puede encontrar útil es el comando `E2Label`. Con esta utilidad, puede ver cualquier etiqueta del sistema de archivos para un sistema de archivos Ext2, Ext3 o Ext4, como se muestra aquí en una distribución de Ubuntu:
+
+```sh
+sudo e2label /dev/sdc2
+[sudo] password for christine:
+Extra
+```
+
+Observe que se requieren privilegios de súper usuario para usar el comando `E2Label`. También puede cambiar la etiqueta pasando un nuevo nombre de etiqueta después del nombre del dispositivo en esta cadena de comando.
+
+La utilidad `FindFS` también puede ser útil para administrar sus sistemas de archivos. Le permite ver el dispositivo de bloque asociado con un UUID o etiqueta particular, como se muestra en un sistema Ubuntu aquí:
+
+```sh
+findfs LABEL=Extra
+/dev/sdc2
+
+findfs UUID="82558d44–16af-4f2c-8670–6f54732bb31b"
+/dev/sdc2
+```
+
+El comando `FindFS` no requiere privilegios de supervisión de súper. Sin embargo, desafortunadamente, al escribir un UUID del sistema de archivos para el comando `FindFS`, la finalización del comando de pestaña del shell no está disponible.
+
+Además de las utilidades mencionadas hasta ahora, otras utilidades pueden ser útiles, incluidas estas: 
+`FindMnt`: muestra sistemas de archivos montados en un formato de árbol.
+`DF`: Muestra el uso del espacio del disco del sistema de archivos montado, e incluye el punto de montaje del sistema de archivos.
+`mount`: muestra sistemas de archivos montados e incluye el punto de montaje del sistema de archivos.
+Puede usar la opción `-l` en el comando `mount` para mostrar etiquetas y puede usar el comando `-t fstype` para reducir su lista solo para ciertos tipos de sistemas de archivos, como se muestra en este Snip desde una distribución de CentOS:
+
+```sh
+mount -t xfs
+/dev/mapper/centos-root on / type xfs [...]
+/dev/sda1 on /boot type xfs [...]
+```
+
+Todas estas utilidades son muy útiles para administrar sus sistemas de archivos. Es posible que no los necesite en cada situación, pero son útiles para saber por las diversas circunstancias que puede encontrar en sus sistemas Linux.
+### Explorando temas adicionales del sistema de archivos
+Ciertos temas del sistema de archivos requieren una discusión adicional. Estos incluyen mirar los sistemas de archivos, como la memoria, Swap, BTRFS, etc. Además, los sistemas de archivos que se pueden montar automáticamente (fuera del archivo `/etc/fstab`) son un tema especial que requiere detalles adicionales.
+### Mirando los sistemas de archivos Linux basados en la memoria
+Al cubrir los sistemas de archivos, un tema que merece algo de atención especial es los sistemas de archivos Linux virtuales o basados en la memoria. Estos sistemas de archivos son únicos porque sus datos residen dentro de la memoria del sistema, pero puede ver sus datos utilizando sus puntos de montaje.
+A menudo encontrará estos sistemas de archivos basados en la memoria montados en `/dev`, `/proc`, `/sys` y `/run` o uno de sus subdirectorios. Algunos ejemplos de sistemas de archivos basados en la memoria son `Devpts`, `Proc`, `SYSFS` y `TMPFS`.
+
+Para comprender esto un poco mejor, veamos archivos `PROC`. Los archivos en el sistema de archivos `PROC` están basados en memoria (virtual), generalmente contienen información del sistema y se actualizan continuamente, aunque no muestran información de tamaño en sus listados de archivos. Aquí se muestra el listado largo de un archivo de `Proc` virtual en un ejemplo del sistema CentOS:
+
+```sh
+ls -l /proc/cpuinfo
+-r--r--r--. 1 root root 0 Jan 13 13:12 /proc/cpuinfo
+```
+
+Aunque el archivo `/proc/cpuinfo` reside en la memoria, al utilizar el punto de montaje del sistema de archivos, se puede acceder o ver los datos. Aquí hay un ejemplo recortado de cómo mostrar los datos del archivo `/proc/cpuinfo`, que reside en la memoria:
+
+```sh
+cat /proc/cpuinfo
+processor    : 0
+vendor_id    : GenuineIntel
+[...] 
+power management:
+```
+
+Estos sistemas de archivos se crean cuando se inicia el sistema y, a menudo, el sistema los monta automáticamente. Sin embargo, si se necesitan opciones especiales para estos sistemas de archivos basados en memoria, las verá enumeradas en el archivo `/etc/fstab`.
+
+Debido a que estos sistemas de archivos se basan en la memoria, cuando un sistema se apaga, todos los datos que residen en estos sistemas de archivos se eliminan. Por lo tanto, son un excelente medio para almacenar sistemas, procesos y otra información temporal.
+### Mirando el sistema de archivos `Btrfs`
+El sistema de archivos `Btrfs` adopta un enfoque único sobre cómo se logra el formateo y el montaje de alto nivel. Merece una atención especial.
+
+`Btrfs`, un sistema de archivos relativamente nuevo, fue creado para manejar archivos y sistemas de archivos de gran tamaño, así como la escalabilidad necesaria. El sistema de archivos `Btrfs` utiliza una estructura de datos de árbol B, de ahí su nombre. Esta estructura de datos proporciona un método competente para acceder y actualizar grandes bloques de datos almacenados en el sistema de archivos. Este método también puede seguir siendo competente a medida que crece el tamaño del sistema de archivos.
+
+El sistema de archivos `Btrfs` proporciona integridad de datos a través de COW. Esta implementación COW, además de proteger los metadatos, proporciona instantáneas, lo que le permite mover el sistema de archivos a una instantánea anterior en caso de que ocurra un desastre. El término instantánea, tal como se utiliza aquí, se refiere a una unidad distinta. Comparte los datos y metadatos con la partición de la instantánea original, pero actúa como su propia partición al permitir que se agreguen archivos (que no aparecerán en la partición original) y se puede montar de forma independiente.
+
+`Btrfs` también proporciona integridad de datos a través de una función de suma de comprobación y su propia funcionalidad RAID integrada. Puede configurar configuraciones RAID 0, RAID 1 o RAID 10 utilizando `Btrfs`.
+Los atributos de rendimiento y escalabilidad de `Btrfs` incluyen su propia gestión integrada de volúmenes lógicos. También proporciona compresión y desfragmentación de datos.
+
+Unos pocos ejemplos sencillos le ayudarán a comprender el sistema de archivos `Btrfs`. 
+
+Primero, formatear particiones con el sistema de archivos `Btrfs` es similar a realizar otro formateo de alto nivel usando el comando `mkfs`. El ejemplo que se muestra aquí se realiza en dos particiones, porque necesitará al menos dos particiones para implementar `Btrfs RAID`:
+
+```sh
+mkfs -t btrfs  /dev/sdb  /dev/sdc
+Btrfs v3.16.2 
+See [http://btrfs.wiki.kernel.org f](http://btrfs.wiki.kernel.org/)or more information.
+Turning ON incompat feature 'extref':
+increased hardlink limit per file to 65536
+adding device /dev/sdc id 2 
+fs created label (null) on /dev/sdb
+  nodesize 16384 leafsize 16384 sectorsize 4096 size 8.00GiB #
+```
+
+En el ejemplo anterior, debido a que no se usaron opciones además de `-t btrfs` y se incluyeron dos particiones, `Btrfs` está configurado para usar RAID 0 (división de discos) para datos y RAID 1 (duplicación) para sus metadatos. Otras opciones le permitirán configurar diferentes tipos de RAID. Además, puedes incluir más de dos particiones.
+Luego puede montar el sistema de archivos `Btrfs`. Sin embargo, sólo necesita montar una de las particiones para montar el volumen RAID del sistema de archivos `Btrfs`, como se muestra aquí:
+
+```sh
+mkdir BTrial
+
+mount /dev/sdb BTrial
+
+ls BTrial
+
+touch BTrial/file_b.txt**
+
+ls BTrial
+file_b.txt
+```
+
+Una vez montado el volumen del sistema de archivos `Btrfs`, puede usarlo como cualquier otro sistema de archivos, como se muestra en el ejemplo anterior. Sin embargo, tenga en cuenta que no hay ningún directorio `lost+found` como lo vería en un punto de montaje del sistema de archivos ext4.
+Un comando útil para ayudarle con su sistema de archivos `Btrfs` es el comando `btrfs filesystem show`. Aquí se muestra un ejemplo de este comando:
+
+```sh
+btrfs filesystem show
+Label: none  uuid: 5125431c-37c3–4d70-aa85–42b8b4fea161
+       Total devices 2 FS bytes used 384.00KiB        
+       devid    1 size 4.00GiB used 847.12MiB path /dev/sdb        
+       devid    2 size 4.00GiB used 827.12MiB path /dev/sdc
+Btrfs v3.16.2
+```
+
+### Explorando los subvolúmenes `Btrfs`
+Otra característica interesante de `Btrfs` son los subvolúmenes. Los subvolúmenes `Btrfs` pueden actuar como subdirectorios de un sistema de archivos `Btrfs` montado. No son verdaderos subdirectorios porque se pueden montar por separado de su volumen principal. Aunque se puede montar un subvolumen `Btrfs`, no es un dispositivo de bloque. Un subvolumen `Btrfs` es una estructura organizativa.
+
+Los subvolúmenes `Btrfs` son útiles en determinadas situaciones. Por ejemplo, puede mantener un conjunto de subvolúmenes y montarlos según sean necesarios los datos que contienen.
+Para crear un subvolumen, primero se debe montar el volumen `Btrfs` principal. La sintaxis básica para crear un subvolumen es la siguiente.
+
+```sh
+btrfs subvolume create Mount_Point/Subvolume_Name
+```
+
+`Mount_Point` es el punto de montaje del volumen `Btrfs` principal actual. `Subvolume_Name` es el nombre del subvolumen.
+Para demostrar la creación de un subvolumen, usaremos el sistema de archivos `Btrfs` creado anteriormente. Antes de crear un subvolumen, el sistema de archivos `Btrfs` (volumen principal) debe montarse como se muestra aquí en una distribución CentOS usando privilegios de superusuario:
+
+```sh
+mount /dev/sdb BTrial
+
+ls BTrial/ 
+file_b.txt
+
+btrfs subvolume create BTrial/subvolume_1
+Create subvolume 'BTrial/subvolume_1'
+```
