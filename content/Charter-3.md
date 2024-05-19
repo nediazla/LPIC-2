@@ -1,3 +1,4 @@
+![](img/sudo.png)
 # Dominar el Kernel
 
 Si bien normalmente nos referimos al sistema operativo Linux simplemente como Linux, en realidad, bastantes partes conforman un sistema Linux completo. El kernel de Linux es el componente principal que mantiene cosas juntas y ejecutándose en su sistema. Es el corazón del sistema Linux y controla el hardware, la memoria y las aplicaciones en ejecución.

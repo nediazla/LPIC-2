@@ -1,3 +1,4 @@
+![](img/sudo.png)
 # Sistema de Arranque
 
 Antes de que pueda iniciar sesión y comenzar a usar su sistema Linux, debe realizarse un complicado proceso de inicio del sistema operativo. Suceden muchas cosas detrás de escena en el proceso de arranque de Linux. Es útil saber todo lo que está sucediendo en caso de que algo salga mal.

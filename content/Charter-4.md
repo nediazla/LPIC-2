@@ -1,3 +1,4 @@
+![](img/sudo.png)
 # Administrar el Sistema de Archivos
 
 Los datos se guardan como unos y ceros en los medios de almacenamiento, como unidades de disco y DVD. Un sistema de archivos cierra la brecha entre los unos y los ceros almacenados en los medios y los archivos con los que trabaja.

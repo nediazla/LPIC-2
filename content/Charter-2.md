@@ -1,3 +1,4 @@
+![](img/sudo.png)
 # Mantenimiento de sistema
 
 Mantener un sistema Linux en funcionamiento implica muchas tareas de mantenimiento básicas importantes, como la copia de seguridad de los datos y la planificación de la capacidad. En este grupo de tareas se incluye la instalación de software y el mantenimiento de información a la comunidad de usuarios del sistema.
