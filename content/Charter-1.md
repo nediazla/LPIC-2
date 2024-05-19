@@ -136,7 +136,9 @@ El sistema GRUB Legacy almacena los comandos del menú en un archivo de configur
 El archivo de configuración de GRUB Legacy consta de dos secciones:
 - Definiciones globales
 - Definiciones de inicio del sistema operativo
+- 
 La sección de definiciones globales define comandos que controlan el funcionamiento general del menú de inicio de GRUB Legacy. Las definiciones globales deben aparecer primero en el archivo de configuración.
+
 Sólo hay un puñado de configuraciones globales. La Tabla 1.1 muestra estas configuraciones.
 
 | **Setting** | **Description**                                                                                                                                                            |
@@ -273,7 +275,9 @@ Generalmente existen tres formas de ejecutar Linux en un entorno de arranque seg
 
 El primer método suele ser el más sencillo, siempre que el administrador de arranque UEFI de su sistema le permita desactivar la función de arranque seguro. Sin embargo, eso puede dejar su sistema Linux vulnerable a ataques y no todos los sistemas le permiten desactivar el arranque seguro.
 Comprar su propia clave de firma digital puede resultar costoso y algo engorroso si cambia las imágenes del gestor de arranque con frecuencia. Cada vez que cambia la imagen del gestor de arranque, debe volver a firmar el archivo, lo que significa involucrar a un agente de firma externo.
+
 Sin embargo, existe una solución relativamente sencilla. Algunas organizaciones de Linux producen imágenes de minicargadores de arranque firmadas para uso público. El mini gestor de arranque actúa como intermediario en el proceso de arranque. El administrador de arranque UEFI arranca el mini cargador de arranque y luego, a su vez, arranca la imagen estándar del cargador de arranque de Linux.
+
 Actualmente, los dos métodos de imágenes de mini-cargador de arranque más populares son los de la Fundación Linux (llamado precargador) y Fedora (llamado shim). El archivo del minicargador de arranque shim se denomina `shim.efi` y se almacena en la carpeta uefi del sistema. Cuando arranca, busca automáticamente un archivo de imagen del cargador de arranque GRUB 2 llamado `grubx64.efi`, también en la carpeta uefi del sistema. De esa manera aún puedes cambiar la imagen del gestor de arranque GRUB 2 sin tener que preocuparte por el archivo `shim.efi` firmado digitalmente.
 ### Inicialización del proceso
 Un sistema Linux comprende muchos programas que se ejecutan en segundo plano para proporcionar servicios al sistema. El programa `init` inicia todos esos programas cuando se inicia el sistema Linux. Esto se llama proceso de inicialización.
@@ -288,7 +292,9 @@ Actualmente se utilizan tres métodos populares de proceso de inicialización en
 - `systemd`
 - `upstart`
 El programa de inicio de Linux original se basó en el programa de inicio de Unix System V y pasó a denominarse comúnmente `SysV` (o, a veces, `SysV-init`). El programa de inicio `SysV` utiliza una serie de scripts de shell divididos en niveles de ejecución separados para determinar qué programas se ejecutan en qué momentos. Un nivel de ejecución agrupa aplicaciones comunes que deben iniciarse o detenerse juntas en un grupo común. Cada programa utiliza un script de shell independiente para iniciar y detener el programa individual, pero el sistema puede ejecutar todos los scripts al mismo tiempo.
+
 El administrador del sistema establece el nivel de ejecución en el que se inicia el sistema Linux. Esto a su vez determina qué conjunto de programas se está ejecutando. El administrador del sistema también puede cambiar el nivel de ejecución en cualquier momento mientras el sistema está en ejecución.
+
 El programa `init SysV` había servido bien a la comunidad Linux durante muchos años, pero a medida que los sistemas Linux se volvieron más complicados y requirieron más servicios, los scripts de shell de nivel de ejecución se volvieron más complicados. Esto hizo que los desarrolladores de Linux buscaran otras soluciones.
 
 El programa `systemd` fue desarrollado por el grupo Red Hat Linux para manejar el inicio y la detención de programas en entornos dinámicos de Linux. En lugar de niveles de ejecución, utiliza objetivos y unidades para controlar qué aplicaciones se ejecutan en cualquier momento en el sistema. Utiliza archivos de configuración separados que determinan este comportamiento.

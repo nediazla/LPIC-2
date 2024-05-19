@@ -20,19 +20,19 @@ El comando `/usr/bin/wall` envía mensajes simples a ciertos usuarios del sistem
 El comando `/bin/mesg` o `/usr/bin/mesg` le permite ver y configurar el estado de su mensaje. El comando `mesg` se demuestra aquí:
 
 ```sh
-$ mesg 
+mesg 
 is n
-$
-$ mesg y
-$
-$ mesg
+
+mesg y
+
+mesg
 is y
-$
-$ mesg n
-$
-$ mesg*
+
+mesg n
+
+mesg*
 is n 
-$
+
 ```
 
 Observe en el ejemplo anterior que el comando `mesg` usado por sí solo simplemente muestra el estado actual del mensaje. Al ejecutar el comando `mesg` y se activa la mensajería y al emitir `mesg n` se desactiva.

@@ -543,23 +543,37 @@ Las distribuciones de Linux basadas en Red Hat (como Red Hat Enterprise Linux, F
 mkinitrd outputfile version
 ```
 
-donde archivo de salida es el nombre del archivo de disco RAM inicial que se creará y versión es la versión del kernel para la cual se crea el archivo. Hay algunas opciones de línea de comandos que puede utilizar para el comando `mkinitrd`. Se muestran en la Tabla 3.3.
+donde archivo de salida es el nombre del archivo de disco RAM inicial que se creará y versión es la versión del kernel para la cual se crea el archivo. Hay algunas opciones de línea de comandos que puede utilizar para el comando `mkinitrd`.
 
+```
+       --version
+           print info about the version
 
-| Option                | Description                                                                               |
-| --------------------- | ----------------------------------------------------------------------------------------- |
-| `--builtin=module`    | Assume the module is built into the kernel, even if it’s not.                             |
-| `--force`             | Allow the output file to be overwritten if it already exists                              |
-| `--fstab=filename`    | Determine what filesystem support is required to read the specified filename              |
-| `--image-version`     | Add the kernel version to the generated initial RAM disk image file                       |
-| `--nocompress`        | Force the image file to be uncompressed. The default is to create a compressed image file |
-| `--omit-lvm-modules`  | Omit logical volume manager modules from the image                                        |
-| `--omit-raid-modules` | Omit RAID disk modules from the image                                                     |
-| `--omit-scsi-modules` | Omit SCSI disk modules from the image.                                                    |
-| `--preload=module`    | Load the specified module before the SCSI modules are loaded.                             |
-| `--verbose`           | Display verbose information as each module is loaded                                      |
-| `--version`           | Display the version of the mkinitrd program                                               |
-| `--with=module`       | Load the specified module before the SCSI modules are loaded                              |
+       -v, --verbose
+           increase verbosity level
+
+       -f, --force
+           overwrite existing initramfs file.
+
+       *--image-version
+           append the kernel version to the target image
+           <initrd-image>-<kernel-version>.
+
+       --with=<module>
+           add the kernel module <module> to the initramfs.
+
+       --preload=<module>
+           preload the kernel module <module> in the initramfs before
+           any other kernel modules are loaded. This can be used to
+           ensure a certain device naming, which should in theory be
+           avoided and the use of symbolic links in /dev is encouraged.
+
+       --nocompress
+           do not compress the resulting image.
+
+       --help
+           print a help message and exit.
+```
 
 En la mayoría de las situaciones, puede ejecutar el comando `mkinitrd` sin ninguna opción para generar el archivo de imagen de disco RAM inicial:
 
@@ -575,18 +589,36 @@ Las distribuciones de Linux basadas en Debian (como Debian y Ubuntu) utilizan la
 mkinitramfs –o outputfile version
 ```
 
-donde archivo de salida es el archivo de imagen a crear y versión es la versión del kernel. La Tabla 3.4 enumera las opciones que están disponibles.
+donde archivo de salida es el archivo de imagen a crear y versión es la versión del kernel. 
 
+```
+                -c  compress
+                      Override the COMPRESS setting in initramfs.conf.
 
-| Option                                | Description                                                                  |
-| ------------------------------------- | ---------------------------------------------------------------------------- |
-| `-c`                                  | Create a compressed image file.                                              |
-| `-d` `confdir`                        | Set the configuration directory.                                             |
-| `-k`                                  | Retain the temporary directory created to build the initial RAM disk file.   |
-| `-o` `outputfile`                     | Define the output image filename.                                            |
-| `-r` `root`                           | Set the root partition used by the bootloader.                               |
-| `--supported-host-version=hversion`   | Determine if it can create an image for the specified running kernel version |
-| `--supported-target-version=tversion` | Determine if it can create an image for the specified kernel version.        |
+                -d  confdir
+                      Set an alternate configuration directory.
+
+                -k    
+		               Keep the temporary directory used to make the image.
+
+                -o  outfile
+                      Write the image to outfile.
+
+                -r  root
+                      Override the ROOT setting in initramfs.conf.
+
+                -v    
+		              Set the verbose mode output.
+
+                version
+                      Set the kernel version of the initramfs image (defaults to the running kernel).
+
+       --supported-host-version=hversion
+                      This option queries if mkinitramfs can create ramdisks on a running kernel of version hversion.
+
+       --supported-target-version=tversion
+                      This option queries if mkinitramfs can create ramdisks for kernel version tversion.
+```
 
 En la mayoría de las situaciones, puedes usar la opción `-o` para especificar el archivo de imagen de salida:
 
@@ -767,121 +799,168 @@ La desventaja de usar el programa `insmod` es que puede encontrarse con módulos
 
 Otra característica interesante del comando `modprobe` es que comprende los nombres de los módulos y buscará en la biblioteca del módulo el archivo del módulo que proporciona el controlador para el nombre del módulo.
 
-Debido a esta versatilidad, hay muchas opciones disponibles para el comando `modprobe`. La Tabla 3.5 muestra las opciones de línea de comandos que puede utilizar.
+Debido a esta versatilidad, hay muchas opciones disponibles para el comando `modprobe`. 
 
-`-a`, `--all` 
-		Insert all module names on the command line.
-`-b`, `--use-blacklist`
-		This option causes `modprobe` to apply the **blacklist** commands
-		in the configuration files (if any) to module names as well.
-		It is usually used by udev.
-`-C`, `--config`
-	    This option overrides the default configuration directory
-	    (`/etc/modprobe.d`).
-`-c`, `--showconfig`
-	     Dump out the effective configuration from the config
-	    directory and exit.
-`--dump-modversions`
-	    Print out a list of module versioning information required by
-	    a module. This option is commonly used by distributions in
-	    order to package up a Linux kernel module using module
-	    versioning deps.
-`-d`, `--dirname`
-	    Root directory for modules, / by default.
-`--first-time`
-           Normally, `modprobe` will succeed (and do nothing) if told to
-           insert a module which is already present or to remove a
-           module which isn't present. This is ideal for simple scripts;
-           however, more complicated scripts often want to know whether
-           `modprobe` really did something: this option makes modprobe
-           fail in the case that it actually didn't do anything.
-`--force-vermagic`
-           Every module contains a small string containing important
-           information, such as the kernel and compiler versions. If a
-           module fails to load and the kernel complains that the
-           "version magic" doesn't match, you can use this option to
-           remove it. Naturally, this check is there for your
-           protection, so using this option is dangerous unless you know
-           what you're doing.
-`--force-modversion`
-           When modules are compiled with CONFIG_MODVERSIONS set, a
-           section detailing the versions of every interfaced used by
-           (or supplied by) the module is created. If a module fails to
-           load and the kernel complains that the module disagrees about
-           a version of some interface, you can use "--force-modversion"
-           to remove the version information altogether. Naturally, this
-           check is there for your protection, so using this option is
-           dangerous unless you know what you're doing.
-`-f`, `--force`
-           Try to strip any versioning information from the module which
-           might otherwise stop it from loading: this is the same as
-           using both **--force-vermagic** and **--force-modversion**.
-           Naturally, these checks are there for your protection, so
-           using this option is dangerous unless you know what you are
-           doing.
-`-i`, `--ignore-install`, `--ignore-remove`
-           This option causes `modprobe` to ignore **install** and **remove**
-           commands in the configuration file (if any) for the module
-           specified on the command line (any dependent modules are
-           still subject to commands set for them in the configuration
-           file). Both **install** and **remove** commands will currently be
-           ignored when this option is used regardless of whether the
-           request was more specifically made with only one or other
-           (and not both) of **--ignore-install** or **--ignore-remove**.
-`-n`, `--dry-run`, `--show`
-           This option does everything but actually insert or delete the
-           modules (or run the install or remove commands). Combined
-           with **-v**, it is useful for debugging problems. For historical
-           reasons both **--dry-run** and **--show** actually mean the same
-           thing and are interchangeable.
-`-q`, `--quiet`
-           With this flag, `modprobe` won't print an error message if you
-           try to remove or insert a module it can't find (and isn't an
-           alias or **install**/**remove** command). However, it will still
-           return with a non-zero exit status. The kernel uses this to
-           opportunistically probe for modules which might exist using
-           request_module.
-`-R`, `--resolve-alias`
-           Print all module names matching an alias. This can be useful
-           for debugging module alias problems.
-`-r`, `--remove`
-           This option causes `modprobe` to remove rather than insert a
-           module. If the modules it depends on are also unused,
-           `modprobe` will try to remove them too. Unlike insertion, more
-           than one module can be specified on the command line (it does
-           not make sense to specify module parameters when removing
-           modules).
-`-w`, `--wait=TIMEOUT_MSEC`
-           This option causes **modprobe -r** to continue trying to remove a
-           module if it fails due to the module being busy, i.e. its
-           refcount is not 0 at the time the call is made. Modprobe
-           tries to remove the module with an incremental sleep time
-           between each tentative up until the maximum wait time in
-           milliseconds passed in this option.
-`-S`, `--set-version`
-           Set the kernel version, rather than using [uname(2)](https://www.man7.org/linux/man-pages/man2/uname.2.html) to decide
-           on the kernel version (which dictates where to find the
-           modules).
-`--show-depends`
-           List the dependencies of a module (or alias), including the
-           module itself. This produces a (possibly empty) set of module
-           filenames, one per line, each starting with "insmod" and is
-           typically used by distributions to determine which modules to
-           include when generating initrd/initramfs images.  **Install**
-           commands which apply are shown prefixed by "install". It does
-           not run any of the install commands. Note that [modinfo(8)](https://www.man7.org/linux/man-pages/man8/modinfo.8.html) can
-           be used to extract dependencies of a module from the module
-           itself, but knows nothing of aliases or install commands.
-`-s`, `--syslog`
-           This option causes any error messages to go through the
-           syslog mechanism (as LOG_DAEMON with level LOG_NOTICE) rather
-           than to standard error. This is also automatically enabled
-           when stderr is unavailable.
-`-V, `--version`
-           Show version of program and exit.
-`-v`, `--verbose`
-           Print messages about what the program is doing. Usually
-           `modprobe` only prints messages if something goes wrong.
+```
+-a, --all
+           Insert all module names on the command line.
+
+       -b, --use-blacklist
+           This option causes modprobe to apply the blacklist commands
+           in the configuration files (if any) to module names as well.
+           It is usually used by [udev]
+
+       -C, --config
+           This option overrides the default configuration directory
+           (/etc/modprobe.d).
+           This option is passed through install or remove commands to
+           other modprobe commands in the MODPROBE_OPTIONS environment
+           variable.
+
+       -c, --showconfig
+           Dump out the effective configuration from the config
+           directory and exit.
+
+       --dump-modversions
+           Print out a list of module versioning information required by
+           a module. This option is commonly used by distributions in
+           order to package up a Linux kernel module using module
+           versioning deps.
+
+       -d, --dirname
+           Root directory for modules, / by default.
+
+       --first-time
+           Normally, modprobe will succeed (and do nothing) if told to
+           insert a module which is already present or to remove a
+           module which isn't present. This is ideal for simple scripts;
+           however, more complicated scripts often want to know whether
+           modprobe really did something: this option makes modprobe
+           fail in the case that it actually didn't do anything.
+
+       --force-vermagic
+           Every module contains a small string containing important
+           information, such as the kernel and compiler versions. If a
+           module fails to load and the kernel complains that the
+           "version magic" doesn't match, you can use this option to
+           remove it. Naturally, this check is there for your
+           protection, so using this option is dangerous unless you know
+           what you're doing.
+           
+           This applies to any modules inserted: both the module (or
+           alias) on the command line and any modules on which it
+           depends.
+
+       --force-modversion
+           When modules are compiled with CONFIG_MODVERSIONS set, a
+           section detailing the versions of every interfaced used by
+           (or supplied by) the module is created. If a module fails to
+           load and the kernel complains that the module disagrees about
+           a version of some interface, you can use "--force-modversion"
+           to remove the version information altogether. Naturally, this
+           check is there for your protection, so using this option is
+           dangerous unless you know what you're doing.
+
+           This applies any modules inserted: both the module (or alias)
+           on the command line and any modules on which it depends.
+
+       -f, --force
+           Try to strip any versioning information from the module which
+           might otherwise stop it from loading: this is the same as
+           using both --force-vermagic and --force-modversion.
+           Naturally, these checks are there for your protection, so
+           using this option is dangerous unless you know what you are
+           doing.
+
+           This applies to any modules inserted: both the module (or
+           alias) on the command line and any modules it on which it
+           depends.
+
+       -i, --ignore-install, --ignore-remove
+           This option causes modprobe to ignore install and remove
+           commands in the configuration file (if any) for the module
+           specified on the command line (any dependent modules are
+           still subject to commands set for them in the configuration
+           file). Both install and remove commands will currently be
+           ignored when this option is used regardless of whether the
+           request was more specifically made with only one or other
+           (and not both) of --ignore-install or --ignore-remove. .
+
+       -n, --dry-run, --show
+           This option does everything but actually insert or delete the
+           modules (or run the install or remove commands). Combined
+           with -v, it is useful for debugging problems. For historical
+           reasons both --dry-run and --show actually mean the same
+           thing and are interchangeable.
+
+       -q, --quiet
+           With this flag, modprobe won't print an error message if you
+           try to remove or insert a module it can't find (and isn't an
+           alias or install/remove command). However, it will still
+           return with a non-zero exit status. The kernel uses this to
+           opportunistically probe for modules which might exist using
+           request_module.
+
+       -R, --resolve-alias
+           Print all module names matching an alias. This can be useful
+           for debugging module alias problems.
+
+       -r, --remove
+           This option causes modprobe to remove rather than insert a
+           module. If the modules it depends on are also unused,
+           modprobe will try to remove them too. Unlike insertion, more
+           than one module can be specified on the command line (it does
+           not make sense to specify module parameters when removing
+           modules).
+
+           There is usually no reason to remove modules, but some buggy
+           modules require it. Your distribution kernel may not have
+           been built to support removal of modules at all.
+
+       -w, --wait=TIMEOUT_MSEC
+           This option causes modprobe -r to continue trying to remove a
+           module if it fails due to the module being busy, i.e. its
+           refcount is not 0 at the time the call is made. Modprobe
+           tries to remove the module with an incremental sleep time
+           between each tentative up until the maximum wait time in
+           milliseconds passed in this option.
+
+       -S, --set-version
+           Set the kernel version, rather than using [uname] to decide
+           on the kernel version (which dictates where to find the
+           modules).
+
+       --show-depends
+           List the dependencies of a module (or alias), including the
+           module itself. This produces a (possibly empty) set of module
+           filenames, one per line, each starting with "insmod" and is
+           typically used by distributions to determine which modules to
+           include when generating initrd/initramfs images.  Install
+           commands which apply are shown prefixed by "install". It does
+           not run any of the install commands. Note that [modinfo] can
+           be used to extract dependencies of a module from the module
+           itself, but knows nothing of aliases or install commands.
+
+       -s, --syslog
+           This option causes any error messages to go through the
+           syslog mechanism (as LOG_DAEMON with level LOG_NOTICE) rather
+           than to standard error. This is also automatically enabled
+           when stderr is unavailable.
+
+           This option is passed through install or remove commands to
+           other modprobe commands in the MODPROBE_OPTIONS environment
+           variable.
+
+       -V, --version
+           Show version of program and exit.
+
+       -v, --verbose
+           Print messages about what the program is doing. Usually
+           modprobe only prints messages if something goes wrong.
+           This option is passed through install or remove commands to
+           other modprobe commands in the MODPROBE_OPTIONS environment
+           variable.
+```
 
 Como puede ver, el comando `modprobe` es una herramienta con todas las funciones en sí misma. Quizás la característica más útil es que le permite instalar módulos según el nombre del módulo y no tener que enumerar el nombre de archivo completo del módulo:
 
@@ -910,159 +989,404 @@ Hay algunos comandos que puede utilizar para consultar los dispositivos de hardw
 La interfaz de componentes periféricos (PCI) es un antiguo estándar de PC compatible con IBM para conectar placas de hardware a placas base de PC. El estándar se ha actualizado varias veces para adaptarse a velocidades de interfaz más rápidas, así como para aumentar el tamaño del bus de datos en las placas base. El estándar PCI Express (PCIe) se utiliza actualmente en la mayoría de los servidores y estaciones de trabajo de escritorio para proporcionar una interfaz común para tarjetas de hardware externas, como Fast Ethernet y compatibilidad con unidades SCSI externas.
 
 El kernel de Linux admite los estándares PCI y PCIe y, por lo general, puede detectar e interactuar con una placa PCI o PCIe cuando se carga el módulo de controlador adecuado.
-El comando `lspci` le permite ver las tarjetas PCI y PCIe actualmente instaladas y reconocidas en el sistema Linux. Puede incluir varias opciones de línea de comandos con el comando `lspci` para mostrar información diversa sobre las tarjetas PCI y PCIe instaladas en el sistema. La Tabla 3.6 muestra las opciones más comunes que resultan útiles.
+El comando `lspci` le permite ver las tarjetas PCI y PCIe actualmente instaladas y reconocidas en el sistema Linux. Puede incluir varias opciones de línea de comandos con el comando `lspci` para mostrar información diversa sobre las tarjetas PCI y PCIe instaladas en el sistema. 
 
 ```
-**Basic display modes**
-       **-m**     Dump PCI device data in a backward-compatible machine
-              readable form.  See below for details.
+  Basic display modes
 
-       **-mm**    Dump PCI device data in a machine readable form for easy
-              parsing by scripts.  See below for details.
+       -m     Dump PCI device data in a backward-compatible machine
+              readable form.  See below for details.
 
-       **-t**     Show a tree-like diagram containing all buses, bridges,
-              devices and connections between them.
+       -mm    Dump PCI device data in a machine readable form for easy
+              parsing by scripts.  See below for details.
 
-   **Display options**
-       **-v**     Be verbose and display detailed information about all
-              devices.
+       -t     Show a tree-like diagram containing all buses, bridges,
+              devices and connections between them.
 
-       **-vv**    Be very verbose and display more details. This level
-              includes everything deemed useful.
+   Display options
 
-       **-vvv**   Be even more verbose and display everything we are able to
-              parse, even if it doesn't look interesting at all (e.g.,
-              undefined memory regions).
+       -v     Be verbose and display detailed information about all
+              devices.
 
-       **-k**     Show kernel drivers handling each device and also kernel
-              modules capable of handling it.  Turned on by default when
-              **-v** is given in the normal mode of output.  (Currently
-              works only on Linux with kernel 2.6 or newer.)
+       -vv    Be very verbose and display more details. This level
 
-       **-x**     Show hexadecimal dump of the standard part of the
-              configuration space (the first 64 bytes or 128 bytes for
-              CardBus bridges).
+              includes everything deemed useful.
 
-       **-xxx**   Show hexadecimal dump of the whole PCI configuration
-              space. It is available only to root as several PCI devices
-              **crash** when you try to read some parts of the config space
-              (this behavior probably doesn't violate the PCI standard,
-              but it's at least very stupid). However, such devices are
-              rare, so you needn't worry much.
+       -vvv   Be even more verbose and display everything we are able to
+              parse, even if it doesn't look interesting at all (e.g.,
+              undefined memory regions).
 
-       **-xxxx**  Show hexadecimal dump of the extended (4096-byte) PCI
-              configuration space available on PCI-X 2.0 and PCI Express
-              buses.
+       -k     Show kernel drivers handling each device and also kernel
+              modules capable of handling it.  Turned on by default when
+              -v is given in the normal mode of output.  (Currently
+              works only on Linux with kernel 2.6 or newer.)
 
-       **-b**     Bus-centric view. Show all IRQ numbers and addresses as
-              seen by the cards on the PCI bus instead of as seen by the
-              kernel.
+       -x     Show hexadecimal dump of the standard part of the
+              configuration space (the first 64 bytes or 128 bytes for
+              CardBus bridges).
 
-       **-D**     Always show PCI domain numbers. By default, lspci
-              suppresses them on machines which have only domain 0.
+       -xxx   Show hexadecimal dump of the whole PCI configuration
+              space. It is available only to root as several PCI devices
+              crash when you try to read some parts of the config space
+              (this behavior probably doesn't violate the PCI standard,
+              but it's at least very stupid). However, such devices are
+              rare, so you needn't worry much.
 
-       **-P**     Identify PCI devices by path through each bridge, instead
-              of by bus number.
+       -xxxx  Show hexadecimal dump of the extended (4096-byte) PCI
+              configuration space available on PCI-X 2.0 and PCI Express
+              buses.
 
-       **-PP**    Identify PCI devices by path through each bridge, showing
-              the bus number as well as the device number.
+       -b     Bus-centric view. Show all IRQ numbers and addresses as
+              seen by the cards on the PCI bus instead of as seen by the
+              kernel.
 
-   **Options to control resolving ID's to names**
-       **-n**     Show PCI vendor and device codes as numbers instead of
-              looking them up in the PCI ID list.
+       -D     Always show PCI domain numbers. By default, lspci
+              suppresses them on machines which have only domain 0.
 
-       **-nn**    Show PCI vendor and device codes as both numbers and
-              names.
+       -P     Identify PCI devices by path through each bridge, instead
+              of by bus number.
 
-       **-q**     Use DNS to query the central PCI ID database if a device
-              is not found in the local **pci.ids** file. If the DNS query
-              succeeds, the result is cached in **~/.pciids-cache** and it
-              is recognized in subsequent runs even if **-q** is not given
-              any more. Please use this switch inside automated scripts
-              only with caution to avoid overloading the database
-              servers.
+       -PP    Identify PCI devices by path through each bridge, showing
+              the bus number as well as the device number.
 
-       **-qq**    Same as **-q**, but the local cache is reset.
+   Options to control resolving ID's to names
 
-       **-Q**     Query the central database even for entries which are
-              recognized locally.  Use this if you suspect that the
-              displayed entry is wrong.
+       -n     Show PCI vendor and device codes as numbers instead of
+              looking them up in the PCI ID list.
 
-   **Options for selection of devices**
-       **-s [[[[<domain>]:]<bus>]:][<device>][.[<func>]]**
-              Show only devices in the specified domain (in case your
-              machine has several host bridges, they can either share a
-              common bus number space or each of them can address a PCI
-              domain of its own; domains are numbered from 0 to ffff),
-              bus (0 to ff), device (0 to 1f) and function (0 to 7).
-              Each component of the device address can be omitted or set
-              to "*", both meaning "any value". All numbers are
-              hexadecimal.  E.g., "0:" means all devices on bus 0, "0"
-              means all functions of device 0 on any bus, "0.3" selects
-              third function of device 0 on all buses and ".4" shows
-              only the fourth function of each device.
+       -nn    Show PCI vendor and device codes as both numbers and
+              names.
 
-       **-d [<vendor>]:[<device>][:<class>[:<prog-if>]]**
-              Show only devices with specified vendor, device, class ID,
-              and programming interface.  The ID's are given in
-              hexadecimal and may be omitted or given as "*", both
-              meaning "any value". The class ID can contain "x"
-              characters which stand for "any digit".
+       -q     Use DNS to query the central PCI ID database if a device
+              is not found in the local pci.ids file. If the DNS query
+              succeeds, the result is cached in ~/.pciids-cache and it
+              is recognized in subsequent runs even if -q is not given
+              any more. Please use this switch inside automated script
+              only with caution to avoid overloading the database
+              servers.
 
-   **Other options**
-       **-i <file>**
-              Use **<file>** as the PCI ID list instead of
-              /usr/local/share/pci.ids.
+       -qq    Same as -q, but the local cache is reset.
 
-       **-p <file>**
-              Use **<file>** as the map of PCI ID's handled by kernel
-              modules. By default, lspci uses
-              /lib/modules/_kernel_version_/modules.pcimap.  Applies only
-              to Linux systems with recent enough module tools.
+       -Q     Query the central database even for entries which are
+              recognized locally.  Use this if you suspect that the
+              displayed entry is wrong.
 
-       **-M**     Invoke bus mapping mode which performs a thorough scan of
-              all PCI devices, including those behind misconfigured
-              bridges, etc. This option gives meaningful results only
-              with a direct hardware access mode, which usually requires
-              root privileges.  By default, the bus mapper scans domain.
-              You can use the **-s** option to select a different domain.
+   Options for selection of devices
 
-       **--version**
-              Shows _lspci_ version. This option should be used stand-
-              alone.
+       -s [[[[<domain>]:]<bus>]:][<device>][.[<func>]]
 
-   **PCI access options**
-       The PCI utilities use the PCI library to talk to PCI devices (see
-       [pcilib(7)](https://man7.org/linux/man-pages/man7/pcilib.7.html) for details). You can use the following options to
-       influence its behavior:
+              Show only devices in the specified domain (in case your
+              machine has several host bridges, they can either share a
+              common bus number space or each of them can address a PCI
+              domain of its own; domains are numbered from 0 to ffff),
+              bus (0 to ff), device (0 to 1f) and function (0 to 7).
+              Each component of the device address can be omitted or set
+              to "*", both meaning "any value". All numbers are
+              hexadecimal.  E.g., "0:" means all devices on bus 0, "0"
+              means all functions of device 0 on any bus, "0.3" selects
+              third function of device 0 on all buses and ".4" shows
+              only the fourth function of each device.
 
-       **-A <method>**
-              The library supports a variety of methods to access the
-              PCI hardware.  By default, it uses the first access method
-              available, but you can use this option to override this
-              decision. See **-A help** for a list of available methods and
-              their descriptions.
+       -d [<vendor>]:[<device>][:<class>[:<prog-if>]]
 
-       **-O <param>=<value>**
-              The behavior of the library is controlled by several named
-              parameters.  This option allows one to set the value of
-              any of the parameters. Use **-O help** for a list of known
-              parameters and their default values.
+              Show only devices with specified vendor, device, class ID,
+              and programming interface.  The ID's are given in
+              hexadecimal and may be omitted or given as "*", both
+              meaning "any value". The class ID can contain "x"
+              characters which stand for "any digit".
 
-       **-H1**    Use direct hardware access via Intel configuration
-              mechanism 1.  (This is a shorthand for **-A intel-conf1**.)
+   Other options
 
-       **-H2**    Use direct hardware access via Intel configuration
-              mechanism 2.  (This is a shorthand for **-A intel-conf2**.)
+       -i <file>
+              Use <file> as the PCI ID list instead of
+              /usr/local/share/pci.ids.
 
-       **-F <file>**
-              Instead of accessing real hardware, read the list of
-              devices and values of their configuration registers from
-              the given file produced by an earlier run of lspci -x.
-              This is very useful for analysis of user-supplied bug
-              reports, because you can display the hardware
-              configuration in any way you want without disturbing the
-              user with requests for more dumps.
+       -p <file>
+              Use <file> as the map of PCI ID's handled by kernel
+              modules. By default, lspci uses
+              /lib/modules/_kernel_version_/modules.pcimap.  Applies only
+              to Linux systems with recent enough module tools.
 
-       **-G**     Increase debug level of the library.
+       -M     Invoke bus mapping mode which performs a thorough scan of
+              all PCI devices, including those behind misconfigured
+              bridges, etc. This option gives meaningful results only
+              with a direct hardware access mode, which usually requires
+              root privileges.  By default, the bus mapper scans domain.
+              You can use the -s option to select a different domain.
+
+       --version
+              Shows _lspci_ version. This option should be used stand-
+              alone.
+
+   PCI access options
+
+       The PCI utilities use the PCI library to talk to PCI devices (see
+       [pcilib] for details). You can use the following options to
+       influence its behavior:
+
+       -A <method>
+              The library supports a variety of methods to access the
+              PCI hardware.  By default, it uses the first access method
+              available, but you can use this option to override this
+              decision. See -A help for a list of available methods and
+              their descriptions.
+
+       -O <param>=<value>
+              The behavior of the library is controlled by several named
+              parameters.  This option allows one to set the value of
+              any of the parameters. Use -O help for a list of known
+              parameters and their default values.
+
+       -H1    Use direct hardware access via Intel configuration
+              mechanism 1.  (This is a shorthand for -A intel-conf1.)
+
+       -H2    Use direct hardware access via Intel configuration
+              mechanism 2.  (This is a shorthand for -A intel-conf2.)
+
+       -F <file>
+              Instead of accessing real hardware, read the list of
+              devices and values of their configuration registers from
+              the given file produced by an earlier run of lspci -x.
+              This is very useful for analysis of user-supplied bug
+              reports, because you can display the hardware
+              configuration in any way you want without disturbing the
+              user with requests for more dumps.
+
+       -G     Increase debug level of the library.
 ```
+
+La salida del comando `lspci` sin ninguna opción muestra todos los dispositivos conectados al sistema, como se muestra en el Listado 3.8.
+
+```sh
+lspci
+
+00:00.0 Host bridge: Intel Corporation 440FX—82441FX PMC [Natoma] (rev 02)
+00:01.0 ISA bridge: Intel Corporation 82371SB PIIX3 ISA [Natoma/Triton II]
+00:01.1 IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)
+00:02.0 VGA compatible controller: InnoTek Systemberatung GmbH VirtualBox
+Graphics Adapter
+00:03.0 Ethernet controller: Intel Corporation 82540EM Gigabit Ethernet
+Controller (rev 02)
+00:04.0 System peripheral: InnoTek Systemberatung GmbH VirtualBox Guest Service
+00:05.0 Multimedia audio controller: Intel Corporation 82801AA AC'97' Audio
+Controller (rev 01)
+00:06.0 USB controller: Apple Inc. KeyLargo/Intrepid USB
+00:07.0 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 08)
+00:0d.0 SATA controller: Intel Corporation 82801HM/HEM (ICH8M/ICH8M-E) SATA
+Controller [AHCI mode] (rev 02)
+```
+
+Puede utilizar el resultado del comando `lspci` para solucionar problemas de la tarjeta PCI, como si el sistema PnP no reconoce una tarjeta.
+### Trabajar con dispositivos USB
+Con diferencia, el estándar más popular utilizado para los dispositivos hoy en día es el bus serie universal (USB). USB es tanto un protocolo como un estándar de hardware para transferir datos entre dispositivos de hardware.
+
+Hablando de los diferentes tipos o versiones de estándares de USB, los cuales se clasifican en cuatro tipos **dependiendo de la velocidad a la que transfieren sus datos**. Antes de su lanzamiento oficial en 1996, el USB tuvo algunas versiones previas como el USB 0.7 y 0.8 de 1994, el 0.9 de 1995 y el 0.00 de agosto del 96, pero nosotros comenzaremos a partir de la versión 1.0, aunque teniendo en cuenta que ya son tan antiguos que son difíciles de encontrar.
+
+- **USB 1.0**: Son los más antiguos, y el estándar USB de menor menor velocidad. Su tasa de transferencia es de **hasta 1,5 Mbit/s (188 kB/s)**, y es utilizado sobre todo en interfaces humanas como los teclados, los ratones o las webcams.
+- **USB 1.1**: Es la mejora del 1.0 conocida como de velocidad completa o “plug and play“. Su tasa de transferencia sube **hasta 12 Mbit/s (1,5 MB/s)**, aunque todavía estaba lejos de las velocidades que alcanzarían los siguientes estándares.
+- **USB 2.0**: Conocida también como de alta velocidad, alcanza tasas de transferencia de **hasta 480 Mbit/s (60 MB/s)**, aunque en la práctica suele quedarse en _280 Mbit/s (35 MB/s)_. Es el estándar más extendido de momento, y cuenta con dos líneas para datos y dos de alimentación de alta velocidad. También puede cargar dispositivos a 2,5 W de potencia.
+- **USB 3.0**: También se le llama de velocidad super alta, y tiene una tasa de transferencia de **hasta 4,8 Gbit/s (600 MB/s)**, diez veces superior a la velocidad del USB 2.0 gracias a sus cinco contactos adicionales.
+- **USB 3.1**: Se le denomina de velocidad super alta+ o _SuperSpeed_, y duplica la velocidad de su predecesor, con una tasa de transferencia de **hasta 10 Gbit/s (1,25 GB/s)**. Es el que suele ser utilizado por los conectores de Tipo C que te vamos a explicar un poco más adelante.
+- **USB 3.2**: Presentado en febrero del 2019. Será capaz de ofrecer tasas de transferencia de **hasta 20 Gbit/s (2,5 GB/s)**, y los primeros periféricos en utilizarlo llegaron en 2020.
+- **USB 4.0**: Presentado también en 2019, es el estándar más reciente hasta la fecha. El USB4 será capaz de ofrecer tasas de transferencia de **hasta 40 Gbit/s (5 GB/s)**, y los primeros equipos en utilizarlo han llegado en 2021.
+
+Puede ver la información básica sobre los dispositivos USB conectados a su sistema Linux utilizando el comando `lsusb`.
+
+```
+-v, --verbose
+
+Tells _lsusb_ to be verbose and display detailed information about the devices shown. This includes configuration descriptors for the device's current speed. Class descriptors will be shown, when available, for USB device classes including hub, audio, HID, communications, and chipcard.
+
+-s [[_bus_]:][_devnum_]
+
+Show only devices in specified _bus_ and/or _devnum._ Both ID's are given in decimal and may be omitted.
+
+-d [_vendor_]:[_product_]
+
+Show only devices with the specified vendor and product ID. Both ID's are given in hexadecimal.
+
+-D _device_
+
+Do not scan the /dev/bus/usb directory, instead display only information about the device whose device file is given. The device file should be something like /dev/bus/usb/001/001. This option displays detailed information like the v option; you must be root to do this.
+
+-t
+
+Tells _lsusb_ to dump the physical USB device hierarchy as a tree. This overrides the v option.
+
+-V, --version
+
+Print version information on standard output, then exit successfully.
+```
+
+La salida básica de `lsusb` se muestra en el Listado 3.9.
+
+```sh
+lsusb
+Bus 001 Device 004: ID 1908:1320 GEMBIRD PhotoFrame PF-15–1
+Bus 001 Device 003: ID 80ee:0022 VirtualBox
+Bus 001 Device 002: ID 80ee:0021 VirtualBox USB Tablet
+Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+```
+
+Una vez que vea la lista de dispositivos USB, puede obtener más información para un dispositivo específico usando las opciones `–d` y `–v`.
+### Detección automática de hardware
+El hardware informático generalmente se clasifica en dos tipos:
+- Dispositivos Coldplug
+- Dispositivos Hotplug
+
+Los dispositivos Coldplug son hardware que se pueden conectar al sistema solo cuando está completamente apagado. Por lo general, incluyen elementos que se encuentran comúnmente dentro de la carcasa de la computadora, como memoria, tarjetas PCI y discos duros. No puede eliminar ninguna de estas cosas mientras el sistema está funcionando.
+
+Por el contrario, normalmente puedes agregar y quitar dispositivos hotplug en cualquier momento. Suelen ser componentes externos, como conexiones de red, monitores y dispositivos USB. El truco con los dispositivos hotplug es que de alguna manera el kernel de Linux necesita saber cuándo está conectado un dispositivo hotplug y cargar automáticamente el módulo de controlador de dispositivo correcto para admitir el dispositivo.
+
+El administrador de dispositivos `udev` es un programa que se ejecuta en segundo plano en sistemas Linux y escucha las notificaciones del kernel sobre dispositivos de hardware. A medida que se conectan nuevos dispositivos de hardware al sistema en ejecución o se eliminan dispositivos de hardware existentes, el kernel envía mensajes de eventos de notificación.
+
+El programa `udevd` se ejecuta en segundo plano y escucha estos mensajes de notificación. El funcionamiento general del programa `udevd` está controlado por la configuración del archivo de configuración `/etc/udev/udev.conf`.
+El programa `udevd` compara los mensajes del kernel con reglas definidas en un conjunto de archivos de configuración, normalmente almacenados en las carpetas `/etc/udev/rules.d` y `/lib/udev/rules.d`. Si un dispositivo coincide con una regla definida, `udevd` actúa sobre la notificación del evento según lo definido por la regla. Las reglas del dispositivo definen qué módulo del kernel cargar para admitir el dispositivo y qué nombre de dispositivo asignarle.
+
+Cada distribución de Linux define un conjunto estándar de reglas que debe seguir `udevd`. Las reglas definen acciones como montar memorias USB en la carpeta `/media` o asignar una tarjeta de red USB al dispositivo `/dev/eth0`.
+Puede modificar las reglas predeterminadas definidas por su distribución de Linux, pero normalmente no es necesario.
+### Solución de problemas del Kernel
+Si algo sale mal con el kernel, hay algunas herramientas disponibles para ayudarle a solucionar problemas.
+### Mostrando la versión del kernel
+Antes de poder solucionar muchos problemas, querrá saber qué versión del kernel está iniciando su sistema. El comando `uname` puede proporcionar bastante información útil aquí. De forma predeterminada, el comando `uname` muestra una cadena que no es demasiado útil:
+
+```sh
+uname
+Linux
+```
+
+En realidad, este es el nombre del kernel que se está ejecutando. Para obtener mucha más información, utilice la opción `–a`:
+
+```sh
+uname -a
+Linux ubuntu02 3.13.0–63-generic 103-Ubuntu SMP Fri Aug 14 21:42:59 UTC
+2015 x86_64 x86_64 x86_64 GNU/Linux
+```
+
+Ahora eso es más útil. La información proporcionada por el comando `uname` es la siguiente:
+- El nombre del kernel (Linux)
+- El nombre de host de la red del sistema (ubuntu02)
+- La versión del kernel (3.13.0–63-genérica)
+- La versión del kernel (#103 Ubuntu SMP viernes 14 de agosto a las 21:42:59 UTC de 2015)
+- El nombre del hardware de la máquina (x86_64)
+- El tipo de procesador (x86_64)
+- El sistema operativo (GNU/Linux)
+
+```
+   Print certain system information.  With no OPTION, same as -s.
+
+       -a, --all
+              print all information, in the following order, except omit
+              -p and -i if unknown:
+
+       -s, --kernel-name
+              print the kernel name
+
+       -n, --nodename
+              print the network node hostname
+
+       -r, --kernel-release
+              print the kernel release
+
+       -v, --kernel-version
+              print the kernel version
+
+       -m, --machine
+
+              print the machine hardware name
+
+       -p, --processor
+              print the processor type (non-portable)
+
+       -i, --hardware-platform
+              print the hardware platform (non-portable)
+
+       -o, --operating-system
+              print the operating system
+
+       --help display this help and exit
+
+       --version
+              output version information and exit
+```
+
+El comando `uname` es el primer lugar al que acudir cuando necesita verificar qué kernel se cargó en el momento del arranque, especialmente si tiene varios kernels configurados en su sistema.
+### El sistema de archivos `/proc`
+El kernel de Linux crea un pseudodirectorio dinámico llamado `/proc` que le permite echar un vistazo a la información de configuración y rendimiento relacionada con el kernel mientras se ejecuta.
+
+El sistema de archivos `/proc` contiene información sobre el hardware, como solicitudes de interrupción asignadas (`/proc/interrupts`), puertos de E/S (`/proc/ioports`) y canales de acceso directo a memoria (DMA) (`/proc/dma`). Ver esta información es tan fácil como usar el comando `cat` para mostrar el contenido del archivo. El Listado 3.10 muestra la salida del archivo `/proc/interrupts`.
+
+```sh
+cat /proc/interrupts
+           CPU0
+  0:        129    XT-PIC-XT-PIC    timer
+  1:        986    XT-PIC-XT-PIC    i8042
+  2:          0    XT-PIC-XT-PIC    cascade
+  8:          0    XT-PIC-XT-PIC    rtc0
+  9:       4808    XT-PIC-XT-PIC    acpi, vboxguest
+ 10:       9827    XT-PIC-XT-PIC    eth0
+ 11:      32914    XT-PIC-XT-PIC    ohci_hcd:usb1, ahci, snd_intel8x0
+ 12:        505    XT-PIC-XT-PIC    i8042
+ 14:       2440    XT-PIC-XT-PIC    ata_piix
+ 15:          0    XT-PIC-XT-PIC    ata_piix
+NMI:          0   Non-maskable interrupts
+LOC:     119411   Local timer interrupts
+SPU:          0   Spurious interrupts
+PMI:          0   Performance monitoring interrupts
+IWI:      19157   IRQ work interrupts
+RTR:          0   APIC ICR read retries
+RES:          0   Rescheduling interrupts
+CAL:          0   Function call interrupts
+TLB:          0   TLB shootdowns
+TRM:          0   Thermal event interrupts
+THR:          0   Threshold APIC interrupts
+MCE:          0   Machine check exceptions
+MCP:          9   Machine check polls
+ERR:          0
+MIS:          0
+```
+
+Puede utilizar el comando `lsdev` para mostrar la información de hardware que se encuentra en el sistema de archivos `/proc` en una tabla sencilla, como se muestra en el Listado 3.11. Es posible que tengas que instalar el comando ya que muchas distribuciones de Linux no lo instalan de forma predeterminada.
+
+```sh
+lsdev
+Device            DMA   IRQ  I/O Ports
+————————————————————————
+0000:00:01.1                 0170–0177 01f0–01f7 0376–0376 03f6–03f6
+0000:00:03.0                 d010-d017
+0000:00:04.0                 d020-d03f
+0000:00:05.0                 d100-d1ff d200-d23f
+0000:00:0d.0                 d240-d247 d250-d257 d260-d26f
+ACPI                         4000–4003 4004–4005 4008–400b 4020–4021 ahci                         d240-d247   d250-d257   d260-d26f 
+ata_piix            14   15  0170–0177 01f0–01f7 0376–0376 03f6–03f6
+cascade             4     2 
+dma                          0080–008f 
+dma1                         0000–001f 
+dma2                         00c0–00df 
+e1000                        d010-d017
+eth0                     10 
+fpu                          00f0–00ff
+i8042               1    12
+Intel                        d100-d1ff   d200-d23f 
+keyboard                     0060–0060 0064–0064 
+PCI                          0cf8–0cff 
+pic1                         0020–0021 
+pic2                         00a0–00a1 
+rtc0                      8  0070–0071 
+rtc_cmos                     0070–0071
+snd_intel8x0             11 
+timer                     0 
+timer0                       0040–0043 
+timer1                       0050–0053
+vboxguest                 9
+vesafb                       03c0–03df 
+```
+
+Encontrará información del kernel en la carpeta `/proc/sys/kernel`, que contiene archivos que puede leer para obtener información del kernel y escribir para configurar los parámetros del kernel. Leer los parámetros del kernel es tan fácil como usar el comando `cat`:
+
+```sh
+cat /proc/sys/kernel/version
+103-Ubuntu SMP Fri Aug 14 21:42:59 UTC 2015
+```
+
+Puede configurar los parámetros del kernel escribiendo directamente en el archivo del sistema de archivos `/proc` o usando el comando `sysctl`. Puede especificar el parámetro y el valor del kernel en la línea de comando `sysctl`, o puede especificar un grupo de parámetros y valores en el archivo de configuración `/etc/sysctl.conf`, que el comando `sysctl` leerá y procesará. La mayoría de las distribuciones de Linux también utilizan una carpeta `/etc/sysctl.d`, que contiene varios archivos de configuración de parámetros del kernel. Esto ayuda a organizar la configuración.
