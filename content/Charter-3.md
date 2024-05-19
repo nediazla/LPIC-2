@@ -305,26 +305,46 @@ Otra parte importante de los archivos del kernel de Linux es la documentación d
 Debido al tamaño de los archivos, los archivos de documentación del kernel a menudo se instalan por separado del paquete de código fuente del kernel en las versiones de distribución, pero si descarga el código fuente del kernel desde el sitio web www.kernel.org, se incluyen. Los archivos de documentación del kernel generalmente se instalan en la estructura de directorios `/usr/src/linux/Documentation`, pero pueden estar en la estructura de directorios `/usr/src/kernels` para sistemas basados en Red Hat.
 ### Versiones del Kernel
 Una de las partes más confusas de trabajar con el kernel de Linux es el sistema de versiones. A lo largo de la historia del kernel de Linux se han implementado seis versiones diferentes del sistema. Esta sección analiza los diferentes números de versión del kernel y describe cómo interpretar lo que significa cada uno.
-### Los lanzamientos originales del kernel
-Cuando Linus lanzó el kernel de Linux original en septiembre de 1991, le asignó la versión 0.01. Al comenzar con la versión 0, indicó que era principalmente para pruebas y no estaba destinada a ser utilizada como ningún tipo de sistema de producción para manejar datos importantes.
+### Historial de versiones del kernel de Linux
 
-A medida que el sistema Linux se hizo popular y se hicieron nuevas adiciones, las versiones actualizadas aún mantuvieron el número de versión principal 0 y aumentaron la parte después del punto para indicar cada versión más nueva (como 0.01, 0.02, etc.). Este método de versión se mantuvo en uso hasta la versión 0.95, que se lanzó en marzo de 1992.
-### La serie Linux versión 1
-En marzo de 1994, Linus lanzó la primera versión de producción de Linux como la versión 1.0. Esta versión inició un sistema de versiones estándar que seguía el formato 1.x.y.
-En este formato, la x representa el número de versión principal. Los lanzamientos de versiones principales con números impares indican una versión de prueba (o desarrollo), mientras que los lanzamientos de versiones pares indican una versión de producción. La y indica niveles incrementales de versiones de parches menores dentro de las versiones principales. Este método de versión estuvo en uso hasta la versión 1.3, lanzada en mayo de 1995.
-### La serie Linux versión 2
-Después de la versión 1.3, Linus determinó que la siguiente versión contenía suficientes cambios para garantizar un nuevo número de versión principal, y la versión 2.0 se lanzó en junio de 1996. Los núcleos de la serie de la versión 2 mantuvieron el formato 2.x.y al igual que la serie de la versión 1, con Los lanzamientos principales con números impares indican lanzamientos de prueba y los lanzamientos principales con números pares indican lanzamientos de producción. Este método estuvo en uso hasta la versión 2.4, lanzada en enero de 2001.
-### La serie Linux versión 2.6
-En diciembre de 2003, Linus lanzó la versión 2.6.0 del kernel de Linux e inició otro nuevo sistema de versiones. Sintió que el kernel principal de Linux era bastante estable y decidió mantener el número de versión 2.6 y comenzar un nuevo formato de numeración. Las versiones más recientes del kernel de Linux usaban el formato 2.6.x.y.
+En abril de 1991, Linus Torvalds, de 21 años, empezó a trabajar en unas simples ideas para un núcleo de un sistema operativo. Comenzó intentando obtener un núcleo de sistema operativo gratuito similar a Unix que funcionara con microprocesadores Intel 80386. Para ello tomó como base al sistema Minix (un clon de Unix) e hizo un núcleo monolítico compatible que inicialmente requería software de Minix para funcionar.​ El 26 de agosto de 1991 Torvalds escribió en el grupo de noticias comp.os.minix:
 
-El 2.6 se mantuvo constante, desplazando el número de versión principal hacia abajo un nivel al tercer número (la x) y el número de parche menor incremental como el cuarto número (la y).
-Otra cosa que cambió con la versión 2.6 fue que todos los lanzamientos eran lanzamientos de producción. Las versiones de desarrollo utilizaron una designación `-rc` después del final de la versión del kernel (para la versión candidata). Cuando una versión se consideraba estable para producción, se eliminaba `-rc`. Este método permaneció en uso hasta la versión 2.6.39 en mayo de 2011.
-### La serie Linux versión 3
-En julio de 2011, Linus celebró el vigésimo aniversario del kernel de Linux iniciando la serie de la versión 3 con la versión 3.0. El lanzamiento de la nueva versión volvió a utilizar el sistema de lanzamiento 3.x.y de tres dígitos, donde x representa los lanzamientos principales y y los lanzamientos incrementales de parches menores. Sin embargo, la serie de la versión 3 mantuvo la designación `-rc` para las versiones de desarrollo iniciadas en la serie de versiones 2.6. Este método permaneció en uso hasta la versión 3.19 en febrero de 2015.
-### La serie Linux versión 4
-En abril de 2015, Linus determinó que era hora de realizar otro cambio importante en la versión de lanzamiento y, por lo tanto, la serie de la versión 4 comenzó con la versión 4.0. La serie de la versión 4 mantiene el sistema de lanzamiento 4.x.y y también utiliza la designación `-rc` para los lanzamientos de prueba. 
+```
+"Estoy haciendo un sistema operativo (gratuito, solo un pasatiempo, no será nada grande ni profesional como GNU para clones AT 386(486). Llevo en ello desde abril y está empezando a estar listo. Me gustaría saber su opinión sobre las cosas que les gustan o disgustan en minix, ya que mi SO tiene algún parecido con él. Actualmente he portado bash(1.08) y gcc(1.40), y parece que las cosas funcionan. Esto implica que tendré algo práctico dentro de unos meses..."
+```
 
-Al momento de escribir este resumen nos encontramos en la version 6.7.
+Tras dicho mensaje, muchas personas ayudaron con el código. En septiembre de 1991 se lanzó la versión 0.01 de Linux. Tenía 10.239 líneas de código. En octubre de ese año (1991), salió la versión 0.02 de Linux; luego, en diciembre se lanzó la versión 0.11(1991). Esta versión fue la primera en ser self-hosted (autoalbergada). Es decir, Linux 0.11 podía ser compilado por una computadora que ejecutase Linux 0.11, mientras que las versiones anteriores de Linux se compilaban usando otros sistemas operativos. Cuando lanzó la siguiente versión, Torvalds adoptó la GPL como su propio boceto de licencia, la cual no permite su redistribución con otra licencia que no sea GPL. Antes de este cambio, se impedía el cobro por la distribución del código fuente.
+
+Se inició un grupo de noticias llamado alt.os.linux y el 19 de enero de 1992 se publicó en ese grupo la primera publicación (post). El 31 de marzo, alt.os.linux se convirtió en comp.os.linux. XFree86, una implementación del X Window System, fue portada a Linux, la versión del núcleo 0.95 fue la primera en ser capaz de ejecutarla. Este gran salto de versiones (de 0.1x a 0.9x) fue por la sensación de que una versión 1.0 acabada no parecía estar lejos. Sin embargo, estas previsiones resultaron ser un poco optimistas: desde 1993 hasta principios de 1994 se desarrollaron 15 versiones diferentes de 0.99 (llegando a la versión 0.99r15).
+
+El 14 de marzo de 1994, salió Linux 1.0.0, que constaba de 176.250 líneas de código. En marzo de 1995 se lanzó Linux 1.2.0, que ya estaba compuesto de 310.950 líneas de código.
+### Cronología 
+***1991***: El núcleo de Linux es anunciado públicamente el 25 de agosto por el estudiante finlandés de 21 años Linus Benedict Torvalds.16​ La versión 0.01 es lanzada públicamente el 17 de septiembre.
+***1992***: El núcleo de Linux cambia de licencia a la GPL de GNU. Se crean las primeras distribuciones de Linux.
+***1993***: Más de 100 desarrolladores trabajan en el núcleo de Linux. Con su ayuda, el núcleo se adapta al entorno GNU, lo que crea un amplio espectro de tipos de aplicaciones para Linux. Se lanza por primera vez la distribución de Linux más antigua que existe actualmente, Slackware. Más tarde en el mismo año, se establece el proyecto Debian. Hoy en día es la distribución comunitaria más grande.
+***1994***: Torvalds considera que todos los componentes del núcleo están completamente maduros: lanza la versión 1.0 de Linux. El proyecto XFree86 contribuye con una interfaz gráfica de usuario (GUI). Los fabricantes comerciales de distribuciones de Linux, como Red Hat y SUSE, publican la versión 1.0 de sus distribuciones de Linux.
+***1995***: Linux se porta a la arquitectura DEC Alpha y a la Sun SPARC. En los años siguientes se porta a un número cada vez mayor de plataformas.
+***1996***: Se lanza la versión 2.0 del núcleo de Linux. El núcleo ahora puede servir a varios procesadores al mismo tiempo utilizando multiprocesamiento simétrico (SMP), convirtiéndose así en una alternativa seria para muchas empresas.
+***1998***: Muchas empresas importantes como IBM, Compaq y Oracle anuncian su apoyo a Linux. La catedral y el bazar se publica por primera vez como un ensayo (más tarde como un libro), lo que resulta en que Netscape publique públicamente el código fuente de su suite de navegadores web Netscape Communicator. Las acciones de Netscape y la referencia al ensayo18​ llaman la atención del popular prensa técnica sobre el modelo de desarrollo de código abierto de Linux. Además, un grupo de programadores comienza a desarrollar la interfaz gráfica de usuario KDE. Linux aparece por primera vez en la lista TOP500 de supercomputadoras más rápidas.​ El puerto ARM (iniciado en 199420​21​) se fusiona.
+***1998***: David A. Bader inventa el primer supercomputador basado en Linux utilizando piezas de consumo.
+***1999***: Un grupo de desarrolladores comienza a trabajar en el entorno gráfico GNOME, destinado a convertirse en un reemplazo gratuito de KDE, que en ese momento dependía del entonces propietario kit de herramientas Qt. Durante el año, IBM anuncia un extenso proyecto para el soporte de Linux. Se lanza la versión 2.2 del núcleo de Linux.
+***2000***: Dell anuncia que ahora es el segundo proveedor mundial de sistemas basados en Linux y el primer fabricante importante en ofrecer Linux en toda su línea de productos.
+***2001***: Se lanza la versión 2.4 del núcleo de Linux.
+***2002***: Los medios de comunicación informan que "Microsoft mató a Dell Linux"
+***2003***: Se lanza la versión 2.6 del núcleo de Linux.
+***2004***: El equipo de XFree86 se divide y se une al organismo existente de estándares X para formar la Fundación X.Org, lo que resulta en un desarrollo sustancialmente más rápido del servidor X para Linux.
+***2005***: El proyecto openSUSE comienza una distribución gratuita de la comunidad de Novell. También el proyecto OpenOffice.org introduce la versión 2.0 que luego comenzó a admitir los estándares OASIS OpenDocument.
+***2006***: Oracle lanza su propia distribución de Red Hat Enterprise Linux. Novell y Microsoft anuncian cooperación para una mejor interoperabilidad y protección mutua de patentes.
+***2007***: Dell comienza a distribuir laptops con Ubuntu preinstalado.
+***2009***: La capitalización de mercado de Red Hat iguala a la de Sun, interpretada como un momento simbólico para la "economía basada en Linux".
+***2011***: Se lanza la versión 3.0 del núcleo de Linux.
+***2012***: Los ingresos agregados del mercado de servidores Linux superan los del resto del mercado de Unix.
+***2013***: El sistema operativo basado en Linux de Google, Android, reclama el 75% del mercado de teléfonos inteligentes, en términos de la cantidad de teléfonos enviados.
+***2014***: Ubuntu alcanza 22.000.000 de usuarios.
+***2015***: Se lanza la versión 4.0 del núcleo de Linux.
+***2017***: Todos los sistemas de la lista TOP500 de supercomputadoras más rápidas ejecutan Linux.19​
+***2019***: Se lanza la versión 5.0 del núcleo de Linux.
+***2022***: Se lanza la versión 6.0 del núcleo de Linux.
 ### Compilando un kernel
 En la mayoría de los entornos Linux normales, nunca tendrá que preocuparse por compilar un nuevo kernel. Todas las principales distribuciones de Linux hacen eso por usted y lanzan los nuevos núcleos como paquetes de software en sus repositorios. La actualización del kernel suele ser automática y se realiza mediante el proceso de actualización automática de software de la distribución.
 
@@ -526,6 +546,509 @@ mkinitrd outputfile version
 donde archivo de salida es el nombre del archivo de disco RAM inicial que se creará y versión es la versión del kernel para la cual se crea el archivo. Hay algunas opciones de línea de comandos que puede utilizar para el comando `mkinitrd`. Se muestran en la Tabla 3.3.
 
 
-|     |     |
-| --- | --- |
-|     |     |
+| Option                | Description                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| `--builtin=module`    | Assume the module is built into the kernel, even if it’s not.                             |
+| `--force`             | Allow the output file to be overwritten if it already exists                              |
+| `--fstab=filename`    | Determine what filesystem support is required to read the specified filename              |
+| `--image-version`     | Add the kernel version to the generated initial RAM disk image file                       |
+| `--nocompress`        | Force the image file to be uncompressed. The default is to create a compressed image file |
+| `--omit-lvm-modules`  | Omit logical volume manager modules from the image                                        |
+| `--omit-raid-modules` | Omit RAID disk modules from the image                                                     |
+| `--omit-scsi-modules` | Omit SCSI disk modules from the image.                                                    |
+| `--preload=module`    | Load the specified module before the SCSI modules are loaded.                             |
+| `--verbose`           | Display verbose information as each module is loaded                                      |
+| `--version`           | Display the version of the mkinitrd program                                               |
+| `--with=module`       | Load the specified module before the SCSI modules are loaded                              |
+
+En la mayoría de las situaciones, puede ejecutar el comando `mkinitrd` sin ninguna opción para generar el archivo de imagen de disco RAM inicial:
+
+```sh
+mkinitrd /boot/initrd.img-4.3.3 4.3.3
+```
+
+Debido a que el archivo de disco RAM inicial se utiliza en el momento del arranque, la mayoría de las distribuciones de Linux lo almacenan en la misma carpeta donde se encuentra el archivo binario del kernel, generalmente la carpeta `/boot`.
+### La utilidad `mkinitramfs`
+Las distribuciones de Linux basadas en Debian (como Debian y Ubuntu) utilizan la utilidad `mkinitramfs` para generar el archivo de disco RAM inicial. El formato general del comando es:
+
+```sh
+mkinitramfs –o outputfile version
+```
+
+donde archivo de salida es el archivo de imagen a crear y versión es la versión del kernel. La Tabla 3.4 enumera las opciones que están disponibles.
+
+
+| Option                                | Description                                                                  |
+| ------------------------------------- | ---------------------------------------------------------------------------- |
+| `-c`                                  | Create a compressed image file.                                              |
+| `-d` `confdir`                        | Set the configuration directory.                                             |
+| `-k`                                  | Retain the temporary directory created to build the initial RAM disk file.   |
+| `-o` `outputfile`                     | Define the output image filename.                                            |
+| `-r` `root`                           | Set the root partition used by the bootloader.                               |
+| `--supported-host-version=hversion`   | Determine if it can create an image for the specified running kernel version |
+| `--supported-target-version=tversion` | Determine if it can create an image for the specified kernel version.        |
+
+En la mayoría de las situaciones, puedes usar la opción `-o` para especificar el archivo de imagen de salida:
+
+```sh
+mkinitramfs –o /boot/initramfs-4.3.3.img 4.3.3
+```
+
+La mayoría de las distribuciones de Debian Linux también almacenan el archivo del disco RAM inicial en la misma carpeta que el archivo binario del kernel, la carpeta `/boot`.
+### Arrancando el nuevo kernel
+Una vez que haya compilado e instalado los archivos binarios del kernel y de imagen de disco RAM inicial, estará listo para usarlos para iniciar su sistema Linux. Hoy en día, la mayoría de las distribuciones de Linux utilizan el programa de arranque GRUB Legacy o GRUB2 para iniciar el sistema. Si su distribución de Linux utiliza el gestor de arranque GRUB Legacy, debe actualizar manualmente el archivo de configuración de GRUB `/boot/grub/menu.lst` o `/boot/grub/grub.conf` para agregar una nueva sección de arranque para el nuevo kernel. La nueva sección de inicio debe comenzar con un título e incluir el nuevo archivo binario del kernel y los archivos de imagen del disco RAM inicial:
+
+```sh
+title Test (4.3.3)    
+	root (hd0,0)
+	kernel /vmlinuz-4.3.3 ro root=/dev/sda1
+	initrd /initrd.img-4.3.3
+```
+
+Si su distribución de Linux usa el gestor de arranque GRUB2, después de instalar el nuevo binario del kernel en el menú de inicio, solo necesita ejecutar el comando `update-grub`:
+
+```sh
+update-grub
+```
+
+El comando `update-grub` escanea la carpeta `/boot` y agrega automáticamente el nuevo binario del kernel al menú de inicio de GRUB. También actualiza el archivo de configuración `grub.cfg` para incluir el nuevo archivo de disco RAM inicial que creó e instaló.
+
+Si por alguna razón el comando `update-grub` no detecta automáticamente el nuevo archivo binario del kernel, tendrá que agregar una entrada manualmente a uno de los archivos de opciones de arranque en la carpeta `/etc/grub.d`. Puede elegir uno de los archivos de opciones de arranque personalizados, como el archivo `40_custom`. Simplemente agregue la nueva entrada que apunta al nuevo kernel al final de las entradas existentes:
+
+```sh
+menuentry "Test (4.3.3)"    
+	set root=(hd0,1)
+	linux /vmlinuz-4.3.3 ro root=/dev/sda1    
+	initrd /initrd-4.3.3
+```
+
+Después de agregar la nueva entrada, guarde el archivo y luego ejecute el comando `update-grub`. Debería agregar la nueva opción del kernel al archivo de configuración `/boot/grub/grub.cfg`.
+
+Cuando reinicie su sistema Linux, debería ver la nueva opción binaria del kernel en las opciones de arranque. Si está utilizando una distribución de Linux que oculta el menú de inicio de GRUB de forma predeterminada, mantenga presionada la tecla Shift cuando inicie y debería aparecer. En la distribución Ubuntu Linux, también deberá seleccionar la entrada del menú Opciones avanzadas para Ubuntu para ver la lista de kernels disponibles para arrancar; luego simplemente seleccione su nueva opción de kernel.
+### Creando un paquete de kernel
+Si se encuentra en un entorno que admite muchas estaciones de trabajo Linux, intentar compilar y copiar un nuevo binario del kernel en todas las estaciones de trabajo puede resultar algo tedioso. Afortunadamente, el código fuente del kernel proporciona algunos objetivos de creación que pueden ayudar:
+- `rpm-pkg`: crea paquetes RPM de origen y binarios.
+- `binrpm-pkg`: crea un paquete RPM binario
+- `deb-pkg`: crea un paquete DEB binario
+
+Después de ejecutar el comando `make` con el destino apropiado, el archivo binario del kernel se incluirá como parte del paquete generado. Luego puede utilizar la herramienta de administración de paquetes de software estándar (`rpm` para Red Hat o `dpkg` para Debian) para instalar el nuevo paquete binario del kernel en cada estación de trabajo.
+### Mantenimiento del núcleo
+Una vez que tenga instalado un kernel de Linux, hay algunos pasos que puede seguir para asegurarse de que todo funcione correctamente. Esta sección lo guía a través de los comandos de la línea de comandos que debe conocer para monitorear el funcionamiento del kernel, incluido el seguimiento de los módulos instalados, la detección de dispositivos de hardware y la resolución de problemas del kernel.
+### Trabajar con archivos de módulo
+Debería estar familiarizado con algunos archivos diferentes cuando trabaje con módulos. Ya has visto que los módulos necesarios para soportar un kernel se almacenan en la carpeta `/lib/modules`. Cada kernel tiene su propia carpeta para sus propios módulos (como `/lib/modules/4.3.3`), lo que le permite crear módulos separados para cada versión del kernel en el sistema si es necesario.
+Los módulos que el kernel cargará en el momento del arranque se enumeran en el archivo `/etc/modules` en sistemas Debian o en archivos de texto separados en la carpeta `/etc/modules-load.d` para sistemas basados en Red Hat. La mayoría de los módulos de hardware se pueden cargar dinámicamente, porque el sistema detecta automáticamente los dispositivos de hardware, por lo que es posible que este archivo no contenga muchos módulos.
+
+Si es necesario, puede personalizar un módulo del kernel para definir los parámetros únicos necesarios, como la configuración de hardware necesaria para que funcione el dispositivo. Las configuraciones del módulo del kernel se almacenan en el archivo de configuración `/etc/conf.modules`.
+
+Finalmente, algunos módulos pueden depender de que otros módulos se carguen primero para funcionar correctamente. Estas relaciones se definen en el archivo `module.dep` y se almacenan en la carpeta `/lib/modules/version/`, donde versión es la versión del kernel. El formato para cada entrada es `modulefilename`: `dependencyfilename1` `dependencyfilename2...`
+
+Cuando utiliza el destino `module_install` para instalar los módulos, llama a la utilidad `depmod`, que determina las dependencias del módulo y genera el archivo `module.dep` automáticamente. Si modifica o agrega algún módulo después de eso, debe ejecutar manualmente el comando `depmod` para actualizar el archivo `module.dep`.
+
+Si compila sus propios módulos fuera de los módulos estándar del kernel, tiene otro problema que considerar. Dado que los módulos se compilan para un kernel específico, cada vez que el sistema actualiza el kernel, debe volver a compilar sus módulos personalizados.
+
+Una solución a este problema es la compatibilidad con módulos de kernel dinámicos (DKMS). El sistema DKMS proporciona una manera de registrar sus módulos personalizados y proporcionar instrucciones sobre cómo compilarlos e instalarlos cada vez que se instala un nuevo kernel. El programa `dkms` monitorea la versión del kernel y ejecuta automáticamente scripts para recompilar e instalar módulos cuando cambia la versión del kernel.
+### Comando `module`
+Puede utilizar una gran cantidad de comandos de línea de comandos para ayudarle a solucionar y solucionar problemas del módulo del kernel. Esta sección lo guiará a través de los diferentes comandos de módulo que están disponibles para ayudarlo con cualquier problema que pueda surgir con el módulo.
+### Listado de Módulos
+El primer comando es `lsmod`, que enumera todos los módulos instalados en su sistema. El Listado 3.6 muestra un ejemplo del uso del comando `lsmod` en un sistema Ubuntu.
+
+```sh
+lsmod
+
+Module                  Size  Used by 
+vboxsf                 39706  1 
+snd_intel8x0           38153  2 
+snd_ac97_codec        130285  1 snd_intel8x0 
+ac97_bus               12730  1 snd_ac97_codec 
+snd_pcm               102099  2 snd_ac97_codec,snd_intel8x0 
+snd_page_alloc         18710  2 snd_intel8x0,snd_pcm
+snd_seq_midi           13324  0 
+snd_seq_midi_event     14899  1 snd_seq_midi 
+snd_rawmidi            30144  1 snd_seq_midi
+snd_seq                61560  2 snd_seq_midi_event,snd_seq_midi snd_seq_device         14497  3 snd_seq,snd_rawmidi,snd_seq_midi
+snd_timer              29482  2 snd_pcm,snd_seq
+rfcomm                 69160  0 
+hid_multitouch         17407  0 
+joydev                 17381  0 
+snd                    69322  12
+snd_ac97_codec,snd_intel8x0,snd_timer,snd_pcm,snd_seq,snd_rawmidi,snd_seq_ device,snd_seq_midi 
+bnep                   19624  2 
+bluetooth             391136  10 bnep,rfcomm
+serio_raw              13462  0 
+vboxvideo              12658  1 
+drm                   303102  2 vboxvideo 
+vboxguest             276728  7 vboxsf 
+i2c_piix4              22155  0 
+soundcore              12680  1 snd 
+video                  19476  0 
+mac_hid                13205  0 
+parport_pc             32701  0 
+ppdev                  17671  0 
+lp                     17759  0
+parport                42348  3 lp,ppdev,parport_pc
+hid_generic            12548  0
+usbhid                 52659  0
+hid                   106148  3 hid_multitouch,hid_generic,usbhid
+psmouse               106692  0 
+ahci                   34091  3 
+libahci                32716  1 ahci 
+e1000                 145227  0 
+pata_acpi              13038  0 
+```
+
+Observe que el comando `lsmod` también muestra qué módulos utilizan otros módulos.
+
+Esta puede ser información crucial al intentar solucionar problemas de hardware.
+### Obtener información del módulo
+Si necesita más información sobre un módulo específico, use el comando `modinfo`, como se muestra en el Listado 3.7.
+
+```sh
+$ modinfo bluetooth
+filename:       /lib/modules/3.13.0–63-generic/kernel/net/bluetooth/bluetooth.ko
+alias:          net-pf-31 
+license:        GPL version:        2.17
+description:    Bluetooth Core ver 2.17 
+author:         Marcel Holtmann <marcel@holtmann.org>
+srcversion:     071210642A004CFE1860F30 
+depends: 
+intree:         Y
+vermagic:       3.13.0–63-generic SMP mod_unload modversions
+signer:         Magrathea: Glacier signing key
+sig_key:        E2:53:28:1F:E2:65:EE:3C:EA:FC:AA:3F:29:2E:21:2B:95:F0:35:9A
+sig_hashalgo:   sha512
+parm:           disable_esco:Disable eSCO connection creation (bool) 
+parm:           disable_ertm:Disable enhanced retransmission mode (bool)
+```
+
+El comando `modinfo` le muestra exactamente qué archivo de módulo se utiliza para admitir el módulo, junto con información detallada sobre de dónde proviene el módulo.
+### Instalación de nuevos módulos
+Si necesita instalar un nuevo módulo manualmente, hay dos comandos que lo ayudarán:
+- `insmod`
+- `modprobe`
+
+El comando `insmod` es el más básico y requiere que especifiques el archivo de módulo exacto que deseas cargar. Como ha visto, los archivos del módulo del kernel se almacenan en la estructura de carpetas `/lib/modules`, y cada versión del kernel tiene su propia carpeta. Si busca en esa carpeta en su sistema Linux, verá una estructura de árbol de carpetas para los diferentes tipos de hardware.
+
+Por ejemplo, los sistemas de escritorio Ubuntu Linux tienen la siguiente carpeta para los controladores de hardware Bluetooth:
+
+```sh
+/lib/modules/3.13.0–63-generic/kernel/drivers/bluetooth
+```
+
+Esta carpeta es para el kernel de Linux actualmente instalado en el sistema: 3.13.0–63. Dentro de esa carpeta hay muchos archivos de módulos de controladores de dispositivos diferentes para varios tipos de sistemas Bluetooth:
+
+```sh
+ls -l total 420
+-rw-r--r--1 root root 23220 Aug 14 19:07 ath3k.ko
+-rw-r--r--1 root root 14028 Aug 14 19:07 bcm203x.ko
+-rw-r--r--1 root root 26332 Aug 14 19:07 bfusb.ko
+-rw-r--r--1 root root 18404 Aug 14 19:07 bluecard_cs.ko
+-rw-r--r--1 root root 19124 Aug 14 19:07 bpa10x.ko
+-rw-r--r--1 root root 16964 Aug 14 19:07 bt3c_cs.ko
+-rw-r--r--1 root root 38148 Aug 14 19:07 btmrvl.ko
+-rw-r--r--1 root root 34204 Aug 14 19:07 btmrvl_sdio.ko
+-rw-r--r--1 root root 17524 Aug 14 19:07 btsdio.ko
+-rw-r--r--1 root root 14524 Aug 14 19:07 btuart_cs.ko
+-rw-r--r--1 root root 53964 Aug 14 19:07 btusb.ko
+-rw-r--r--1 root root 14188 Aug 14 19:07 btwilink.ko
+-rw-r--r--1 root root 15572 Aug 14 19:07 dtl1_cs.ko
+-rw-r--r--1 root root 74772 Aug 14 19:07 hci_uart.ko
+-rw-r--r--1 root root 15156 Aug 14 19:07 hci_vhci.ko
+```
+
+Cada archivo `.ko` es un archivo de módulo de controlador de dispositivo independiente que puede instalar en el kernel 3.13.0–63. Para instalar el módulo, simplemente especifique el nombre del archivo en la línea de comando de `insmod`. Algunos módulos también requieren parámetros, que también debes especificar en la línea de comando:
+
+```sh
+sudo insmod /lib/modules/3.13.0–49-generic/kernel/drivers/bluetooth/
+btusb.ko 
+password:
+```
+
+La desventaja de usar el programa `insmod` es que puede encontrarse con módulos que dependen de otros módulos, y el programa `insmod` fallará si esos otros módulos aún no están instalados. Para facilitar el proceso, el comando `modprobe` le ayuda a resolver las dependencias de los módulos.
+
+Otra característica interesante del comando `modprobe` es que comprende los nombres de los módulos y buscará en la biblioteca del módulo el archivo del módulo que proporciona el controlador para el nombre del módulo.
+
+Debido a esta versatilidad, hay muchas opciones disponibles para el comando `modprobe`. La Tabla 3.5 muestra las opciones de línea de comandos que puede utilizar.
+
+`-a`, `--all` 
+		Insert all module names on the command line.
+`-b`, `--use-blacklist`
+		This option causes `modprobe` to apply the **blacklist** commands
+		in the configuration files (if any) to module names as well.
+		It is usually used by udev.
+`-C`, `--config`
+	    This option overrides the default configuration directory
+	    (`/etc/modprobe.d`).
+`-c`, `--showconfig`
+	     Dump out the effective configuration from the config
+	    directory and exit.
+`--dump-modversions`
+	    Print out a list of module versioning information required by
+	    a module. This option is commonly used by distributions in
+	    order to package up a Linux kernel module using module
+	    versioning deps.
+`-d`, `--dirname`
+	    Root directory for modules, / by default.
+`--first-time`
+           Normally, `modprobe` will succeed (and do nothing) if told to
+           insert a module which is already present or to remove a
+           module which isn't present. This is ideal for simple scripts;
+           however, more complicated scripts often want to know whether
+           `modprobe` really did something: this option makes modprobe
+           fail in the case that it actually didn't do anything.
+`--force-vermagic`
+           Every module contains a small string containing important
+           information, such as the kernel and compiler versions. If a
+           module fails to load and the kernel complains that the
+           "version magic" doesn't match, you can use this option to
+           remove it. Naturally, this check is there for your
+           protection, so using this option is dangerous unless you know
+           what you're doing.
+`--force-modversion`
+           When modules are compiled with CONFIG_MODVERSIONS set, a
+           section detailing the versions of every interfaced used by
+           (or supplied by) the module is created. If a module fails to
+           load and the kernel complains that the module disagrees about
+           a version of some interface, you can use "--force-modversion"
+           to remove the version information altogether. Naturally, this
+           check is there for your protection, so using this option is
+           dangerous unless you know what you're doing.
+`-f`, `--force`
+           Try to strip any versioning information from the module which
+           might otherwise stop it from loading: this is the same as
+           using both **--force-vermagic** and **--force-modversion**.
+           Naturally, these checks are there for your protection, so
+           using this option is dangerous unless you know what you are
+           doing.
+`-i`, `--ignore-install`, `--ignore-remove`
+           This option causes `modprobe` to ignore **install** and **remove**
+           commands in the configuration file (if any) for the module
+           specified on the command line (any dependent modules are
+           still subject to commands set for them in the configuration
+           file). Both **install** and **remove** commands will currently be
+           ignored when this option is used regardless of whether the
+           request was more specifically made with only one or other
+           (and not both) of **--ignore-install** or **--ignore-remove**.
+`-n`, `--dry-run`, `--show`
+           This option does everything but actually insert or delete the
+           modules (or run the install or remove commands). Combined
+           with **-v**, it is useful for debugging problems. For historical
+           reasons both **--dry-run** and **--show** actually mean the same
+           thing and are interchangeable.
+`-q`, `--quiet`
+           With this flag, `modprobe` won't print an error message if you
+           try to remove or insert a module it can't find (and isn't an
+           alias or **install**/**remove** command). However, it will still
+           return with a non-zero exit status. The kernel uses this to
+           opportunistically probe for modules which might exist using
+           request_module.
+`-R`, `--resolve-alias`
+           Print all module names matching an alias. This can be useful
+           for debugging module alias problems.
+`-r`, `--remove`
+           This option causes `modprobe` to remove rather than insert a
+           module. If the modules it depends on are also unused,
+           `modprobe` will try to remove them too. Unlike insertion, more
+           than one module can be specified on the command line (it does
+           not make sense to specify module parameters when removing
+           modules).
+`-w`, `--wait=TIMEOUT_MSEC`
+           This option causes **modprobe -r** to continue trying to remove a
+           module if it fails due to the module being busy, i.e. its
+           refcount is not 0 at the time the call is made. Modprobe
+           tries to remove the module with an incremental sleep time
+           between each tentative up until the maximum wait time in
+           milliseconds passed in this option.
+`-S`, `--set-version`
+           Set the kernel version, rather than using [uname(2)](https://www.man7.org/linux/man-pages/man2/uname.2.html) to decide
+           on the kernel version (which dictates where to find the
+           modules).
+`--show-depends`
+           List the dependencies of a module (or alias), including the
+           module itself. This produces a (possibly empty) set of module
+           filenames, one per line, each starting with "insmod" and is
+           typically used by distributions to determine which modules to
+           include when generating initrd/initramfs images.  **Install**
+           commands which apply are shown prefixed by "install". It does
+           not run any of the install commands. Note that [modinfo(8)](https://www.man7.org/linux/man-pages/man8/modinfo.8.html) can
+           be used to extract dependencies of a module from the module
+           itself, but knows nothing of aliases or install commands.
+`-s`, `--syslog`
+           This option causes any error messages to go through the
+           syslog mechanism (as LOG_DAEMON with level LOG_NOTICE) rather
+           than to standard error. This is also automatically enabled
+           when stderr is unavailable.
+`-V, `--version`
+           Show version of program and exit.
+`-v`, `--verbose`
+           Print messages about what the program is doing. Usually
+           `modprobe` only prints messages if something goes wrong.
+
+Como puede ver, el comando `modprobe` es una herramienta con todas las funciones en sí misma. Quizás la característica más útil es que le permite instalar módulos según el nombre del módulo y no tener que enumerar el nombre de archivo completo del módulo:
+
+```sh
+sudo modprobe -iv btusb
+insmod /lib/modules/3.13.0–63-generic/kernel/drivers/bluetooth/btusb.ko
+```
+
+Tenga en cuenta que al agregar la opción `–v` para el modo detallado, el resultado muestra el comando `insmod` generado automáticamente por el comando `modprobe`. El comando `insmod` muestra el archivo del módulo específico utilizado para instalar el módulo.
+### Quitar módulos
+Normalmente, no hace daño instalar un módulo en el sistema si el dispositivo de hardware no está presente. El kernel simplemente ignora los módulos no utilizados. Sin embargo, algunos administradores de Linux prefieren mantener el kernel lo más ligero posible. Por lo tanto, los desarrolladores de Linux crearon un método para eliminar módulos innecesarios: el comando `rmmod`. El comando `rmmod` elimina un módulo especificando el nombre del módulo.
+
+Sin embargo, su amigo el comando `modprobe` también puede eliminar módulos por usted, por lo que realmente no necesita memorizar otro comando. En su lugar, simplemente use la opción `–r` con el comando `modprobe`:
+
+```sh
+sudo modprobe -rv btusb
+rmmod btusb
+```
+
+El comando `modprobe –r` invoca el comando `rmmod` automáticamente, eliminando el módulo por su nombre. Puede verificar que el módulo se haya eliminado utilizando el comando `lsmod`.
+### Trabajar con hardware
+Por supuesto, los módulos funcionan sólo cuando hay hardware conectado al sistema. A veces, puede tener problemas al hacer coincidir el módulo correcto con el dispositivo de hardware correcto.
+
+Hay algunos comandos que puede utilizar para consultar los dispositivos de hardware en su sistema Linux. 
+### Trabajar con tarjetas PCI
+La interfaz de componentes periféricos (PCI) es un antiguo estándar de PC compatible con IBM para conectar placas de hardware a placas base de PC. El estándar se ha actualizado varias veces para adaptarse a velocidades de interfaz más rápidas, así como para aumentar el tamaño del bus de datos en las placas base. El estándar PCI Express (PCIe) se utiliza actualmente en la mayoría de los servidores y estaciones de trabajo de escritorio para proporcionar una interfaz común para tarjetas de hardware externas, como Fast Ethernet y compatibilidad con unidades SCSI externas.
+
+El kernel de Linux admite los estándares PCI y PCIe y, por lo general, puede detectar e interactuar con una placa PCI o PCIe cuando se carga el módulo de controlador adecuado.
+El comando `lspci` le permite ver las tarjetas PCI y PCIe actualmente instaladas y reconocidas en el sistema Linux. Puede incluir varias opciones de línea de comandos con el comando `lspci` para mostrar información diversa sobre las tarjetas PCI y PCIe instaladas en el sistema. La Tabla 3.6 muestra las opciones más comunes que resultan útiles.
+
+**Basic display modes**
+`-m`     Dump PCI device data in a backward-compatible machine
+      readable form.  See below for details.
+`-mm`    Dump PCI device data in a machine readable form for easy
+       parsing by scripts.  See below for details.
+`-t`     Show a tree-like diagram containing all buses, bridges,
+      devices and connections between them.
+
+   **Display options**
+`-v`     Be verbose and display detailed information about all
+     devices.
+`-vv`    Be very verbose and display more details. This level
+       includes everything deemed useful.
+`-vvv`   Be even more verbose and display everything we are able to
+       parse, even if it doesn't look interesting at all (e.g.,
+       undefined memory regions).
+`-k`     Show kernel drivers handling each device and also kernel
+     modules capable of handling it.  Turned on by default when
+     **-v** is given in the normal mode of output.  (Currently
+      works only on Linux with kernel 2.6 or newer.)
+`-x`     Show hexadecimal dump of the standard part of the
+       configuration space (the first 64 bytes or 128 bytes for
+       CardBus bridges).
+`-xxx`   Show hexadecimal dump of the whole PCI configuration
+       space. It is available only to root as several PCI devices
+       **crash** when you try to read some parts of the config space
+       (this behavior probably doesn't violate the PCI standard,
+       but it's at least very stupid). However, such devices are
+       rare, so you needn't worry much.
+`-xxxx`  Show hexadecimal dump of the extended (4096-byte) PCI
+             configuration space available on PCI-X 2.0 and PCI Express
+             buses.
+`-b`     Bus-centric view. Show all IRQ numbers and addresses as
+      seen by the cards on the PCI bus instead of as seen by the
+      kernel.
+`-D`     Always show PCI domain numbers. By default, lspci
+      suppresses them on machines which have only domain 0.
+`-P`     Identify PCI devices by path through each bridge, instead
+      of by bus number.
+`-PP`    Identify PCI devices by path through each bridge, showing
+      the bus number as well as the device number.
+
+   **Options to control resolving ID's to names**
+       **-n**     Show PCI vendor and device codes as numbers instead of
+              looking them up in the PCI ID list.
+
+       **-nn**    Show PCI vendor and device codes as both numbers and
+              names.
+
+       **-q**     Use DNS to query the central PCI ID database if a device
+              is not found in the local **pci.ids** file. If the DNS query
+              succeeds, the result is cached in **~/.pciids-cache** and it
+              is recognized in subsequent runs even if **-q** is not given
+              any more. Please use this switch inside automated scripts
+              only with caution to avoid overloading the database
+              servers.
+
+       **-qq**    Same as **-q**, but the local cache is reset.
+
+       **-Q**     Query the central database even for entries which are
+              recognized locally.  Use this if you suspect that the
+              displayed entry is wrong.
+
+   **Options for selection of devices**
+       **-s [[[[<domain>]:]<bus>]:][<device>][.[<func>]]**
+              Show only devices in the specified domain (in case your
+              machine has several host bridges, they can either share a
+              common bus number space or each of them can address a PCI
+              domain of its own; domains are numbered from 0 to ffff),
+              bus (0 to ff), device (0 to 1f) and function (0 to 7).
+              Each component of the device address can be omitted or set
+              to "*", both meaning "any value". All numbers are
+              hexadecimal.  E.g., "0:" means all devices on bus 0, "0"
+              means all functions of device 0 on any bus, "0.3" selects
+              third function of device 0 on all buses and ".4" shows
+              only the fourth function of each device.
+
+       **-d [<vendor>]:[<device>][:<class>[:<prog-if>]]**
+              Show only devices with specified vendor, device, class ID,
+              and programming interface.  The ID's are given in
+              hexadecimal and may be omitted or given as "*", both
+              meaning "any value". The class ID can contain "x"
+              characters which stand for "any digit".
+
+   **Other options**
+       **-i <file>**
+              Use **<file>** as the PCI ID list instead of
+              /usr/local/share/pci.ids.
+
+       **-p <file>**
+              Use **<file>** as the map of PCI ID's handled by kernel
+              modules. By default, lspci uses
+              /lib/modules/_kernel_version_/modules.pcimap.  Applies only
+              to Linux systems with recent enough module tools.
+
+       **-M**     Invoke bus mapping mode which performs a thorough scan of
+              all PCI devices, including those behind misconfigured
+              bridges, etc. This option gives meaningful results only
+              with a direct hardware access mode, which usually requires
+              root privileges.  By default, the bus mapper scans domain.
+              You can use the **-s** option to select a different domain.
+
+       **--version**
+              Shows _lspci_ version. This option should be used stand-
+              alone.
+
+   **PCI access options**
+       The PCI utilities use the PCI library to talk to PCI devices (see
+       [pcilib(7)](https://man7.org/linux/man-pages/man7/pcilib.7.html) for details). You can use the following options to
+       influence its behavior:
+
+       **-A <method>**
+              The library supports a variety of methods to access the
+              PCI hardware.  By default, it uses the first access method
+              available, but you can use this option to override this
+              decision. See **-A help** for a list of available methods and
+              their descriptions.
+
+       **-O <param>=<value>**
+              The behavior of the library is controlled by several named
+              parameters.  This option allows one to set the value of
+              any of the parameters. Use **-O help** for a list of known
+              parameters and their default values.
+
+       **-H1**    Use direct hardware access via Intel configuration
+              mechanism 1.  (This is a shorthand for **-A intel-conf1**.)
+
+       **-H2**    Use direct hardware access via Intel configuration
+              mechanism 2.  (This is a shorthand for **-A intel-conf2**.)
+
+       **-F <file>**
+              Instead of accessing real hardware, read the list of
+              devices and values of their configuration registers from
+              the given file produced by an earlier run of lspci -x.
+              This is very useful for analysis of user-supplied bug
+              reports, because you can display the hardware
+              configuration in any way you want without disturbing the
+              user with requests for more dumps.
+
+       **-G**     Increase debug level of the library.
