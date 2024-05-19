@@ -8,7 +8,7 @@ Este resumen consta de 12 capítulos, La Parte I, Capítulos 1 a 6, cubre los te
 
 [Capítulo 3](content/Charter-3.md): Dominar el kernel Este capítulo se centra en el núcleo del sistema Linux: el kernel. Le explica cómo instalar un kernel personalizado, así como también cómo crear y mantener los módulos del kernel necesarios para admitir el hardware de su sistema Linux.
 
-[Capítulo 4](): Administrar el sistema de archivos Este capítulo explora los diferentes sistemas de archivos de Linux y cómo administrarlos y mantenerlos, así como también cómo solucionarlos cuando ocurren problemas.
+[Capítulo 4](content/Charter-4.md): Administrar el sistema de archivos Este capítulo explora los diferentes sistemas de archivos de Linux y cómo administrarlos y mantenerlos, así como también cómo solucionarlos cuando ocurren problemas.
 
 [Capítulo 5](): Administración de dispositivos de almacenamiento avanzados Este capítulo analiza dos de los métodos de almacenamiento más avanzados utilizados en entornos Linux. Se centra en cómo utilizar dispositivos RAID en Linux, ya sea como dispositivos de hardware o mediante un emulador RAID de software. También demuestra cómo implementar un Administrador de volúmenes lógicos en un entorno Linux.
 

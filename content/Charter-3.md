@@ -546,6 +546,8 @@ mkinitrd outputfile version
 donde archivo de salida es el nombre del archivo de disco RAM inicial que se creará y versión es la versión del kernel para la cual se crea el archivo. Hay algunas opciones de línea de comandos que puede utilizar para el comando `mkinitrd`.
 
 ```
+       Command line options available for the mkinitrd command:
+       
        --version
            print info about the version
 
@@ -592,6 +594,8 @@ mkinitramfs –o outputfile version
 donde archivo de salida es el archivo de imagen a crear y versión es la versión del kernel. 
 
 ```
+     Command line options available for the mkinitramfs command:
+     
                 -c  compress
                       Override the COMPRESS setting in initramfs.conf.
 
@@ -802,6 +806,9 @@ Otra característica interesante del comando `modprobe` es que comprende los nom
 Debido a esta versatilidad, hay muchas opciones disponibles para el comando `modprobe`. 
 
 ```
+
+Command line options available for the modprobe command:
+
 -a, --all
            Insert all module names on the command line.
 
@@ -992,6 +999,8 @@ El kernel de Linux admite los estándares PCI y PCIe y, por lo general, puede de
 El comando `lspci` le permite ver las tarjetas PCI y PCIe actualmente instaladas y reconocidas en el sistema Linux. Puede incluir varias opciones de línea de comandos con el comando `lspci` para mostrar información diversa sobre las tarjetas PCI y PCIe instaladas en el sistema. 
 
 ```
+Command line options available for the lspci command:
+
   Basic display modes
 
        -m     Dump PCI device data in a backward-compatible machine
@@ -1193,6 +1202,8 @@ Hablando de los diferentes tipos o versiones de estándares de USB, los cuales s
 Puede ver la información básica sobre los dispositivos USB conectados a su sistema Linux utilizando el comando `lsusb`.
 
 ```
+Command line options available for the lsusb command:
+
 -v, --verbose
 
 Tells _lsusb_ to be verbose and display detailed information about the devices shown. This includes configuration descriptors for the device's current speed. Class descriptors will be shown, when available, for USB device classes including hub, audio, HID, communications, and chipcard.
@@ -1273,6 +1284,8 @@ Ahora eso es más útil. La información proporcionada por el comando `uname` es
 - El sistema operativo (GNU/Linux)
 
 ```
+Command line options available for the uname command:
+
    Print certain system information.  With no OPTION, same as -s.
 
        -a, --all
