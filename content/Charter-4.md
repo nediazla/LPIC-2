@@ -514,7 +514,7 @@ a_file.txt  lost+found/
 sudo umount /home/christine/Temp [sudo] 
 password for christine:
 
-ls -F /home/christine/Temp**
+ls -F /home/christine/Temp
 ```
 
 Observe en el directorio anterior que el punto de montaje del directorio, `/home/christine/Temp`, se usa con el comando `umount` en lugar del nombre de archivo del dispositivo, `/dev/sdb1`. Si bien puede utilizar el nombre de archivo del dispositivo, se recomienda utilizar el punto de montaje del directorio en caso de que el dispositivo esté montado en varias ubicaciones.
@@ -543,7 +543,7 @@ fuser Temp
 /home/christine/Temp:  1580c  5008c
 ```
 
-En el ejemplo anterior, el comando `lsof` muestra los detalles de los procesos que actualmente utilizan el directorio Temp. Los detalles indican que la usuaria christine está usando el editor de texto `nano` en un archivo dentro del directorio Temp. El fusor tiene una breve salida que muestra los PID del proceso y un código (c) que indica que el directorio actual del proceso es `/home/christine/Temp`. Puede encontrar una descripción completa de varios códigos de fusor escribiendo man fuser en la línea de comando. Una vez que estos procesos ya no mantienen ocupado el directorio, el sistema de archivos se puede desconectar exitosamente del directorio Temp.
+En el ejemplo anterior, el comando `lsof` muestra los detalles de los procesos que actualmente utilizan el directorio Temp. Los detalles indican que la usuaria Christine está usando el editor de texto `nano` en un archivo dentro del directorio Temp. El fusor tiene una breve salida que muestra los PID del proceso y un código (c) que indica que el directorio actual del proceso es `/home/christine/Temp`. Puede encontrar una descripción completa de varios códigos de fusor escribiendo man fuser en la línea de comando. Una vez que estos procesos ya no mantienen ocupado el directorio, el sistema de archivos se puede desconectar exitosamente del directorio Temp.
 ### Adjuntar medios extraíbles manualmente
 Muchas distribuciones detectan y montan automáticamente medios extraíbles. Sin embargo, hay ocasiones en las que el sistema no monta automáticamente los medios extraíbles o usted no desea que los medios se monten en los puntos de montaje predeterminados. En estos casos, puede montar manualmente los medios extraíbles.
 
