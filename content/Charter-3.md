@@ -912,47 +912,60 @@ La interfaz de componentes periféricos (PCI) es un antiguo estándar de PC comp
 El kernel de Linux admite los estándares PCI y PCIe y, por lo general, puede detectar e interactuar con una placa PCI o PCIe cuando se carga el módulo de controlador adecuado.
 El comando `lspci` le permite ver las tarjetas PCI y PCIe actualmente instaladas y reconocidas en el sistema Linux. Puede incluir varias opciones de línea de comandos con el comando `lspci` para mostrar información diversa sobre las tarjetas PCI y PCIe instaladas en el sistema. La Tabla 3.6 muestra las opciones más comunes que resultan útiles.
 
+```
 **Basic display modes**
-`-m`     Dump PCI device data in a backward-compatible machine
-      readable form.  See below for details.
-`-mm`    Dump PCI device data in a machine readable form for easy
-       parsing by scripts.  See below for details.
-`-t`     Show a tree-like diagram containing all buses, bridges,
-      devices and connections between them.
+       **-m**     Dump PCI device data in a backward-compatible machine
+              readable form.  See below for details.
+
+       **-mm**    Dump PCI device data in a machine readable form for easy
+              parsing by scripts.  See below for details.
+
+       **-t**     Show a tree-like diagram containing all buses, bridges,
+              devices and connections between them.
 
    **Display options**
-`-v`     Be verbose and display detailed information about all
-     devices.
-`-vv`    Be very verbose and display more details. This level
-       includes everything deemed useful.
-`-vvv`   Be even more verbose and display everything we are able to
-       parse, even if it doesn't look interesting at all (e.g.,
-       undefined memory regions).
-`-k`     Show kernel drivers handling each device and also kernel
-     modules capable of handling it.  Turned on by default when
-     **-v** is given in the normal mode of output.  (Currently
-      works only on Linux with kernel 2.6 or newer.)
-`-x`     Show hexadecimal dump of the standard part of the
-       configuration space (the first 64 bytes or 128 bytes for
-       CardBus bridges).
-`-xxx`   Show hexadecimal dump of the whole PCI configuration
-       space. It is available only to root as several PCI devices
-       **crash** when you try to read some parts of the config space
-       (this behavior probably doesn't violate the PCI standard,
-       but it's at least very stupid). However, such devices are
-       rare, so you needn't worry much.
-`-xxxx`  Show hexadecimal dump of the extended (4096-byte) PCI
-             configuration space available on PCI-X 2.0 and PCI Express
-             buses.
-`-b`     Bus-centric view. Show all IRQ numbers and addresses as
-      seen by the cards on the PCI bus instead of as seen by the
-      kernel.
-`-D`     Always show PCI domain numbers. By default, lspci
-      suppresses them on machines which have only domain 0.
-`-P`     Identify PCI devices by path through each bridge, instead
-      of by bus number.
-`-PP`    Identify PCI devices by path through each bridge, showing
-      the bus number as well as the device number.
+       **-v**     Be verbose and display detailed information about all
+              devices.
+
+       **-vv**    Be very verbose and display more details. This level
+              includes everything deemed useful.
+
+       **-vvv**   Be even more verbose and display everything we are able to
+              parse, even if it doesn't look interesting at all (e.g.,
+              undefined memory regions).
+
+       **-k**     Show kernel drivers handling each device and also kernel
+              modules capable of handling it.  Turned on by default when
+              **-v** is given in the normal mode of output.  (Currently
+              works only on Linux with kernel 2.6 or newer.)
+
+       **-x**     Show hexadecimal dump of the standard part of the
+              configuration space (the first 64 bytes or 128 bytes for
+              CardBus bridges).
+
+       **-xxx**   Show hexadecimal dump of the whole PCI configuration
+              space. It is available only to root as several PCI devices
+              **crash** when you try to read some parts of the config space
+              (this behavior probably doesn't violate the PCI standard,
+              but it's at least very stupid). However, such devices are
+              rare, so you needn't worry much.
+
+       **-xxxx**  Show hexadecimal dump of the extended (4096-byte) PCI
+              configuration space available on PCI-X 2.0 and PCI Express
+              buses.
+
+       **-b**     Bus-centric view. Show all IRQ numbers and addresses as
+              seen by the cards on the PCI bus instead of as seen by the
+              kernel.
+
+       **-D**     Always show PCI domain numbers. By default, lspci
+              suppresses them on machines which have only domain 0.
+
+       **-P**     Identify PCI devices by path through each bridge, instead
+              of by bus number.
+
+       **-PP**    Identify PCI devices by path through each bridge, showing
+              the bus number as well as the device number.
 
    **Options to control resolving ID's to names**
        **-n**     Show PCI vendor and device codes as numbers instead of
@@ -1052,3 +1065,4 @@ El comando `lspci` le permite ver las tarjetas PCI y PCIe actualmente instaladas
               user with requests for more dumps.
 
        **-G**     Increase debug level of the library.
+```
