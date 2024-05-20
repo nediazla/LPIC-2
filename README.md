@@ -12,7 +12,7 @@ Este resumen consta de 12 capítulos, La Parte I, Capítulos 1 a 6, cubre los te
 
 [Capítulo 5](content/Charter-5.md): Administración de dispositivos de almacenamiento avanzados Este capítulo analiza dos de los métodos de almacenamiento más avanzados utilizados en entornos Linux. Se centra en cómo utilizar dispositivos RAID en Linux, ya sea como dispositivos de hardware o mediante un emulador RAID de software. También demuestra cómo implementar un Administrador de volúmenes lógicos en un entorno Linux.
 
-[Capítulo 6](): Navegación por los servicios de red Este capítulo analiza en profundidad cómo interactúa Linux en un entorno de red. Cubre cómo utilizar los comandos de la línea de comandos de Linux para configurar una interfaz de red y cómo solucionar problemas básicos de la red.
+[Capítulo 6](content/Charter-6.md): Navegación por los servicios de red Este capítulo analiza en profundidad cómo interactúa Linux en un entorno de red. Cubre cómo utilizar los comandos de la línea de comandos de Linux para configurar una interfaz de red y cómo solucionar problemas básicos de la red.
 ### Parte II: El examen LPI 202
 
 [Capítulo 7](): Organización de servicios de correo electrónico Este capítulo examina cómo ejecutar un servidor de correo electrónico de Internet utilizando Linux. Cubre los dos servidores de correo electrónico más populares: sendmail y Postfix, además de explicarle cómo utilizar los paquetes de clientes de correo electrónico de Linux más populares: Courier y Dovecot.
