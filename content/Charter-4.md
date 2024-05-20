@@ -945,3 +945,902 @@ file_b.txt
 btrfs subvolume create BTrial/subvolume_1
 Create subvolume 'BTrial/subvolume_1'
 ```
+
+Una vez creado el subvolumen, denominado `subvolumen_1` en el ejemplo anterior, se accede al subvolumen a través de una referencia de directorio. Puede crear archivos adicionales, subdirectorios e incluso subvolúmenes adicionales dentro del subvolumen.
+
+Verifica los subvolúmenes mediante el comando `subvolume list` del volumen principal junto con `mount point` . La opción `-t` es útil porque muestra la información en formato de tabla como se muestra aquí:
+
+```sh
+btrfs subvolume list  BTrial
+ID 258 gen 13 top level 5 path subvolume_1
+
+btrfs subvolume list -t BTrial
+ID   gen   top level   path
+--   ---   ---------   ----
+258   13   5           subvolume_1
+```
+
+Para acceder al subvolumen, utiliza una referencia de directorio que incluye el punto de montaje de su volumen principal y el nombre del subvolumen. En esencia, se accede al subvolumen como un subdirectorio del punto de montaje del volumen principal. Aquí hay un ejemplo:
+
+```sh
+cd BTrial/subvolume_1
+
+pwd
+/root/BTrial/subvolume_1
+
+touch file_b_subvol.txt
+
+ls
+file_b_subvol.txt
+
+cd
+
+pwd
+/root
+
+ls -R BTrial/
+BTrial: 
+file_b.txt  subvolume_1 
+
+BTrial/subvolume_1: 
+file_b_subvol.txt
+```
+
+De forma predeterminada, para montar un volumen principal y un subvolumen Btrfs, solo necesita montar el volumen principal:
+
+```sh
+umount BTrial
+
+mount /dev/sdb BTrial
+
+btrfs subvolume list -t BTrial
+ID   gen   top level   path
+--   ---   ---------   ----
+258   14   5           subvolume_1
+```
+
+Una vez montado el volumen principal, se pueden verificar los subvolúmenes montados. Esto se hace mediante el comando `subvolume list`, como se muestra en el ejemplo anterior.
+
+El acceso a los volúmenes principales y subvolúmenes de Btrfs se realiza a través de un punto de entrada. Este punto de entrada se denomina nivel predeterminado y normalmente se establece en el nivel superior (a veces denominado subvolumen de nivel superior). El nivel superior estándar tiene un ID 5, como se muestra en el ejemplo anterior.
+Puede determinar el nivel predeterminado de un subvolumen mediante el comando `subvolume get-default`. El ejemplo que se muestra aquí confirma que el nivel predeterminado actual es el nivel superior (ID 5):
+
+```sh
+btrfs subvolume get-default BTrial
+ID 5 (FS_TREE)
+```
+
+Un subvolumen se puede montar independientemente de su volumen principal. Sin embargo, si el nivel predeterminado del subvolumen se establece en ID 5 (nivel superior), aún se puede acceder a los datos del volumen principal. Recuerde que los subvolúmenes Btrfs no son verdaderos dispositivos de bloques.
+
+Existen dos métodos para montar un subvolumen y no permitir el acceso al volumen principal. Para el primer método, debe modificar las opciones de `mount`. En el siguiente ejemplo, el volumen principal y el subvolumen se desmontan y luego el subvolumen se monta de manera que impida el acceso al volumen principal:
+
+```sh
+umount BTrial
+
+mkdir BTrial_subvol
+
+mount -o subvol=subvolume_1 /dev/sdb BTrial_subvol
+
+ls BTrial_subvol/
+file_b_subvol.txt
+
+umount BTrial_subvol
+```
+
+Después de desmontar el volumen principal, se crea un nuevo directorio (punto de montaje), `BTrial_subvol`. A continuación, el subvolumen se monta utilizando una opción de montaje especial `-o subvol=subvolume_name`, donde `subvolume_name` es `subvolume_1`, el nombre del subvolumen de ejemplo. Una lista de directorio muestra solo los datos del subvolumen y no se proporciona acceso al volumen principal.
+
+El segundo método para montar un subvolumen y bloquear el acceso al volumen principal es cambiar el número de identificación de nivel predeterminado del subvolumen. El número de identificación del nivel predeterminado cambia de 5 al número de identificación del subvolumen. El subvolumen debe estar montado porque el punto de montaje se utiliza en el comando que cambia este número de ID. El comando `subvolume set-default` se utiliza para realizar esta tarea, como se muestra aquí:
+
+```sh
+mount /dev/sdb BTrial
+
+btrfs subvolume list -t BTrial
+ID   gen   top level   path
+--   ---   ---------   ----
+258   14   5           subvolume_1
+
+btrfs subvolume get-default BTrial/subvolume_1
+ID 5 (FS_TREE)
+
+btrfs subvolume set-default 258 BTrial/subvolume_1
+
+btrfs subvolume get-default BTrial/subvolume_1
+ID 258 gen 14 top level 5 path subvolume_1
+
+umount BTrial
+```
+
+Una vez que se cambia el nivel predeterminado del subvolumen, solo se usa un comando de montaje simple. No se concede acceso al volumen principal. Un ejemplo de esto se muestra aquí:
+
+```sh
+mount /dev/sdb BTrial_subvol
+
+ls BTrial_subvol/
+file_b_subvol.txt
+
+btrfs subvolume get-default BTrial_subvol
+ID 258 gen 14 top level 5 path subvolume_1
+
+btrfs subvolume list -t BTrial_subvol
+ID   gen   top level   path
+--   ---   ---------   ----
+258   14   5           subvolume_1
+
+umount BTrial_subvol
+```
+
+### Explorando los Btrfs Snapshots
+Una vez que comprenda los subvolúmenes de Btrfs, podrá explorar más a fondo los Btrfs Snapshots, porque los Snapshots también son subvolúmenes. Los Snapshots son bastante fáciles de crear y administrar.
+
+Para crear un Snapshots, se debe montar el volumen o subvolumen principal. El comando `btrfs` a utilizar es `subvolume Snapshots`. La sintaxis básica de este comando es la siguiente:
+`btrfs subvolume snapshot Volume_Mount_Point Snapshot_Name`
+El `Volume_Mount_Point` en el comando de instantánea del subvolumen designa qué volumen o subvolumen montado se debe tomar la instantánea. `Snapshot_Name` en el comando designa el punto de montaje del subvolumen de la instantánea.
+
+A partir de los ejemplos anteriores de Btrfs, se crea una instantánea del subvolumen montado en `BTrial_subvol`. El comando `Snapshot` está dividido en dos líneas para mayor claridad y se muestra en el ejemplo aquí:
+
+```sh
+mount /dev/sdb BTrial_subvol
+
+ls BTrial_subvol/
+file_b_subvol.txt
+
+btrfs subvolume snapshot BTrial_subvol \
+> BTrial_subvol/my_snapshot
+Create a snapshot of 'BTrial_subvol' in 'BTrial_subvol/my_snapshot'
+
+ls -RF BTrial_subvol/
+BTrial_subvol/
+file_b_subvol.txt  my_snapshot/
+
+BTrial_subvol/my_snapshot: 
+file_b_subvol.txt #
+```
+
+Debido a que un `snapshot` es un subvolumen, puede ver sus detalles mediante el comando `subvolume list`. Aquí se muestra un ejemplo, utilizando la instantánea creada anteriormente:
+
+```sh
+btrfs subvolume list BTrial_subvol
+ID 258 gen 27 top level 5 path subvolume_1
+ID 259 gen 26 top level 258 path my_snapshot
+```
+
+Al igual que los subvolúmenes normales, los subvolúmenes de instantáneas se pueden montar con su volumen principal o por separado. Además, es bastante sencillo crear un subvolumen de instantánea del sistema. La creación de un subvolumen de instantánea antes de la actualización del software permite revertir fácilmente a la versión anterior del software, en caso de que surja la necesidad.
+Obviamente, hay muchas cosas en el sistema de archivos Btrfs. Si desea obtener más información, escriba `man btrfs-filesystem` en la línea de comando o utilice su motor de búsqueda web favorito. 
+### Mirando los sistemas de archivos de intercambio
+El término sistema de archivos de intercambio es realmente inexacto. Una partición de intercambio no contiene un sistema de archivos, sino que es una ubicación especial en el disco que actúa como espacio de intercambio del sistema (también llamado memoria virtual). 
+
+Normalmente, se crea, formatea y agrega una partición de intercambio al archivo de configuración `/etc/fstab` durante la instalación del sistema. Sin embargo, es posible que necesite crear y administrar particiones de intercambio adicionales, por ejemplo, si aumenta la RAM de su sistema.
+
+Hay un par de utilidades útiles disponibles para verificar su espacio de intercambio actual. Lo más probable es que ya estés familiarizado con el comando `free`. Pero es posible que no esté familiarizado con el uso del comando `swapon` para las estadísticas del espacio de intercambio, como se muestra aquí en una distribución de CentOS:
+
+```sh
+free -m
+	  total   used   free   shared   buff/cache   available
+Mem:   993     467    136    7        390          365
+Swap:  819     0      819
+
+swapon -s
+Filename   Type        Size    Used   Priorit
+/dev/dm-1  partition   839676  0      -1
+```
+
+En el ejemplo anterior, la opción `-m` se usa con el comando `free` para mostrar las estadísticas de memoria en megabytes. Tenga en cuenta que este es un sistema bastante silencioso en cuanto a memoria. Además, la opción `-s` se utiliza con el comando `swapon` para mostrar las estadísticas del espacio de intercambio. En algunas distribuciones, puede obtener la misma información del archivo `/proc/swaps`.
+
+La columna Prioridad dentro de las estadísticas del espacio de intercambio del ejemplo anterior se muestra como negativa (-1). El número de prioridad determina qué espacio de intercambio se utiliza primero (si hay varios espacios de intercambio). Si no establece el número de prioridad, lo crea el kernel de Linux y se establecerá en un número negativo. Puedes establecer la prioridad tú mismo y, si lo haces, debe ser un número positivo. Los números más altos obtienen una mayor preferencia de uso.
+
+Una vez que haya creado una nueva partición de disco, el comando `mkswap` se usa para "formatear" la partición en una partición de intercambio. A continuación se muestra un ejemplo en un sistema CentOS, utilizando privilegios de super usuario:
+
+```sh
+mkswap /dev/sdd1
+
+Setting up swapspace version 1, size = 838652 KiB 
+no label, UUID=3297cded-69e9–4d35-b29f-c50cf263fb8b
+
+blkid
+[...]
+/dev/sdd1: UUID="3297cded-[...]-c50cf263fb8b" TYPE="swap"
+```
+
+Ahora que la partición de intercambio se ha preparado adecuadamente, puede activarla usando el comando `swapon`, como se muestra aquí:
+
+```sh
+swapon /dev/sdd1
+
+swapon -s
+Filename   Type        Size    Used   Priority
+/dev/dm-1  partition   839676  0      -1
+/dev/sdd1  partition   838652  0      -2
+
+free -m
+	  total   used   free   shared   buff/cache   available
+Mem:   993     581    66     8        345          249
+Swap:  1638    0      1638
+```
+
+Puede ver que el tamaño del espacio de intercambio ha aumentado significativamente debido a la adición de una segunda partición de intercambio. Si lo desea, la prioridad de uso de la nueva partición de intercambio se puede cambiar de su actual negativo dos (-2) a una prioridad más alta usando el comando `swapon`, como se muestra aquí:
+
+```sh
+swapoff /dev/sdd1
+
+swapon -p 0 /dev/sdd1
+
+swapon -s
+Filename   Type        Size    Used   Priority
+/dev/dm-1  partition   839676  4      -1
+/dev/sdd1  partition   838652  0      0
+```
+
+Primero debe usar el comando `swapoff` en la partición de intercambio antes de cambiar su prioridad y luego usar el comando `swapon -p prioridad` para cambiar la prioridad de preferencia. Puede establecer la prioridad en cualquier número entre 0 y 32767. Para las diversas opciones disponibles con el comando `swapon`, escriba `man swapon` en la línea de comando.
+
+Si todo está bien con su nueva partición de intercambio, debe agregarla al archivo `/etc/fstab` para que sea persistente. Puede imitar fielmente la configuración de registro de la partición de intercambio actual, pero asegúrese de cambiar el nombre de la partición a su nueva partición de intercambio.
+### Mirando los sistemas de archivos basados en red
+Algunos sistemas de archivos no están conectados localmente, sino que residen físicamente en medios de almacenamiento conectados a la red. Estos sistemas de archivos basados en red se comparten en toda la red.
+
+Los sistemas de archivos que se pueden incluir en esta categoría son NFS y Sistema de archivos común de Internet (CIFS), que se implementa a través de Samba  y se llama SMBFS en sistemas más antiguos.
+
+Puede ampliar un poco la definición del sistema de archivos para incluir el almacenamiento conectado en red (NAS), que tiene distribuciones completas de Linux disponibles para implementarlo, como OpenMediaVault. NAS normalmente utiliza NFS o CIFS como núcleo. Mientras ampliamos las definiciones, incluyamos las redes conectadas a almacenamiento (SAN). Puede implementar una SAN con el protocolo iSCSI en Linux.
+### Comprender el montaje automático
+Muchas distribuciones montan automáticamente medios extraíbles, como unidades flash USB y DVD, en un directorio virtual de Linux. Normalmente, en varias distribuciones actuales, los medios extraíbles se montan automáticamente en el directorio `/run` o `/media`. La administración dinámica de dispositivo es responsable de manejar las funciones de montaje automático de estos dispositivos. Las distribuciones de Linux más antiguas utilizaban el demonio de capa de abstracción de hardware (`HALd`) y, a menudo, montaban medios extraíbles en el directorio `/mnt`.
+### Explorando AutoFS
+Otro tipo de montaje automático está orientado a sistemas de archivos basados en red. Por ejemplo, el servicio de montaje automático, `AutoFS`, puede gestionar las funciones de montaje automático de los sistemas de archivos NFS, así como las de otros sistemas de archivos basados en red. Puede colocar sistemas de archivos NFS en el archivo de configuración `/etc/fstab` para que se monten automáticamente al iniciar el sistema. Sin embargo, en algunos casos, el sistema puede experimentar problemas de rendimiento al utilizar esta disposición. Al permitir que `AutoFS` administre el montaje de sistemas de archivos NFS, evitará estos problemas. Por ejemplo, una forma en que `AutoFS` ayuda con el rendimiento del sistema es que los sistemas de archivos NFS se montan cuando se accede a ellos en lugar de en el momento del inicio del sistema. Esto hace que el proceso de arranque sea mucho más rápido.
+
+`AutoFS` utiliza el archivo `/etc/auto.master`, también llamado mapa maestro, como su archivo de configuración principal para administrar el almacenamiento de red conectado automáticamente. El archivo de mapa maestro brinda al servicio `AutoFS` información sobre los sistemas de archivos basados en red, incluido dónde se encuentran actualmente, dónde se montarán y las opciones a usar.
+Excepto por las líneas de comentarios que están precedidas por una almohadilla (`#`), cada entrada del mapa maestro tiene este formato básico:
+
+```sh
+mount-point map-name [ mount-options ]
+```
+
+Las entradas en el mapa maestro son uno de tres tipos de mapas diferentes. Cada tipo de mapa determina la sintaxis exacta de la entrada del mapa maestro. Estos mapas se describen aquí:
+**Built-in-map** El archivo de mapa incorporado se activa al tener `-hosts` en el campo de nombre del mapa de un mapa maestro. Tiene `AutoFS` para montar todos los sistemas de archivos NFS disponibles desde cualquier servidor NFS listado dentro de un directorio especial, `/net`. (Esto a veces se denomina montaje diferido, pero el mapeo integrado suena mejor).
+
+Por ejemplo, si desea montar el sistema de archivos NFS del servidor NFS, Server01, necesitará el directorio `/net/Server01`, junto con la entrada de mapa incorporada en el archivo de mapa maestro. El sistema de archivos NFS del Servidor01 se montaría automáticamente en `/net/Server01`. Por lo tanto, los directorios no sólo sirven como disparadores para el mapa integrado, sino que también sirven como punto de montaje. Puede tener varios directorios en `/net`, uno para cada servidor NFS. Por ejemplo, si también tiene sistemas de archivos NFS en Server02 y Server03, los directorios `/net/Server02` y `/net/Server03` también actuarían como activadores para el mapa integrado y los puntos de montaje.
+
+Una entrada de mapa incorporada típica en el archivo de mapa maestro se ve así:
+
+```sh
+/net   -hosts
+```
+
+**Direct map** Una entrada de mapa directo es simplemente un puntero a otro archivo. El otro archivo es `/etc/auto.direct`. Esta entrada normalmente no está en el mapa maestro de forma predeterminada, por lo que si la deseas, tendrás que agregarla. Una entrada típica de mapa directo en el archivo de mapa maestro se ve así:
+
+```sh
+/-  /etc/auto.direct
+```
+
+Dentro del archivo `/etc/auto.direct`, se enumeran los nombres de ruta de directorio absolutos para los puntos de montaje, así como las opciones y sus servidores asociados. Dos entradas típicas en el archivo de mapa directo pueden verse así:
+
+```sh
+/home/bucket server01.acme.com:/home/bucket
+/mnt/nfs/var/nfsshare  192.168.56.101:/var/nfsshare
+```
+
+**IndirectMaps** Una entrada de mapa indirecto también es un puntero a otro archivo. El otro archivo es `/etc/auto.directory`, donde el directorio coincide con el punto de montaje. Por ejemplo, la típica entrada de mapa indirecto predeterminada en el archivo del mapa maestro se ve así:
+
+```
+/misc /etc/auto.misc
+```
+
+El archivo `/etc/auto.misc` se utiliza normalmente para montar medios extraíbles, como sistemas de archivos ópticos o unidades flash USB. También tiene varias entradas disponibles para su uso si no incluyen ninguna marca hash anterior, como esta: 
+
+```
+cd -fstype=iso9660,ro,nosuid,nodev :/dev/cdrom
+```
+
+Debido a que este archivo es un mapa indirecto, esta entrada hará que cualquier CD se monte en el directorio `/misc`, específicamente usando el punto de montaje `/misc/cd`. Por lo tanto, aquí se aplica el término mapa indirecto. Mientras que un archivo de mapa directo indica una referencia de directorio absoluta, como `/home/bucket`, un archivo de mapa indirecto solo enumera un punto de mapa relativo, como cd, que se montará en el directorio que figura en su entrada de mapa maestro, como `/misceláneos`
+
+Puede tener archivos de mapas indirectos adicionales según sea necesario. Por ejemplo, si su empresa tenía proyectos especiales llamados ProjectX y ProjectY, que requerían espacio de trabajo temporal (pero sin respaldo) en el directorio `/tmp` para varios sistemas, podría configurar dos sistemas de archivos NFS y luego agregar una entrada como tal en su mapa maestro:
+
+```
+/tmp /etc/auto.tmp
+```
+
+Siguiendo con este ejemplo, crearía el archivo `/etc/auto.tmp`. Este archivo de mapa indirecto podría contener las dos entradas siguientes:
+
+```
+proyectox -fstype=nfs4,rw :/tmp/projectx 
+proyectoy -fstype=nfs4,rw :/tmp/projecty
+```
+
+También se pueden incluir mapas secundarios adicionales, que son útiles si tiene una implementación de sistema de archivos basado en red a gran escala. Esta entrada en el mapa maestro incluye todos los mapas (cuyas entradas deben seguir el mismo formato que las del archivo de mapa maestro) ubicados en el directorio `/etc/auto.master.d/`:
+
+```
++dir:/etc/auto.master.d
+```
+
+Cuando modifique la configuración de `AutoFS` y los archivos de mapas, deberá reiniciar su servicio `AutoFS`. Además, recuerde que necesitará acceder al directorio que se montará automáticamente mediante `AutoFS` (un comando `ls` será suficiente) para activar el montaje automático de ese directorio. Puede verificar que el directorio esté montado usando el comando `df`. Si el directorio no se está montando, verifique el archivo `/var/log/messages` para ver si hay mensajes de error pertinentes.
+
+`AutoFS` y sus mapas permiten una gran flexibilidad para el montaje automático de sistemas de archivos basados en red. Si decide configurar `AutoFS` y agregarle cualquier sistema de archivos basado en red que actualmente esté montado mediante el archivo `/etc/fstab`, asegúrese de eliminarlo de `/etc/fstab` o tendrá algunas situaciones interesantes durante su próximo reinicio de sistema. 
+### Explorando unidades de montaje automático
+Si su servidor Linux tiene `systemd`, puede configurar el montaje bajo demanda, así como el montaje en paralelo utilizando unidades de montaje automático. Además, puede configurar los sistemas de archivos para que se desmonten automáticamente ante la falta de actividad.
+
+Un archivo de configuración de unidad de montaje automático funciona de manera muy similar a un archivo de unidad de montaje. La convención de nomenclatura es la misma, excepto que la extensión del archivo es `.automount`.
+
+Dentro de un archivo de configuración de unidad de montaje automático, solo hay tres opciones disponibles. La opción Dónde es una opción obligatoria y está configurada exactamente de la misma manera que en los archivos de la unidad de montaje.
+
+La opción `DirectoryMode` no es una opción obligatoria. La configuración de la opción determina los permisos colocados en cualquier punto de montaje y directorio principal creado automáticamente. De forma predeterminada, está configurado en el código octal 0755.
+
+La opción `TimeOutIdleSec` tampoco es necesaria. Esta opción particular le permite configurar la cantidad de tiempo (en segundos) que un sistema de archivos montado ha estado inactivo. Una vez que se alcanza el límite de tiempo, el sistema de archivos se desmonta. Por defecto esta opción está deshabilitada.
+### Mirando los sistemas de archivos cifrados
+Otro grupo de sistemas de archivos que merece una mirada son los sistemas de archivos cifrados. El cifrado es el proceso de convertir texto que un humano o una máquina puede leer (texto sin formato) en texto que un humano o una máquina no puede leer (texto cifrado) y viceversa, utilizando un algoritmo (cifrado). El descifrado invierte el proceso, permitiéndole acceder/leer el texto y, por lo general, requiere una clave (o un conjunto de claves) mediante el algoritmo. La(s) clave(s) suele ser una frase de contraseña, que es similar a una contraseña.
+
+En Linux se pueden utilizar un par de sistemas de archivos cifrados con Linux e incluyen los siguientes:
+**dm-crypt El cifrado dm-crypt** se puede implementar utilizando la utilidad `cryptsetup`. Este tipo puede resultar un poco confuso, porque el software detrás de `cryptsetup` se llama `dm-crypt`, y su tipo de cifrado muy básico también se llama `dm-crypt`.
+
+Los sistemas de archivos cifrados `dm-crypt` utilizan Device Mapper. Esto permite que las aplicaciones utilicen texto sin formato, mientras que cualquier escritura en el volumen está cifrada.
+A menos que tenga un buen conocimiento del cifrado, no se recomienda utilizar el tipo `dmcrypt`. Utiliza un hash de frase de contraseña sin sal para su clave única y no mantiene metadatos en el volumen.
+
+`eCryptfs` Un tipo de sistema de archivos cifrado más nuevo, `eCryptfs`, es en realidad un pseudosistema de archivos en el sentido de que está superpuesto a un sistema de archivos actual. La capa proporciona capacidades de cifrado, que incluyen elegir qué algoritmo de cifrado utilizar, como AES, Blowfish, des3_ede, etc.
+
+Una de las cosas más interesantes de `eCryptfs` es que no hay nuevos comandos de utilidad que aprender. Siempre que tenga el paquete de software `ecryptfs-utils` en su sistema, simplemente use el comando `mount` con `eCryptfs` de la siguiente manera:
+
+```sh
+mount -t ext4 /dev/sdd1 /home
+mount -t eCryptfs /home /home
+```
+
+El primer comando de montaje adjunta la partición a la estructura del directorio virtual de Linux. El segundo comando de montaje coloca el sistema de archivos `eCryptfs` encima.
+
+El sistema de archivos `eCryptfs` cifra una partición o volumen archivo por archivo. Además, los archivos cifrados se pueden copiar entre varios sistemas, porque los metadatos de `eCryptfs` se almacenan en el encabezado de cada archivo.
+
+Puede agregar opciones como tamaño de bytes de clave, elección de cifrado, cifrado de nombre de archivo, etc. mediante la opción `-o` del comando `mount`. Además, los volúmenes `eCryptfs` se pueden montar automáticamente al iniciar el sistema mediante entradas en el archivo `/etc/fstab`.
+
+**Configuración de clave unificada de Linux (LUKS)** LUKS es un tipo de sistema de archivos cifrado `dm-crypt` mejorado. También se puede implementar utilizando la utilidad `cryptsetup` y utiliza Device Mapper. Es el método preferido sobre el tipo básico `dm-crypt`.
+
+LUKS utiliza una clave maestra y varias claves de usuario. Mantiene metadatos en el volumen y proporciona funciones antiforenses mejoradas.
+
+Tenga en cuenta que el cifrado no significa protección contra desastres de hardware. Sólo ayuda a proteger los datos de quienes no deberían tener acceso a ellos. Aún necesita emplear todos los demás elementos y métodos importantes para proteger la integridad de sus datos.
+### Mantenimiento de sistemas de archivos Linux
+Parte de la gestión de un sistema Linux incluye el mantenimiento adecuado de sus sistemas de archivos a través de varias utilidades del sistema disponibles para este fin. El mantenimiento del sistema de archivos comprende la manipulación de sistemas de archivos estándar a través de utilidades como `tune2fs`, monitorear el estado de un sistema de archivos y repararlos cuando se encuentran problemas.
+### Ajustar un sistema de archivos
+Es posible que sea necesario ajustar un sistema de archivos por varias razones, y estas pueden incluir muchos elementos diferentes. Por ejemplo, puede decidir cambiar la etiqueta de un sistema de archivos porque ya no refleja el propósito del sistema de archivos.
+
+Las utilidades para ajustar sistemas de archivos suelen ser específicas de un determinado sistema de archivos o grupo de sistemas de archivos. Para los sistemas de archivos extendidos ext2, ext3 y ext4, puede utilizar las utilidades.
+### Cómo ver la información del sistema de archivos EXT2/EXT3/EXT4
+
+**dumpe2fs** es una herramienta de línea de comandos que se utiliza para volcar información del sistema de archivos ext2/ext3/ext4, lo que significa que muestra información de super bloques y grupos de bloques para el sistema de archivos en el dispositivo.
+
+Antes de ejecutar **dumpe2fs**, asegúrese de ejecutar el comando `df -hT` para conocer los nombres de los dispositivos del sistema de archivos.
+
+```sh
+sudo dumpe2fs /dev/sda10
+```
+
+##### Sample Output
+
+```sh
+dumpe2fs 1.42.13 (17-May-2015)
+Filesystem volume name:   
+Last mounted on:          /
+Filesystem UUID:          bb29dda3-bdaa-4b39-86cf-4a6dc9634a1b
+Filesystem magic number:  0xEF53
+Filesystem revision #:    1 (dynamic)
+Filesystem features:      has_journal ext_attr resize_inode dir_index filetype needs_recovery extent flex_bg sparse_super large_file huge_file uninit_bg dir_nlink extra_isize
+Filesystem flags:         signed_directory_hash 
+Default mount options:    user_xattr acl
+Filesystem state:         clean
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              21544960
+Block count:              86154752
+Reserved block count:     4307737
+Free blocks:              22387732
+Free inodes:              21026406
+First block:              0
+Block size:               4096
+Fragment size:            4096
+Reserved GDT blocks:      1003
+Blocks per group:         32768
+Fragments per group:      32768
+Inodes per group:         8192
+Inode blocks per group:   512
+Flex block group size:    16
+Filesystem created:       Sun Jul 31 16:19:36 2016
+Last mount time:          Mon Nov  6 10:25:28 2017
+Last write time:          Mon Nov  6 10:25:19 2017
+Mount count:              432
+Maximum mount count:      -1
+Last checked:             Sun Jul 31 16:19:36 2016
+Check interval:           0 ()
+Lifetime writes:          2834 GB
+Reserved blocks uid:      0 (user root)
+Reserved blocks gid:      0 (group root)
+First inode:              11
+Inode size:	          256
+Required extra isize:     28
+Desired extra isize:      28
+Journal inode:            8
+First orphan inode:       6947324
+Default directory hash:   half_md4
+Directory Hash Seed:      9da5dafb-bded-494d-ba7f-5c0ff3d9b805
+Journal backup:           inode blocks
+Journal features:         journal_incompat_revoke
+Journal size:             128M
+Journal length:           32768
+Journal sequence:         0x00580f0c
+Journal start:            12055
+```
+
+Puedes pasar el indicador `-b` para mostrar cualquier bloque reservado como incorrecto en el sistema de archivos (ninguna salida implica bloques incorrectos):
+
+```sh
+dumpe2fs -b
+```
+
+### Comprobación de errores en los sistemas de archivos EXT2/EXT3/EXT4
+
+**e2fsck** se utiliza para examinar los sistemas de archivos ext2/ext3/ext4 en busca de errores y `fsck` verificaciones y, opcionalmente, puede reparar un sistema de archivos Linux; Básicamente es una interfaz para una variedad de verificadores de sistemas de archivos (`fsck.fstype` por ejemplo `fsck.ext3`, `fsck.sfx` etc) que se ofrecen en Linux.
+
+Recuerde que Linux ejecuta `e2fack/fsck` automáticamente al iniciar el sistema en las particiones etiquetadas para registrar el archivo de configuración `/etc/fstab` . Normalmente, esto se hace después de que un sistema de archivos no se ha desmontado limpiamente.
+
+**Atención**: No ejecute `e2fsck` o `fsck` en sistemas de archivos montados, siempre desmonte una partición antes de poder ejecutar estas herramientas en ella, como se muestra a continuación.
+
+```sh
+sudo unmount /dev/sda10
+sudo fsck /dev/sda10
+```
+
+Alternativamente, habilite la salida detallada con el interruptor `-V` y use `-t` para especificar un tipo de sistema de archivos como este:
+
+```sh
+sudo fsck -Vt ext4 /dev/sda10
+```
+
+### Tuning EXT2/EXT3/EXT4 Filesystems
+
+Mencionamos desde el principio que una de las causas del daño del sistema de archivos es el ajuste incorrecto. Puede utilizar la utilidad `tune2fs` para cambiar los parámetros ajustables de los sistemas de archivos ext2/ext3/ext4 como se explica a continuación.
+
+Para ver el contenido del super bloque del sistema de archivos, incluidos los valores actuales de los parámetros, use la opción `-l` como se muestra.
+
+```sh
+sudo tune2fs -l /dev/sda10
+```
+##### Sample Output
+
+```sh
+tune2fs 1.42.13 (17-May-2015)
+Filesystem volume name:   
+Last mounted on:          /
+Filesystem UUID:          bb29dda3-bdaa-4b39-86cf-4a6dc9634a1b
+Filesystem magic number:  0xEF53
+Filesystem revision #:    1 (dynamic)
+Filesystem features:      has_journal ext_attr resize_inode dir_index filetype needs_recovery extent flex_bg sparse_super large_file huge_file uninit_bg dir_nlink extra_isize
+Filesystem flags:         signed_directory_hash 
+Default mount options:    user_xattr acl
+Filesystem state:         clean
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              21544960
+Block count:              86154752
+Reserved block count:     4307737
+Free blocks:              22387732
+Free inodes:              21026406
+First block:              0
+Block size:               4096
+Fragment size:            4096
+Reserved GDT blocks:      1003
+Blocks per group:         32768
+Fragments per group:      32768
+Inodes per group:         8192
+Inode blocks per group:   512
+Flex block group size:    16
+Filesystem created:       Sun Jul 31 16:19:36 2016
+Last mount time:          Mon Nov  6 10:25:28 2017
+Last write time:          Mon Nov  6 10:25:19 2017
+Mount count:              432
+Maximum mount count:      -1
+Last checked:             Sun Jul 31 16:19:36 2016
+Check interval:           0 ()
+Lifetime writes:          2834 GB
+Reserved blocks uid:      0 (user root)
+Reserved blocks gid:      0 (group root)
+First inode:              11
+Inode size:	          256
+Required extra isize:     28
+Desired extra isize:      28
+Journal inode:            8
+First orphan inode:       6947324
+Default directory hash:   half_md4
+Directory Hash Seed:      9da5dafb-bded-494d-ba7f-5c0ff3d9b805
+Journal backup:           inode blocks
+```
+
+A continuación, utilizando el indicador `-c` , puedes establecer el número de montajes después de los cuales `e2fsck` comprobará el sistema de archivos. Este comando indica al sistema que ejecute `e2fsck` en `/dev/sda10` después de cada **4** montajes.
+
+```sh
+sudo tune2fs -c 4 /dev/sda10
+
+tune2fs 1.42.13 (17-May-2015)
+Setting maximal mount count to 4
+```
+
+También puedes definir el tiempo entre dos comprobaciones del sistema de archivos con la opción `-i` . El siguiente comando establece un intervalo de **2** días entre comprobaciones del sistema de archivos.
+
+```sh
+sudo tune2fs  -i  2d  /dev/sda10
+
+tune2fs 1.42.13 (17-May-2015)
+Setting interval between checks to 172800 seconds
+```
+
+Ahora, si ejecuta este comando a continuación, el intervalo de verificación del sistema de archivos para `/dev/sda10` ahora está configurado.
+
+```sh
+sudo tune2fs -l /dev/sda10
+```
+
+##### Sample Output
+
+```sh
+Filesystem created:       Sun Jul 31 16:19:36 2016
+Last mount time:          Mon Nov  6 10:25:28 2017
+Last write time:          Mon Nov  6 13:49:50 2017
+Mount count:              432
+Maximum mount count:      4
+Last checked:             Sun Jul 31 16:19:36 2016
+**Check interval:           172800 (2 days)**
+Next check after:         Tue Aug  2 16:19:36 2016
+Lifetime writes:          2834 GB
+Reserved blocks uid:      0 (user root)
+Reserved blocks gid:      0 (group root)
+First inode:              11
+Inode size:	          256
+Required extra isize:     28
+Desired extra isize:      28
+Journal inode:            8
+First orphan inode:       6947324
+Default directory hash:   half_md4
+Directory Hash Seed:      9da5dafb-bded-494d-ba7f-5c0ff3d9b805
+Journal backup:           inode blocks
+```
+
+Para cambiar los parámetros de registro predeterminados, utilice la opción `-J` . Esta opción también tiene subopciones: **size=diario-tamaño** (establece el tamaño del diario), **device=external-diario** (especifica el dispositivo en el que se almacena) y `ubicación=diario-ubicación` (define la ubicación de la revista).
+
+Tenga en cuenta que solo se puede configurar una de las opciones de tamaño o dispositivo para un sistema de archivos:
+
+```sh
+sudo tune2fs -J size=4MB /dev/sda10
+```
+
+Por último, pero no menos importante, la etiqueta de volumen de un sistema de archivos se puede configurar usando la opción `-L` como se muestra a continuación.
+
+```sh
+sudo tune2fs -L "ROOT" /dev/sda10
+```
+
+### Debug EXT2/EXT3/EXT4 Filesystems
+
+**debugfs** es un depurador de sistemas de archivos ext2/ext3/ext4, sencillo e interactivo, basado en una línea de comandos. Le permite modificar los parámetros del sistema de archivos de forma interactiva. Para ver subcomandos o solicitudes, escriba `"?"`.
+
+```sh
+sudo debugfs /dev/sda10
+```
+
+De forma predeterminada, el sistema de archivos debe abrirse en modo lectura-escritura; utilice el indicador `-w` para abrirlo en modo lectura-escritura. Para abrirlo en modo catastrófico, use la opción `-c` .
+
+##### Sample Output
+
+```sh
+debugfs 1.42.13 (17-May-2015)
+debugfs:  ?
+Available debugfs requests:
+
+show_debugfs_params, params
+Show debugfs parameters
+open_filesys, open       Open a filesystem
+close_filesys, close     Close the filesystem
+freefrag, e2freefrag     Report free space fragmentation
+feature, features        Set/print superblock features
+dirty_filesys, dirty     Mark the filesystem as dirty
+init_filesys             Initialize a filesystem (DESTROYS DATA)
+show_super_stats, stats  Show superblock statistics
+ncheck                   Do inode->name translation
+icheck                   Do block->inode translation
+change_root_directory, chroot
+[....]
+```
+
+Para mostrar la fragmentación del espacio libre, utilice la solicitud **freefrag** de este modo.
+```
+debugfs: freefrag
+```
+
+##### Sample Output
+
+```sh
+Device: /dev/sda10
+Blocksize: 4096 bytes
+Total blocks: 86154752
+Free blocks: 22387732 (26.0%)
+
+Min. free extent: 4 KB 
+Max. free extent: 2064256 KB
+Avg. free extent: 2664 KB
+Num. free extent: 33625
+
+HISTOGRAM OF FREE EXTENT SIZES:
+Extent Size Range :  Free extents   Free Blocks  Percent
+    4K...    8K-  :          4883          4883    0.02%
+    8K...   16K-  :          4029          9357    0.04%
+   16K...   32K-  :          3172         15824    0.07%
+   32K...   64K-  :          2523         27916    0.12%
+   64K...  128K-  :          2041         45142    0.20%
+  128K...  256K-  :          2088         95442    0.43%
+  256K...  512K-  :          2462        218526    0.98%
+  512K... 1024K-  :          3175        571055    2.55%
+    1M...    2M-  :          4551       1609188    7.19%
+    2M...    4M-  :          2870       1942177    8.68%
+    4M...    8M-  :          1065       1448374    6.47%
+    8M...   16M-  :           364        891633    3.98%
+   16M...   32M-  :           194        984448    4.40%
+   32M...   64M-  :            86        873181    3.90%
+   64M...  128M-  :            77       1733629    7.74%
+  128M...  256M-  :            11        490445    2.19%
+  256M...  512M-  :            10        889448    3.97%
+  512M... 1024M-  :             2        343904    1.54%
+    1G...    2G-  :            22      10217801   45.64%
+debugfs:  
+```
+
+Puede explorar muchas otras solicitudes, como crear o eliminar archivos o directorios, cambiar el directorio de trabajo actual y mucho más, simplemente leyendo la breve descripción proporcionada. Para salir de `debugfs`, utilice la solicitud `q` .
+
+Con algunas distribuciones migrando a XFS como sistema de archivos predeterminado, comprender las diversas utilidades XFS se ha vuelto aún más importante. Las utilidades utilizadas para modificar el sistema de archivos XFS:
+
+`xfs_fsr` Se utiliza para desfragmentar sistemas de archivos XFS montados. Cuando se invoca sin argumentos, `xfs_fsr` desfragmenta todos los archivos normales en todos los sistemas de archivos XFS montados. Esta utilidad también permite a los usuarios suspender una desfragmentación en un momento específico y continuar desde donde la dejó más tarde.
+
+Además, `xfs_fsr` también permite la desfragmentación de un solo archivo, como en `xfs_fsr _/path/to/file_`. Red Hat desaconseja desfragmentar periódicamente un sistema de archivos completo, ya que normalmente esto no está garantizado.
+
+`xfs_bmap` Imprime el mapa de bloques de disco utilizados por los archivos en un sistema de archivos XFS. Este mapa enumera cada extensión utilizada por un archivo específico, así como las regiones del archivo sin bloques correspondientes (es decir, agujeros).
+
+`xfs_info` Prints XFS file system information.
+
+`xfs_admin` Cambia los parámetros de un sistema de archivos XFS. La utilidad `xfs_admin` solo puede modificar parámetros de dispositivos o sistemas de archivos desmontados.
+
+`xfs_copy` Copia el contenido de un sistema de archivos XFS completo a uno o más destinos en paralelo.
+
+Las siguientes utilidades también son útiles para depurar y analizar sistemas de archivos XFS:
+
+`xfs_metadump` Copia los metadatos del sistema de archivos XFS en un archivo. La utilidad `xfs_metadump` solo debe usarse para copiar sistemas de archivos desmontados, de solo lectura o congelados/suspendidos; de lo contrario, los volcados generados podrían estar dañados o ser inconsistentes.
+
+`xfs_mdrestore` Restaura una imagen de metavolcado XFS (generada mediante `xfs_metadump`) en una imagen del sistema de archivos.
+
+`xfs_db` Debugs an XFS file system.
+
+Es probable que el sistema de archivos Btrfs más nuevo aparezca en una distribución que esté administrando. Por lo tanto, hemos incluido utilidades para modificar el sistema de archivos Btrfs.
+
+```
+       balance
+           Balance btrfs filesystem chunks across single or several
+           devices.
+
+       check
+           Do off-line check on a btrfs filesystem.
+
+       device
+           Manage devices managed by btrfs, including add/delete/scan
+           and so on.
+
+       filesystem
+           Manage a btrfs filesystem, including label setting/sync and
+           so on.
+
+       inspect-internal
+           Debug tools for developers/hackers.
+
+       property
+           Get/set a property from/to a btrfs object.
+
+       qgroup
+           Manage quota group(qgroup) for btrfs filesystem.
+
+       quota
+           Manage quota on btrfs filesystem like enabling/rescan and
+           etc.
+
+       receive
+           Receive subvolume data from stdin/file for restore and etc.
+
+       replace
+           Replace btrfs devices.
+
+       rescue
+           Try to rescue damaged btrfs filesystem.
+
+       restore
+           Try to restore files from a damaged btrfs filesystem.
+
+       scrub
+           Scrub a btrfs filesystem.
+
+       send
+           Send subvolume data to stdout/file for backup and etc.
+
+       subvolume
+           Create/delete/list/manage btrfs subvolume.
+```
+
+### Comprobación y reparación de un sistema de archivos
+Proteger, monitorear y reparar un sistema de archivos van de la mano. Afortunadamente, hay muchas herramientas en esta categoría que puedes emplear.
+
+Utilidades de administración de sistemas de archivos que son capaces de verificar y reparar sistemas de archivos. Estas herramientas a menudo se denominan herramientas `fsck`, donde `fsck` es una versión abreviada de verificación del sistema de archivos. En la mayoría de los casos, estas utilidades se ejecutan automáticamente durante el inicio del sistema, si es necesario, pero también se pueden invocar manualmente si es necesario.
+### Escenarios que requieren una verificación del sistema de archivos
+Las herramientas `fsck` relevantes se pueden utilizar para verificar su sistema si ocurre cualquiera de las siguientes situaciones:
+- El sistema no arranca
+- Los archivos de un disco específico se corrompen
+- El sistema de archivos se cierra o cambia a solo lectura debido a inconsistencias
+- Un archivo en el sistema de archivos es inaccesible
+
+Las inconsistencias del sistema de archivos pueden ocurrir por varias razones, que incluyen, entre otras, errores de hardware, errores de administración de almacenamiento y errores de software.
+
+Para los sistemas de archivos con registro en diario, todo lo que normalmente se requiere en el momento del arranque es reproducir el diario si es necesario y esta suele ser una operación muy breve.
+
+Sin embargo, si se produce una inconsistencia o corrupción en el sistema de archivos, incluso para sistemas de archivos con registro en diario, se debe utilizar el verificador del sistema de archivos para reparar el sistema de archivos.
+###  Posibles efectos secundarios de ejecutar `fsck`
+Generalmente, se puede esperar que la ejecución de la herramienta de reparación y verificación del sistema de archivos repare automáticamente al menos algunas de las inconsistencias que encuentre. En algunos casos, pueden surgir los siguientes problemas:
+- Los inodos o directorios gravemente dañados pueden descartarse si no se pueden reparar.
+- Pueden ocurrir cambios significativos en el sistema de archivos.
+
+Para garantizar que no se realicen cambios inesperados o no deseados de forma permanente, asegúrese de seguir los pasos de precaución descritos en el procedimiento.
+### Mecanismos de manejo de errores en XFS
+Esta sección describe cómo XFS maneja varios tipos de errores en el sistema de archivos.
+- Desmontajes impuros
+
+Journalling mantiene un registro transaccional de los cambios de metadatos que ocurren en el sistema de archivos.
+
+En caso de una falla del sistema, un corte de energía u otro desmontaje no limpio, XFS usa el diario (también llamado registro) para recuperar el sistema de archivos. El kernel realiza una recuperación del diario al montar el sistema de archivos XFS.
+#### Corrupción
+En este contexto, la corrupción significa errores en el sistema de archivos causados por, por ejemplo:
+- Fallos de hardware
+- Errores en el firmware de almacenamiento, los controladores de dispositivos, la pila de software o el propio sistema de archivos
+- Problemas que hacen que partes del sistema de archivos se sobrescriban con algo externo al sistema de archivos
+
+Cuando XFS detecta daños en el sistema de archivos o en los metadatos del sistema de archivos, puede cerrar el sistema de archivos e informar el incidente en el registro del sistema. Tenga en cuenta que si la corrupción ocurrió en el sistema de archivos que aloja el directorio `/var`, estos registros no estarán disponibles después de reiniciar.
+
+**System log entry reporting an XFS corruption**
+
+```sh
+# dmesg --notime | tail -15
+
+XFS (loop0): Mounting V5 Filesystem
+XFS (loop0): Metadata CRC error detected at xfs_agi_read_verify+0xcb/0xf0 [xfs], xfs_agi block 0x2
+XFS (loop0): Unmount and run xfs_repair
+XFS (loop0): First 128 bytes of corrupted metadata buffer:
+00000000027b3b56: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+000000005f9abc7a: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+000000005b0aef35: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000000da9d2ded: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+000000001e265b07: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+000000006a40df69: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+000000000b272907: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000000e484aac5: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+XFS (loop0): metadata I/O error in "xfs_trans_read_buf_map" at daddr 0x2 len 1 error 74
+XFS (loop0): xfs_imap_lookup: xfs_ialloc_read_agi() returned error -117, agno 0
+XFS (loop0): Failed to read root inode 0x80, error 11
+```
+
+Las utilidades de espacio de usuario suelen informar el mensaje de error de entrada/salida cuando intentan acceder a un sistema de archivos XFS dañado. Montar un sistema de archivos XFS con un registro dañado da como resultado un montaje fallido y el siguiente mensaje de error:
+
+```sh
+mount: : mount(2) system call failed: Structure needs cleaning.
+```
+
+Debe utilizar manualmente la utilidad `xfs_repair` para reparar la corrupción.
+### Comprobación de un sistema de archivos XFS con `xfs_repair`
+Este procedimiento realiza una verificación de solo lectura de un sistema de archivos XFS utilizando la utilidad `xfs_repair`. Debe utilizar manualmente la utilidad `xfs_repair` para reparar cualquier daño. A diferencia de otras utilidades de reparación de sistemas de archivos, `xfs_repair` no se ejecuta en el momento del arranque, incluso cuando un sistema de archivos XFS no se desmontó limpiamente. En caso de un desmontaje incorrecto, XFS simplemente reproduce el registro en el momento del montaje, lo que garantiza un sistema de archivos coherente; `xfs_repair` no puede reparar un sistema de archivos XFS con un registro sucio sin volver a montarlo primero.
+
+Procedimiento
+Reproduzca el registro montando y desmontando el sistema de archivos:
+
+```sh
+mount file-system
+umount file-system
+```
+
+Utilice la utilidad `xfs_repair` para realizar un ensayo y comprobar el sistema de archivos. Cualquier error se imprime y una indicación de las acciones que se tomarían, sin modificar el sistema de archivos.
+
+```sh
+xfs_repair -n _block-device_
+```
+
+Monte el sistema de archivos:
+
+```sh
+mount file-system
+```
+
+#### Reparar un sistema de archivos XFS con `xfs_repair`
+Este procedimiento repara un sistema de archivos XFS dañado utilizando la utilidad `xfs_repair`.
+#### Procedimiento
+Cree una imagen de metadatos antes de la reparación con fines de diagnóstico o prueba utilizando la utilidad `xfs_metadump`. Una imagen de metadatos del sistema de archivos previa a la reparación puede resultar útil para las investigaciones de soporte si la corrupción se debe a un error de software. Los patrones de corrupción presentes en la imagen previa a la reparación pueden ayudar en el análisis de la causa raíz.
+
+Utilice la herramienta de depuración `xfs_metadump` para copiar los metadatos de un sistema de archivos XFS a un archivo. El archivo de metavolcado resultante se puede comprimir utilizando utilidades de compresión estándar para reducir el tamaño del archivo si es necesario enviar archivos de metavolcado grandes al soporte.
+
+```sh
+xfs_metadump block-device metadump-file
+```
+
+Vuelva a reproducir el registro volviendo a montar el sistema de archivos:
+
+```sh
+mount file-system
+umount file-system
+```
+
+Utilice la utilidad `xfs_repair` para reparar el sistema de archivos desmontado:
+
+Si el montaje se realizó correctamente, no se requieren opciones adicionales:
+
+```sh
+xfs_repair block-device
+```
+
+Si el montaje falló con el error La estructura necesita limpieza, el registro está dañado y no se puede reproducir. Utilice la opción `-L` (forzar la puesta a cero del registro) para borrar el registro:
+
+```sh
+xfs_repair -L block-device
+```
+
+Monte el sistema de archivos:
+
+```sh
+mount file-system
+```
+### Usando SMART
+El acrónimo SMART significa "Tecnología de informes y análisis de autocontrol". Los dispositivos SMART suelen ser unidades de disco duro o de estado sólido. Sin embargo, también pueden ser unidades de cinta conectadas SCSI.
+
+Un dispositivo SMART tiene un sistema incorporado que le permite comunicarse con el software de su sistema. Esta comunicación incluye proporcionar información sobre el estado del disco: posibles advertencias de fallas del disco y resultados de autopruebas.
+
+El demonio `smartd` permite monitorear cualquier dispositivo SMART conectado que tenga capacidad SMART. Puede verificar los dispositivos cada tantos minutos y registrar errores a través de su archivo de registro configurado, de forma predeterminada `/var/log/smartd.log`, `/var/log/messages` o `/var/log/syslog`, dependiendo de su distribución.
+
+Puede configurar `smartd` utilizando su archivo de configuración. Dependiendo de su distribución, el archivo es `/etc/smartd.conf` o `/etc/smartmontools/smartd.conf`.
+
+Puede interactuar directamente con dispositivos SMART utilizando el comando `smartctl`. Para ver la información de un dispositivo individual, puede usar el comando `smartctl -i dispositivo`, donde dispositivo es el nombre de archivo del dispositivo. Aquí hay un ejemplo recortado del uso de este comando en una Distribución basada en Debian, que muestra una unidad conectada por USB sin capacidades SMART:
+
+```sh
+sudo smartctl -i /dev/sda1
+[...]
+Vendor:               Maxtor
+Product:              OneTouch II
+[...]
+Device does not support SMART
+```
+
+No es necesario montar el dispositivo en el sistema para obtener su información SMART. Sólo es necesario conectarlo al sistema, lo que puede resultar útil.
+
+Muchos discos duros tienen capacidades SMART. Aquí hay un ejemplo recortado del uso del comando `smartctl` en una distribución de Ubuntu, que muestra un disco duro antiguo que tiene capacidades SMART:
+
+```sh
+sudo smartctl -i /dev/sda6
+[...]
+=== START OF INFORMATION SECTION ===
+Model Family:     Seagate Momentus 5400.6
+[...] 
+SMART support is: Available—device has SMART capability.
+SMART support is: Enabled
+```
+
+Observe en el ejemplo anterior no solo que la unidad tiene capacidades SMART sino también que la compatibilidad SMART está habilitada. Si su disco no tiene habilitada la compatibilidad con SMART, puede habilitarla usando el comando `smartctl -s` en el dispositivo.
+
+Puede realizar una serie de pruebas en su disco duro mediante la opción `-t` en el comando `smartctl`. La opción toma diferentes argumentos para determinar qué tipo de prueba realizar. Por ejemplo, puede realizar una prueba automática, corta o larga. Tanto la opción de autoprueba como la de prueba corta son bastante rápidas. La opción de prueba larga puede ser bastante larga, como se muestra en este ejemplo recortado:
+
+```sh
+sudo smartctl -t long /dev/sda6
+[...]
+=== START OF OFFLINE IMMEDIATE AND SELF-TEST SECTION ===
+[...] 
+Testing has begun.
+Please wait 74 minutes for test to complete.
+Test will complete after Fri Jan 22 12:44:10 2017 
+Use smartctl -X to abort test.
+```
+
+En el ejemplo anterior, puede ver que la prueba tardará 74 minutos en completarse. ¡Algunos viajes pueden tardar incluso más! No se mostrará ningún resultado en su terminal cuando se complete la prueba. Sin embargo, puede verificar el progreso de la prueba, como se muestra aquí:
+
+```sh
+sudo smartctl -a /dev/sda6 | grep -A1 "Self-test execution"
+Self-test execution status:  ( 249)Self-test routine in progress                                    
+									90% of test remaining.
+```
+
+No deje que el término rutina de autoprueba del listado anterior le confunda. Todas las pruebas son autopruebas y la prueba larga es una autoprueba extendida.
+
+Una vez realizada la prueba, puede ver los resultados utilizando el comando `smartctl -a dispositivo`. De hecho, puede utilizar este comando en cualquier momento para determinar el estado general actual de su disco. La opción `smartctl -a` muestra una gran cantidad de información. Por lo tanto, puede ser una buena idea redirigir la salida a un archivo o canalizarla a la utilidad less. Aquí se muestra un ejemplo recortado de este comando en una distribución de Ubuntu:
