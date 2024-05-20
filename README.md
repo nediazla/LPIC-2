@@ -10,7 +10,7 @@ Este resumen consta de 12 capítulos, La Parte I, Capítulos 1 a 6, cubre los te
 
 [Capítulo 4](content/Charter-4.md): Administrar el sistema de archivos Este capítulo explora los diferentes sistemas de archivos de Linux y cómo administrarlos y mantenerlos, así como también cómo solucionarlos cuando ocurren problemas.
 
-[Capítulo 5](LPIC-2/content/charter-5.md): Administración de dispositivos de almacenamiento avanzados Este capítulo analiza dos de los métodos de almacenamiento más avanzados utilizados en entornos Linux. Se centra en cómo utilizar dispositivos RAID en Linux, ya sea como dispositivos de hardware o mediante un emulador RAID de software. También demuestra cómo implementar un Administrador de volúmenes lógicos en un entorno Linux.
+[Capítulo 5](content/charter-5.md): Administración de dispositivos de almacenamiento avanzados Este capítulo analiza dos de los métodos de almacenamiento más avanzados utilizados en entornos Linux. Se centra en cómo utilizar dispositivos RAID en Linux, ya sea como dispositivos de hardware o mediante un emulador RAID de software. También demuestra cómo implementar un Administrador de volúmenes lógicos en un entorno Linux.
 
 [Capítulo 6](content/Charter-6.md): Navegación por los servicios de red Este capítulo analiza en profundidad cómo interactúa Linux en un entorno de red. Cubre cómo utilizar los comandos de la línea de comandos de Linux para configurar una interfaz de red y cómo solucionar problemas básicos de la red.
 ### Parte II: El examen LPI 202
