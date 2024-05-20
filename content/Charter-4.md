@@ -1838,7 +1838,7 @@ En el ejemplo anterior, puede ver que la prueba tardará 74 minutos en completar
 ```sh
 sudo smartctl -a /dev/sda6 | grep -A1 "Self-test execution"
 Self-test execution status:  ( 249)Self-test routine in progress                                    
-									90% of test remaining.
+					90% of test remaining.
 ```
 
 No deje que el término rutina de autoprueba del listado anterior le confunda. Todas las pruebas son autopruebas y la prueba larga es una autoprueba extendida.
@@ -1849,9 +1849,19 @@ Una vez realizada la prueba, puede ver los resultados utilizando el comando `sma
 sudo smartctl -a /dev/sda6
 [...]
 Self-test execution status: (   0) The previous self-test routine
-							completed without error or 
-							no self-test has ever been run.
+					completed without error or 
+					no self-test has ever been run.
 [...]
 ```
 
 Puede obtener un resumen del estado del dispositivo SMART preguntando por su estado. La información de estado se deriva de varias pruebas. Aquí hay un ejemplo recortado del resumen del estado de salud de una unidad:
+
+```sh
+sudo smartctl -H /dev/sda6
+[...]
+SMART overall-health self-assessment test result: PASSED
+```
+
+En el ejemplo anterior, el estado `PASSED` significa que todo está bien con la unidad. Si por alguna razón se informa un estado de falla, esto significa que la unidad ya falló o fallará en breve. Puede ver los registros de errores del dispositivo escribiendo `smartctl -l error dispositivo`, utilizando privilegios de super usuario.
+
+El uso de `smartctl` y `smartd` para evaluar el estado de varios dispositivos son adiciones útiles a las utilidades utilizadas para mantener el estado del sistema de archivos. Por supuesto, como muchas otras cosas en la vida, si no las usas, no sirven de nada.
