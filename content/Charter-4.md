@@ -1844,3 +1844,14 @@ Self-test execution status:  ( 249)Self-test routine in progress       �
 No deje que el término rutina de autoprueba del listado anterior le confunda. Todas las pruebas son autopruebas y la prueba larga es una autoprueba extendida.
 
 Una vez realizada la prueba, puede ver los resultados utilizando el comando `smartctl -a dispositivo`. De hecho, puede utilizar este comando en cualquier momento para determinar el estado general actual de su disco. La opción `smartctl -a` muestra una gran cantidad de información. Por lo tanto, puede ser una buena idea redirigir la salida a un archivo o canalizarla a la utilidad less. Aquí se muestra un ejemplo recortado de este comando en una distribución de Ubuntu:
+
+```sh
+sudo smartctl -a /dev/sda6
+[...]
+Self-test execution status: (   0) The previous self-test routine
+							completed without error or 
+							no self-test has ever been run.
+[...]
+```
+
+Puede obtener un resumen del estado del dispositivo SMART preguntando por su estado. La información de estado se deriva de varias pruebas. Aquí hay un ejemplo recortado del resumen del estado de salud de una unidad:
