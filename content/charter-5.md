@@ -309,3 +309,206 @@ Number   Major   Minor   RaidDevice State
 ```
 
 Este comando proporciona una gran cantidad de información útil. Observe en el ejemplo anterior que no solo se proporciona información de estado, sino que también se muestra información de identificación, como el UUID. Estos datos pueden ayudarle a diagnosticar cualquier problema que haya ocurrido durante la creación de la matriz RAID.
+### Formatee y monte la matriz RAID
+Una vez que se ha creado (o ensamblado) y verificado una matriz RAID, se puede tratar como cualquier otra partición: formateándola con un sistema de archivos y montándola. En el ejemplo recortado aquí, puede ver que la matriz RAID 6 de muestra, `/dev/md0`, está formateada con un sistema de archivos ext4 y luego montada en un directorio temporal:
+
+```sh
+mkfs -t ext4 /dev/md0
+mke2fs 1.42.9 (28-Dec-2013)
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+[...]
+
+mount -t ext4 /dev/md0 Temp
+ls Temp
+lost+found
+
+touch Temp/My_RAID_File.txt
+
+ls Temp
+lost+found 
+My_RAID_File.txt
+```
+
+En el ejemplo anterior, observe que el directorio `lost+found` está en el sistema de archivos `/dev/md0`, como lo vería en una partición no RAID formateada con el sistema de archivos ext4. Una vez que haya montado su matriz RAID en la ubicación permanente deseada, al igual que con otros sistemas de archivos, agregue un registro al archivo `/etc/fstab`, de modo que la matriz RAID se monte automáticamente en el momento del arranque del sistema.
+### Guardar configuración de matriz RAID
+Debido a que el kernel, el controlador `md` y `mdadm` pueden leer el superbloque de cada miembro RAID, no es absolutamente necesario un archivo de configuración. Además, al crear una matriz RAID, no se crea un archivo de configuración. Si existe un archivo de configuración RAID, la utilidad `mdadm` no lo actualiza automáticamente.
+
+Sin embargo, es una buena idea crear y mantener un archivo de configuración RAID. Este archivo de utilidad `mdadm` es útil para una posible situación de recuperación de una matriz RAID, y algunas distribuciones de Linux producen errores cuando intenta ensamblar una matriz si no hay ningún archivo de configuración presente.
+
+El archivo de configuración de `mdadm`, `mdadm.conf`, debe almacenarse en el directorio `/etc/` o en el directorio `/etc/mdadm/`, dependiendo de su distribución. Dado que no se crea cuando se instala la utilidad `mdadm`, deberá verificar qué ubicación del archivo de configuración utiliza su distribución. Puede averiguarlo escribiendo `man mdadm.conf` en la línea de comando..
+
+Una vez que se determina la ubicación adecuada para su archivo de configuración, puede crearlo. La mejor manera de crear este archivo es utilizando la opción `--scan` de la utilidad `mdadm`. Primero, simplemente haga un escaneo simple para ver qué producirá el comando, como se muestra aquí en este ejemplo recortado:
+
+```sh
+mdadm --verbose --detail --scan /dev/md0
+ARRAY /dev/md0 level=raid6 num-devices=4 metadata=1.2
+name=localhost.localdomain:0 UUID=38edfd0d:45092996:954[...]
+	devices=/dev/sdf1,/dev/sdg1,/dev/sdh1,/dev/sdi1
+```
+
+Esta es la información que debe almacenarse dentro de su archivo de configuración para esta matriz RAID en particular. Observe que la palabra clave `ARRAY` aparece con la información. Esta palabra clave se puede utilizar en el archivo `mdadm.conf` para identificar una matriz RAID.
+
+En lugar de escribir esta información, lo que podría introducir errores tipográficos, redirija la salida estándar del comando al nombre de archivo de configuración adecuado, como se muestra aquí en esta distribución de CentOS:
+
+```sh
+ls /etc/mdadm.conf
+ls: cannot access /etc/mdadm.conf: No such file or directory
+
+mdadm --verbose --detail --scan /dev/md0 >> /etc/mdadm.conf
+
+cat /etc/mdadm.conf
+ARRAY /dev/md0 level=raid6 num-devices=4 metadata=1.2 name=localhost
+	.localdomain:0 UUID=38edfd0d:45092996:954[...]    devices=/dev/sdf1,/dev/sdg1,/dev/sdh1,/dev/sdi1 #
+```
+
+Una vez que haya creado este archivo de configuración y/o haya almacenado en él la nueva información de la matriz RAID, habrá completado la fase de implementación de la matriz RAID. Sin embargo, puede modificar el archivo para agregar información de configuración adicional con fines de monitoreo. Hay muchas formas de monitorear y administrar su matriz RAID correctamente, algunas de las cuales incluyen modificar este archivo de configuración. Estos temas se tratan más apropiadamente en la fase de administración de una matriz RAID.
+### Administrar una matriz RAID
+Una vez que tenga su matriz RAID en producción, pasará a la fase de administración. La gestión de matrices RAID implica monitorearlas para detectar problemas, manejar cualquier dificultad, ajustar su configuración si es necesario, etc. 
+### Monitoreo de su matriz RAID
+Una de las tareas de administración de matrices RAID más importantes es la supervisión (también llamada _seguimiento_). La supervisión le permite tomar medidas rápidas cuando se producen problemas, mejorar el rendimiento del acceso a los datos y reducir las interrupciones.
+
+La utilidad `mdadm` tiene un modo de monitor, que es fundamental para monitorear su matriz RAID controlada por software. Con este modo, puede monitorear sus conjuntos RAID para detectar ciertos eventos (también llamados _alertas_). 
+
+```
+       mdadm has several major modes of operation:
+
+       Assemble
+
+              Assemble the components of a previously created  array  into  an
+              active  array.  Components  can  be  explicitly  given or can be
+              searched for.  mdadm checks that the components do form  a  bona
+              fide  array,  and can, on request, fiddle superblock information
+              so as to assemble a faulty array.
+
+       Build  Build an array that doesn’t have  per-device  superblocks.   For
+              these  sorts  of  arrays,  mdadm  cannot  differentiate  between
+              initial creation and subsequent assembly of an array.   It  also
+              cannot  perform any checks that appropriate components have been
+              requested.  Because of this, the Build mode should only be  used
+              together with a complete understanding of what you are doing.
+
+       Create Create a new array with per-device superblocks.
+
+       Follow or Monitor
+              Monitor  one  or  more  md devices and act on any state changes.
+              This is only meaningful for raid1, 4,  5,  6,  10  or  multipath
+              arrays,  as  only these have interesting state.  raid0 or linear
+              never have missing, spare, or failed drives, so there is nothing
+              to monitor.
+
+       Grow   Grow  (or shrink) an array, or otherwise reshape it in some way.
+              Currently supported growth options including changing the active
+              size  of  component  devices  and  changing the number of active
+              devices in RAID levels 1/4/5/6, as well as adding or removing  a
+              write-intent bitmap.
+
+       Incremental Assembly
+
+              Add a single device to an appropriate array.  If the addition of
+              the device makes the array runnable, the array will be  started.
+              This  provides  a convenient interface to a hot-plug system.  As
+              each device is detected, mdadm has a chance  to  include  it  in
+              some array as appropriate.
+
+       Manage This is for doing things to specific components of an array such
+              as adding new spares and removing faulty devices.
+
+       Misc   This is an ’everything else’ mode that  supports  operations  on
+              active  arrays,  operations on component devices such as erasing
+              old superblocks, and information gathering operations.
+
+       Auto-detect
+              This mode does not act on a specific device or array, but rather
+              it  requests  the  Linux  Kernel  to  activate any auto-detected
+              arrays.
+```
+
+El proceso de monitoreo se puede iniciar manualmente en la línea de comando. La sintaxis básica de la utilidad `mdadm` para iniciar el monitoreo es `mdadm --monitor options devices`
+Puede sustituir `--follow` por `--monitor` en el comando. Este comando inicia `mdadm monitor`, donde examinará las matrices RAID cada 60 segundos (de forma predeterminada) e informará cualquier evento.
+
+Tenga en cuenta que cuando la utilidad `mdadm` inicia su modo de monitoreo y encuentra matrices para monitorear, no saldrá. Por lo tanto, es una buena idea agregar un símbolo (`&`) al final del comando y ejecutarlo en segundo plano.
+
+Puede configurar varias opciones con el modo monitor para satisfacer las necesidades de su sistema. Aquí se muestra una lista de las opciones del monitor `mdadm` en una distribución CentOS:
+
+```sh
+mdadm --monitor --help
+[...] 
+Options that are valid with the monitor (-F --follow) mode are:
+ --mail=       -m  : Address to mail alerts of failure to
+ --program=    -p  : Program to run when an event is detected
+ --alert=          : same as --program
+ --syslog      -y  : Report alerts via syslog
+ --increment=  -r  : Report RebuildNN events in the given increment. default=20
+ --delay=      -d  : seconds of delay between polling state. default=60
+ --config=     -c  : specify a different config file
+ --scan        -s  : find mail-address/program in config file
+ --daemonise   -f  : Fork and continue in child, parent exits
+ --pid-file=   -i  : In daemon mode write pid to specified file instead of stdout
+ --oneshot     -1  : Check for degraded arrays, then exit
+ --test        -t  : Generate a TestMessage event against each array at startup
+```
+
+La opción `--mail` le permite designar una única dirección de correo electrónico para recibir notificaciones de eventos. La opción `--program` designa un programa que se ejecutará tras una notificación de evento. Como alternativa al uso de estas opciones, puede usar la opción `--scan`, que hará que la utilidad `mdadm` busque estas configuraciones dentro del archivo de configuración `mdadm.conf`. Dentro del archivo de configuración, agrega la palabra clave `MAILADDR` seguida de una única dirección de correo electrónico. Además, puede agregar la palabra clave `PROGRAM` seguida del nombre de un programa o script de shell para ejecutar, en caso de que se produzca una alerta. Si usa la opción `--scan` y el archivo `mdadm.conf` no tiene palabras clave de programa o correo electrónico, o si inicia el modo de monitoreo sin las opciones `--mail` o `--program`, las notificaciones de eventos se envían a la salida estándar.
+
+Otra opción interesante es `--daemonise`. Esto le permite iniciar `mdadm` en modo monitor como demonio. Esta útil opción se puede incluir en un script de inicio del sistema.
+### Agregar un disco de repuesto a una matriz RAID
+Puede agregar un disco de repuesto a una matriz RAID cuando la crea. Sin embargo, si no agregó uno (o más) en el momento de la creación, o si su disco de repuesto se ha convertido en un miembro RAID activo debido a una falla de otra unidad, es posible que desee agregar un disco de repuesto a una matriz RAID activa.
+
+Cuando necesite agregar una unidad de repuesto a una matriz RAID, primero debe asegurarse de que no sea miembro de la matriz RAID. Es posible que esto no sea necesario para un solo sistema de matriz RAID, pero si tiene una instalación de matriz grande, vale la pena dedicar unos minutos adicionales. A continuación se muestra un ejemplo recortado de cómo verificar la pertenencia a una matriz en una unidad:
+
+```sh
+mdadm --misc --examine /dev/sde1
+mdadm: No md superblock detected on /dev/sde1.
+
+mdadm --misc --examine /dev/sdf1 
+/dev/sdf1:
+          Magic: a92b4efc
+          Version: 1.2
+[...]
+```
+
+Este ejemplo anterior muestra el resultado que recibe tanto para un miembro que no es RAID como para un miembro RAID activo. La partición `/dev/sde1` no es parte de una matriz RAID, pero la partición `/dev/sdf1` es un miembro de la matriz RAID. Tenga en cuenta que si la unidad aún no está particionada, deberá pasar el nombre completo de la unidad, `/dev/sde` en este caso, a la utilidad `mdadm` en lugar del nombre de la partición para verificar la membresía de RAID.
+
+Antes de agregar un repuesto a su matriz RAID, verifique la cantidad actual de repuestos de la matriz usando el comando `grep`, junto con la opción `--detail` del modo misceláneo de la utilidad `mdadm`. Aquí se muestra un ejemplo:****
+
+```sh
+mdadm --misc --detail /dev/md0 | grep Spare
+Spare Devices: 0
+```
+
+La matriz RAID `/dev/md0` actualmente no tiene unidades de repuesto. Para solucionar esta situación, la partición `/dev/sde1` se agrega en caliente aquí usando el modo de administración de la utilidad `mdadm`:
+
+```sh
+mdadm --manage --add /dev/md0 /dev/sde1
+mdadm: added /dev/sde1
+
+mdadm --misc --detail /dev/md0 | grep Spare
+Spare Devices: 1
+```
+
+Notice that once the partition was added, the Spare Devices count went up by one. You can add more than one device at a time, if desired.
+### Ampliación de la matriz RAID
+Puede cambiar el tamaño o la forma de su matriz RAID utilizando la utilidad `mdadm`. _Tamaño_ o _forma_ se refiere a la capacidad de cambiar los elementos de configuración de la matriz RAID, como el tamaño del fragmento y el número de miembros activos de la matriz RAID. Incluso puede realizar conversiones, como cambiar una matriz RAID de nivel 5 a una matriz RAID de nivel 6.
+
+El modo de crecimiento de la utilidad `mdadm` maneja estos diversos cambios. Tenga en cuenta que cambiar el tamaño y la forma de su matriz RAID requiere mucho tiempo (desde horas hasta días) y una actividad potencialmente peligrosa para los datos. Asegúrese siempre de haber completado las copias de seguridad antes de cualquier actividad en el modo de crecimiento. Para ver todas las opciones del modo de crecimiento, escriba `mdadm --grow --help` en la línea de comando
+### Eliminación de una matriz RAID
+Si lo desea, puede eliminar una matriz RAID completa. Para hacerlo, primero debe detener la matriz usando el modo de administración de la utilidad `mdadm`.
+
+La matriz RAID `/dev/md0` de muestra se detiene en este ejemplo:
+
+```sh
+mdadm --manage --stop /dev/md0
+mdadm: stopped /dev/md0
+```
+
+Una vez que se detiene una matriz RAID, sus miembros y unidades de repuesto se pueden eliminar eliminando su superbloque. Puede hacer esto una unidad a la vez o eliminar los superbloques de todas las unidades al mismo tiempo, como se muestra aquí:
+
+```sh
+mdadm --zero-superblock  /dev/sde1
+
+mdadm --zero-superblock  /dev/sdf1 /dev/sdg1 /dev/sdh1
+```
+
+Una vez que se retira el superbloque de las unidades, se pueden emplear en otras matrices RAID o para otros fines. Asegúrese de actualizar el archivo de configuración `mdadm.conf` al eliminar cualquier matriz RAID.
