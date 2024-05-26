@@ -1355,3 +1355,265 @@ Hay muchas opciones disponibles con la utilidad `sdparm` para ver y establecer v
 | --verbose              | -v                      | increase verbosity of output. May be used multiple times to further increase verbosity.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | --version              | -V                      | print out the version and the date of last code change then exits                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | --wscan                | -w                      | [Windows only] scan for device names, show one device per line. Each device can have multiple device names. If a _DEVICE_ name is given (on the command line) then it will be ignored.                                                                                                                                                                                                                                                                                                                                        |
+
+Asegúrese de leer las páginas de manual de la utilidad `sdparm`. Puede ser una utilidad complicada de usar.
+### Usando `sysctl`
+
+La utilidad `sysctl` se utiliza para modificar los parámetros del kernel mientras se ejecuta un sistema. Dentro de estos parámetros se incluyen los asociados con los dispositivos de almacenamiento.
+
+Para ver una lista de parámetros del kernel que se pueden modificar, escriba `sysctl -a` en la línea de comando, usando privilegios de super usuario. Debido a que la lista es larga (hay varios parámetros del kernel), es posible que desee canalizar la salida a un buscapersonas, como less. Para ver parámetros individuales, pase el parámetro como una opción al comando `sysctl`.
+
+Cualquier archivo listado en los directorios y subdirectorios `/proc/sys/` también es un parámetro del kernel que se puede modificar. A continuación se muestra un ejemplo de una distribución de Ubuntu que utiliza `sysctl` y el archivo `/proc/sys/` para ver la configuración de los parámetros del kernel para expulsar automáticamente los discos ópticos cuando se han desmontado:
+
+```sh
+sudo sysctl dev.cdrom.autoeject
+[sudo] password for christine:
+
+dev.cdrom.autoeject = 0
+
+ls /proc/sys/dev/cdrom/autoeject
+/proc/sys/dev/cdrom/autoeject
+
+cat /proc/sys/dev/cdrom/autoeject
+0
+```
+
+Muchos parámetros del kernel son valores booleanos, lo que significa que 0 indica que la función está desactivada y 1 indica que la función está activada. En el ejemplo anterior, el parámetro `dev.cdrom.autoeject` es booleano y actualmente está desactivado.
+
+Para cambiar la configuración de un parámetro del kernel, puede utilizar la utilidad `sysctl`. En este ejemplo, el parámetro `dev.cdrom.autoeject` está activado, lo que hace que los dispositivos ópticos se expulsen automáticamente cuando se desmontan:
+
+```sh
+sudo sysctl -w dev.cdrom.autoeject=1
+[sudo] password for christine:
+
+dev.cdrom.autoeject = 1
+
+sudo sysctl dev.cdrom.autoeject
+dev.cdrom.autoeject = 1
+
+cat /proc/sys/dev/cdrom/autoeject
+1
+```
+
+Puede ver que el archivo `/proc/sys/` asociado se actualiza instantáneamente cuando se utiliza la utilidad `sysctl` para modificar el parámetro del kernel. Sin embargo, esta modificación no es persistente. Para que la modificación sea persistente, debe modificar el archivo de configuración `/etc/sysctl.conf`. La siguiente es una lista de archivos recortados en una distribución de Ubuntu:
+
+```sh
+cat /etc/sysctl.conf
+
+#/etc/sysctl.conf-Configuration file for setting system variables 
+#See /etc/sysctl.d/ for additional system variables.
+#See sysctl.conf (5) for information.
+
+[...]
+# Do not accept ICMP redirects (prevent MITM attacks)
+#net.ipv4.conf.all.accept_redirects = 0
+[...]
+```
+
+Una vez que haya realizado cambios de configuración en este archivo, puede probarlo emitiendo el comando `sysctl -p` y luego viendo los parámetros modificados.
+
+Se deben modificar relativamente pocos parámetros del kernel para ajustar el acceso y el uso del disco. Sin embargo, estos dos parámetros RAID particulares pueden resultar útiles para ajustar:
+
+```sh
+sudo sysctl -a | grep raid
+dev.raid.speed_limit_max = 200000 
+dev.raid.speed_limit_min = 1000
+```
+
+Estos dos parámetros del kernel controlan la velocidad de RAID. Aumentar los límites podría aumentar la velocidad de cualquier reconstrucción o remodelación de una matriz RAID.
+### Usando _smartctl_ y _smartd_
+
+No puede restablecer ni modificar los atributos SMART de una unidad porque están configurados en el área protegida de una unidad. Solo puede habilitar/deshabilitar SMART usando la utilidad `smartctl`:
+
+```sh
+sudo smartctl -s on /dev/sda
+```
+
+Sin embargo, además de las pruebas, comprobaciones y análisis manuales que se muestran en el Capítulo 4 con la utilidad `smartctl` y los dispositivos SMART, puede configurar pruebas de dispositivos programadas con el demonio `smartd` y el archivo de configuración que lo acompaña. Dependiendo de su distribución, el archivo es `/etc/smartd.conf` o `/etc/smartmontools/smartd.conf`.
+
+Si `smartd` se inicia durante la inicialización del sistema, habilitará el monitoreo SMART en cualquier dispositivo ATA que tenga esta capacidad. Después de eso, verificará los dispositivos SMART (incluidas las unidades SCSI) cada 30 minutos y enviará advertencias, mensajes de error y cambios en los elementos SMART al registrador del sistema.
+
+Usted cambia los horarios de las encuestas, las pruebas que se realizan y quién recibe los mensajes a través del archivo de configuración. La palabra clave DEVICESCAN se puede configurar con varias opciones. Por ejemplo, para ejecutar una prueba larga en todos los dispositivos SMART de su sistema los domingos de 1 a.m. a 2 a.m., ingresaría el siguiente registro en el archivo de configuración:
+
+```sh
+DEVICESCAN -s L/../../7/01
+```
+
+Existe una gran cantidad de documentación excelente en el archivo de configuración de `smartd`. Consulte las páginas de manual del archivo de configuración `smartd` de su distribución, o simplemente busque en el archivo mismo. El archivo de configuración `smartd` suele estar muy documentado con muchos buenos ejemplos.
+### Usando `nvme`
+
+Para ajustar y ver registros de SSD con interfaz NVMe, debe utilizar comandos compatibles con el estándar NVMe. La utilidad `nvme` proporciona estos comandos a través de una interfaz de línea de comandos. Se proporciona junto con la documentación a través del paquete `nvme-cli`.
+
+Una vez instalado, vea todos los diversos comandos disponibles para ajustar sus SSD con interfaz NVMe escribiendo `nvme help` en la línea de comando. Aquí se muestra un ejemplo recortado de una distribución de Ubuntu:
+
+```sh
+nvme help
+
+[...]The following are all implemented sub-commands:  
+ list            List all NVMe devices and namespaces on machine
+ id-ctrl         Send NVMe Identify Controller
+ id-ns           Send NVMe Identify Namespace, display structure  
+ list-ns         Send NVMe Identify List, display structure  
+ create-ns       Creates a namespace with the provided parameters  
+ delete-ns       Deletes a namespace from the controller  
+ attach-ns       Attaches a namespace to requested controller(s)  
+ detach-ns       Detaches a namespace from requested controller(s)  
+ list-ctrl       Send NVMe Identify Controller List, display structure  
+ get-ns-id       Retrieve the namespace ID of opened block device  
+ get-log         Generic NVMe get log, returns log in raw format
+ fw-log          Retrieve FW Log, show it  
+ smart-log       Retrieve SMART Log, show it  
+ smart-log-add   Retrieve additional SMART Log, show it
+ error-log       Retrieve Error Log, show it  
+ get-feature     Get feature and show the resulting value  
+ set-feature     Set a feature and show the resulting value  
+ format          Format namespace with new block format
+ fw-activate     Activate new firmware slot  
+ fw-download     Download new firmware
+ admin-passthru  Submit arbitrary admin command, return results  
+ io-passthru     Submit an arbitrary IO command, return results  
+ security-send   Submit a Security Send command, return results  
+ security-recv   Submit a Security Receive command, return results  
+ resv-acquire    Submit a Reservation Acquire, return results  
+ resv-register   Submit a Reservation Register, return results  
+ resv-release    Submit a Reservation Release, return results  
+ resv-report     Submit a Reservation Report, return results  
+ dsm             Submit a Data Set Management command, return results 
+ flush           Submit a Flush command, return results  
+ compare         Submit a Comapre command, return results  
+ read            Submit a read command, return results  
+ write           Submit a write command, return results
+ show-regs       Shows the controller registers. Requires admin character device
+ version         Shows the program version  
+ help            Display this help
+
+See 'nvme help <command>' for more information on a specific command.
+```
+
+Observe en el ejemplo que se utiliza el término _controlador_. El estándar NVMe también se denomina estándar NVM Host Controller Interface (NVMHCI). Un controlador NVMe es una función PCI Express que implementa especificaciones NVMe (o NVMHCI). Es posible que tenga uno o más controladores que administren los espacios de nombres de un SSD con interfaz NVMe en particular. Como se describió anteriormente en este capítulo, un espacio de nombres NVMe es otra capa de división de unidades, que puede constar de una o más particiones. La utilidad `nvme` facilita considerablemente la gestión, el ajuste y la revisión de los registros de la unidad.
+
+Observe también en el ejemplo anterior que la utilidad `nvme` permite la recuperación de registros SMART. Debido a que el estándar NVMe no viene con una interfaz compatible con AHCI o SCSI, si un SSD tiene capacidad SMART, actualmente no existe una forma de recuperar información SMART a través de la utilidad SMART estándar (`smartctl`).
+
+La utilidad `nvme` es muy útil. Le permite realizar cualquier ajuste o administración necesarios de sus SSD con interfaz NVMe.
+### Usando `fstrim`
+
+El comando `fstrim` se puede utilizar periódicamente para evitar problemas de rendimiento en los SSD debido a la fragmentación interna. Sin embargo, antes de intentar utilizar el comando `fstrim`, debe verificar que su SSD sea compatible con TRIM. Puede usar el comando `hdparm` y `grep` para verificar su unidad, como se muestra en una distribución de Ubuntu aquí:
+
+```sh
+sudo hdparm -I /dev/sda  | grep TRIM
+```
+
+Si no hay respuesta del comando significa que TRIM _no_ es compatible. Si se admite TRIM, puede emplear `fstrim` para implementar comandos TRIM en su SSD. La sintaxis general del comando `fstrim` es la siguiente: 
+
+```
+fstrim [opciones] punto de montaje
+```
+
+```
+OPTIONS    
+
+       The offset, length, and minimum-size arguments may be followed by
+       the multiplicative suffixes KiB (=1024), MiB (=1024*1024), and so
+       on for GiB, TiB, PiB, EiB, ZiB and YiB (the "iB" is optional,
+       e.g., "K" has the same meaning as "KiB") or the suffixes KB
+       (=1000), MB (=1000*1000), and so on for GB, TB, PB, EB, ZB and
+       YB.
+
+       -A, --fstab
+           Trim all mounted filesystems mentioned in /etc/fstab on
+           devices that support the discard operation. The root
+           filesystem is determined from kernel command line if missing
+           in the file. The other supplied options, like --offset,
+           --length and --minimum, are applied to all these devices.
+           Errors from filesystems that do not support the discard
+           operation, read-only devices, autofs and read-only
+           filesystems are silently ignored. Filesystems with
+           "X-fstrim.notrim" mount option are skipped.
+
+       -a, --all
+           Trim all mounted filesystems on devices that support the
+           discard operation. The other supplied options, like --offset,
+           --length and --minimum, are applied to all these devices.
+           Errors from filesystems that do not support the discard
+           operation, read-only devices and read-only filesystems are
+           silently ignored.
+
+       -n, --dry-run
+           This option does everything apart from actually call FITRIM
+           ioctl.
+
+       -o, --offset offset
+           Byte offset in the filesystem from which to begin searching
+           for free blocks to discard. The default value is zero,
+           starting at the beginning of the filesystem.
+
+       -l, --length length
+           The number of bytes (after the starting point) to search for
+           free blocks to discard. If the specified value extends past
+           the end of the filesystem, fstrim will stop at the filesystem
+           size boundary. The default value extends to the end of the
+           filesystem.
+
+       -I, --listed-in list
+           Specifies a colon-separated list of files in fstab or kernel
+           mountinfo format. All missing or empty files are silently
+           ignored. The evaluation of the list stops after first
+           non-empty file. For example:
+           --listed-in /etc/fstab:/proc/self/mountinfo.
+           Filesystems with "X-fstrim.notrim" mount option in fstab are
+           skipped.
+
+       -m, --minimum minimum-size
+           Minimum contiguous free range to discard, in bytes. (This
+           value is internally rounded up to a multiple of the
+           filesystem block size.) Free ranges smaller than this will be
+           ignored and fstrim will adjust the minimum if it’s smaller
+           than the device’s minimum, and report that
+           (fstrim_range.minlen) back to userspace. By increasing this
+           value, the fstrim operation will complete more quickly for
+           filesystems with badly fragmented freespace, although not all
+           blocks will be discarded. The default value is zero,
+           discarding every free block.
+
+       -t, --types list
+           Specifies allowed or forbidden filesystem types when used
+           with --all or --fstab. The list is a comma-separated list of
+           the filesystem names. The list follows how mount -t evaluates
+           type patterns. Only specified filesystem types are allowed.
+           All specified types are forbidden if the list is prefixed by
+           "no" or each filesystem prefixed by "no" is forbidden. If the
+           option is not used, then all filesystems (except "autofs")
+           are allowed.
+
+       -v, --verbose
+           Verbose execution. With this option fstrim will output the
+           number of bytes passed from the filesystem down the block
+           stack to the device for potential discard. This number is a
+           maximum discard amount from the storage device’s perspective,
+           because FITRIM ioctl called repeated will keep sending the
+           same sectors for discard repeatedly.
+           fstrim will report the same potential discard bytes each
+           time, but only sectors which had been written to between the
+           discards would actually be discarded by the storage device.
+           Further, the kernel block layer reserves the right to adjust
+           the discard ranges to fit raid stripe geometry, non-trim
+           capable devices in a LVM setup, etc. These reductions would
+           not be reflected in fstrim_range.len (the --length option).
+
+       --quiet-unsupported
+           Suppress error messages if trim operation (ioctl) is
+           unsupported. This option is meant to be used in systemd
+           service file or in cron scripts to hide warnings that are
+           result of known problems, such as NTFS driver reporting Bad
+           file descriptor when device is mounted read-only, or lack of
+           file system support for ioctl FITRIM call. This option also
+           cleans exit status when unsupported filesystem specified on
+           fstrim command line.
+
+       -h, --help
+           Display help text and exit.
+
+       -V, --version
+           Print version and exit.
+```
+
