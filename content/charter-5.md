@@ -1617,3 +1617,76 @@ OPTIONS    
            Print version and exit.
 ```
 
+También puede obtener ayuda sobre la utilidad `fstrim` escribiendo `fstrim` y usando la opción `-h` o `--help`.
+
+Debe utilizar privilegios de superusuario y el SSD debe estar montado. En este ejemplo, el comando `fstrim` se emite usando la opción detallada en una distribución CentOS:
+
+```sh
+fstrim -v /home
+/home: 1503238553 bytes were trimmed
+```
+
+La salida del comando `fstrim` puede ser un poco engañosa. Los bytes mostrados no necesariamente tenían el comando TRIM aplicado sobre ellos. En cambio, estos bytes fueron auditados y, si se consideraba necesario desfragmentarlos, se desfragmentaron.
+
+La mayoría de las unidades, excepto las SSD, nunca necesitarán ser ajustadas. Sin embargo, muchas de las utilidades de esta sección también se pueden utilizar para monitoreo o prueba.
+
+### Implementando iSCSI
+Internet Small Computer System Interface (iSCSI) es un protocolo de red (RFC 3720) que permite el transporte de comandos SCSI a través de TCP/IP. En esencia, permite que las unidades ubicadas remotamente (a través de la intranet de una empresa o incluso a través de Internet) aparezcan como si fueran unidades SCSI locales.
+
+Para comprender iSCSI, es importante comprender algunos conceptos básicos de red de área de almacenamiento (SAN). Una SAN consta de dispositivos de almacenamiento conectados a la red, donde varios sistemas y los dispositivos de almacenamiento se comunican entre sí a través de una red. El objetivo principal de una red SAN es permitir esa comunicación y, por lo general, es una red de alta velocidad dedicada únicamente a las comunicaciones SAN.
+
+Hay tres protocolos SAN populares además de iSCSI para explorar. Las siguientes descripciones le ayudarán a comprender varias alternativas de iSCSI.
+
+***Protocolo de canal de fibra*** Una SAN de canal de fibra es una SAN de alta velocidad y altamente confiable, que generalmente funciona con cables de fibra óptica y ofrece velocidades de hasta 32 gigabits por segundo. Esta SAN, costosa de implementar, utiliza el  Fiber Channel Protocol (FCP) para transportar comandos SCSI a través de la red dedicada. 
+
+***Protocolo ATA sobre Ethernet*** ATA sobre Ethernet AoE es un protocolo de transporte de red que no utiliza el protocolo de Internet, sino que se ejecuta en la capa 2 de una red. Con este protocolo, los comandos ATA se transportan a través de una red Ethernet. La red se puede compartir con otros paquetes TCP/IP, lo que hace que la implementación de AoE sea más económica. Debido a que es un protocolo no enrutable, proporciona seguridad heredada y facilidad de implementación de SAN. 
+
+***Fiber Channel Protocol sobre Ethernet*** Para aquellos que no pueden permitirse el gasto de una red de fibra óptica dedicada, el protocolo Fiber Channel sobre Ethernet (FCoE) proporciona una alternativa de menor costo. FCoE encapsula tramas de protocolo Fiber Channel para viajar a través de redes Ethernet.
+
+Al igual que AoE y FCoE, la red de una implementación de SAN iSCSI no está dedicada a la SAN iSCSI, pero se puede compartir con otras comunicaciones TCP/IP.
+Una SAN iSCSI es económica en comparación con una SAN Fiber Channel y mucho más sencilla de configurar. Sin embargo, debido a que iSCSI comparte su red con otros protocolos TCP/IP, dependiendo de cómo se implemente, es posible que no alcance las mismas velocidades de transferencia de datos que una SAN Fiber Channel.
+
+Es posible que descubra que iSCSI es adecuado para sus necesidades de SAN. Pero antes de comenzar una implementación iSCSI, es necesario comprender los términos y conceptos importantes del protocolo.
+### Entendiendo iSCSI
+En una SAN iSCSI, el sistema remoto que ofrece un disco iSCSI se denomina destino. El sistema local que desea utilizar el disco iSCSI ofrecido se denomina iniciador. Por lo tanto, existe una relación de cliente (iniciador) servidor (destino) al ofrecer y acceder a unidades iSCSI.
+
+Un número de unidad lógica (LUN) es un número que se utiliza para identificar un dispositivo SCSI lógico único en el sistema de destino. La numeración de LUN comienza en cero, por lo que al primer dispositivo SCSI que se ofrece a través de iSCSI normalmente se le asigna lun0. Un LUN iSCSI puede tener un nombre de alias de hasta 255 caracteres de longitud, lo que hace que una unidad LUN particular sea más fácil de identificar.
+
+Un nombre calificado iSCSI (IQN) es una dirección única que identifica el servidor de destino iSCSI junto con la unidad iSCSI ofrecida. Un IQN tiene el siguiente formato básico:
+
+```
+iqn.fecha-dominio.dominio:nombre-scsi-único
+```
+
+La fecha del dominio es la fecha en que su organización registró oficialmente su dominio. El formato es año-mes. El dominio es el dominio de la organización. `Unique-scsi-id` es un nombre único que se le da a la unidad SCSI. Depende de usted cómo identificar cada unidad SCSI de forma única, siempre y cuando los nombres sean únicos para cada unidad SCSI en el servidor de destino. Por ejemplo, un IQN podría verse así:
+
+```
+iqn.2016–02.com.ejemplo.servidor07:iscsidisk1
+```
+
+En el ejemplo anterior, la fecha del dominio es febrero de 2016 escrita en orden inverso: 2016–02. El dominio es server07.example.com, pero observe que también está escrito en orden inverso. Finalmente, el nombre scsi único es iscsidisk1. Como alternativa, puede utilizar el LUN de la unidad SCSI dentro del nombre SCSI exclusivo, como iscsilun0.
+
+El IQN de una unidad iSCSI es importante porque se utiliza en muchos de los archivos y ajustes de configuración iSCSI para identificar la unidad SCSI ofrecida por el servidor de destino. Por lo tanto, querrá tomarse un tiempo para determinar un nombre scsi único para el IQN. Si tiene una instalación SAN iSCSI grande, debe usar la salida del comando `scsi_id`, o el WWID/WWN del SCSI, para identificar la unidad de forma única. Para cuotas más pequeñas, debería ser suficiente un nombre inventado o el LUN de SCSI.
+
+### Configuración de un disco iSCSI de destino
+La herramienta principal para configurar un disco iSCSI en un servidor de destino es la utilidad `targetcli`. Es una interfaz de shell que le permite administrar el subsistema de destino del kernel, Linux IO (LIO). LIO existe desde el kernel de Linux v2.6 y es un subsistema que admite estructuras de almacenamiento. Una estructura de almacenamiento es cualquier hardware que conecta dispositivos de almacenamiento SAN a sistemas. LIO admite estructuras de almacenamiento, como Fiber Channels e iSCSI.
+
+Primero, en su sistema, debe asegurarse de que el subsistema de destino se inicie en el momento del arranque y que el servicio se esté ejecutando. A continuación se muestra un ejemplo de cómo habilitar el subsistema de destino en una distribución CentOS para que se inicie al reiniciar:
+
+```sh
+systemctl enable target
+ln -s '/usr/lib/systemd/system/target.service'
+'/etc/systemd/system/multi-user.target.wants/target.service'
+```
+
+Una vez que se asegure de que el subsistema de destino se esté ejecutando, utilizando privilegios de superusuario, ingrese a la utilidad targetcli. Recibirá un mensaje /> cuando haya ingresado a la utilidad. Aquí se muestra un ejemplo:
+
+```sh
+targetcli
+Warning: Could not load preferences file /root/.targetcli/prefs.bin. 
+targetcli shell version 2.1.fb37 
+Copyright 2011–2013 by Datera, Inc and others.
+For help on commands, type 'help'.
+
+/>
+```
