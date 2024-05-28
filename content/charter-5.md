@@ -1687,6 +1687,104 @@ Warning: Could not load preferences file /root/.targetcli/prefs.bin.
 targetcli shell version 2.1.fb37 
 Copyright 2011–2013 by Datera, Inc and others.
 For help on commands, type 'help'.
-
 />
 ```
+
+Ahora que está dentro de la utilidad `targetcli`, puede crear un almacén trasero. Un _backstore_ es un método de acceso a datos que apunta y permite el acceso a un medio de almacenamiento físico (una unidad completa, una partición de disco o incluso un archivo simple) en una estructura de almacenamiento SAN. En `targetcli`, cambia su directorio de trabajo actual usando un comando `cd` y luego emite un comando de creación, como se muestra en el ejemplo aquí:
+
+```sh
+/> cd /backstores/block
+
+/backstores/block> create iscsidisk1 dev=/dev/sde 
+Created block storage object iscsidisk1 using /dev/sde.
+/backstores/block> ls
+o- block ............. [Storage Objects: 1]
+  o- iscsidisk1 ...... [/dev/sde (1.0GiB) write-thru deactivated]
+```
+
+En este ejemplo, se creó el almacén de respaldo SCSI, se le dio el ID SCSI único iscsidisk1 y luego se asignó a la unidad de muestra, `/dev/sde`. Tenga en cuenta que puede utilizar el comando `ls` para confirmar el backstore recién creado.
+
+Una vez que se crea un backstore, debe crear el IQN para el iSCSI de destino. Sin embargo, es mejor primero cambiar su directorio de trabajo actual al directorio iscsi dentro de `targetcli`, como se muestra aquí:
+
+```sh
+/backstores/block> cd /iscsi
+
+/iscsi> create iqn.2016–02.com.example.server07:iscsidisk1
+Created target iqn.2016–02.com.example.server07:iscsidisk1.
+Created TPG 1.
+Global pref auto_add_default_portal=true 
+Created default portal listening on all IPs (0.0.0.0), port 3260.
+```
+
+Tenga en cuenta que una vez creado el IQN, el servicio escucha en el puerto 3260. El único problema es que, según la designación 0.0.0.0, el servicio está abierto a todas las redes IP, lo que puede representar un riesgo para la seguridad. Esto se soluciona fácilmente de la siguiente manera:
+
+```sh
+/iscsi> cd iqn.2016–02.com.example.server07:iscsidisk1/tpg1
+/iscsi/iqn.20...csidisk1/tpg1> cd portals
+/iscsi/iqn.20.../tpg1/portals> delete 0.0.0.0 3260
+Deleted network portal 0.0.0.0:3260 
+/iscsi/iqn.20.../tpg1/portals> create 192.168.56.103
+Using default IP port 3260 
+Created network portal 192.168.56.103:3260
+```
+
+Ahora solo el nodo cliente iniciador designado (192.168.56.103) puede usar este puerto (3260) para acceder al dispositivo iSCSI ofrecido. Si es necesario, puede usar el comando ls nuevamente para verificar su configuración hasta el momento.
+
+Una vez que el IQN esté configurado correctamente, debe crear un LUN para hacer referencia a la unidad iSCSI. Nuevamente, deberá cambiar los directorios y usar el comando `create`, como se muestra en este ejemplo:
+
+```sh
+/iscsi/iqn.20.../tpg1/portals> cd ..
+/iscsi/iqn.20...csidisk1/tpg1> cd luns
+/iscsi/iqn.20...sk1/tpg1/luns> create /backstores/block/iscsidisk1
+Created LUN 0.
+/iscsi/iqn.20...sk1/tpg1/luns> ls
+o- luns .......................................... [LUNs: 1]   
+o- lun0 .................... [block/iscsidisk1 (/dev/sde)]
+/iscsi/iqn.20...sk1/tpg1/luns>
+```
+
+Para fines de prueba, puede desactivar cualquier autenticación, como se muestra en el siguiente ejemplo. Sin embargo, si utiliza esto en un entorno de producción, revise los comandos `get auth` y `set auth`.
+
+```sh
+/iscsi/iqn.20...sk1/tpg1/luns> cd ..
+/iscsi/iqn.20...csidisk1/tpg1> set attribute authentication=0
+Parameter authentication is now '0'. 
+/iscsi/iqn.20...csidisk1/tpg1> set attribute demo_mode_write_protect=0
+Parameter demo_mode_write_protect is now '0'. 
+/iscsi/iqn.20...csidisk1/tpg1> set attribute generate_node_acls=1
+Parameter generate_node_acls is now '1'.
+```
+
+Una vez configurada la unidad iSCSI del servidor de destino, puede volver a verificar la configuración, como se muestra aquí:
+
+```sh
+/iscsi/iqn.20...csidisk1/tpg1> cd /
+/> ls
+o- / ................................................. [...]
+  o- backstores ...................................... [...]   
+  | o- block .......................... [Storage Objects: 1]
+  | | o- iscsidisk1 [/dev/sde (1.0GiB) write-thru activated]
+  | o- fileio ......................... [Storage Objects: 0]
+  | o- pscsi .......................... [Storage Objects: 0]   
+  | o- ramdisk ........................ [Storage Objects: 0]   
+  o- iscsi ..............................  .... [Targets: 1]   
+  | o- iqn.2016–02.com.example.server07:iscsidisk1 [TPGs: 1]
+  |   o- tpg1 .......................... [gen-acls, no-auth]
+  |     o- acls .................................. [ACLs: 0]
+  |     o- luns .................................. [LUNs: 1]
+  |     | o- lun0 ............ [block/iscsidisk1 (/dev/sde)]
+  |     o- portals ............................ [Portals: 1]   
+  |       o- 192.168.56.103:3260 ...................... [OK]   
+  o- loopback ................................. [Targets: 0]
+
+/> exit
+
+Global pref auto_save_on_exit=true 
+Last 10 configs saved in /etc/target/backup.
+Configuration saved to /etc/target/saveconfig.json
+```
+
+Cuando haya completado la configuración de su destino iSCSI, abandone la utilidad `targetcli` usando el comando de salida.
+
+Si se encuentra en un entorno de producción, deberá agregar las reglas apropiadas a su utilidad de firewall, como `firewalld`, `ufw` o `iptables`. Para fines de prueba, puede simplemente bajar el firewall según sea necesario.
+
