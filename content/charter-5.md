@@ -1787,4 +1787,748 @@ Configuration saved to /etc/target/saveconfig.json
 Cuando haya completado la configuración de su destino iSCSI, abandone la utilidad `targetcli` usando el comando de salida.
 
 Si se encuentra en un entorno de producción, deberá agregar las reglas apropiadas a su utilidad de firewall, como `firewalld`, `ufw` o `iptables`. Para fines de prueba, puede simplemente bajar el firewall según sea necesario.
+### Configuración de un disco iSCSI iniciador
+La herramienta principal para administrar un disco iSCSI en un cliente iniciador es la utilidad `iscsiadm`. Esta utilidad se utiliza para descubrir e iniciar sesión en servidores de destino iSCSI. También se utiliza para administrar los archivos de base de datos `open-iscsi`, que se encuentran en el directorio `/var/log/iscsi/`.
 
+Para muchas operaciones, la utilidad `iscsiadm` necesita que el demonio `iscsi`, `iscsid`, esté en funcionamiento. El `iscsid` interactúa con el kernel e implementa el protocolo iSCSI abierto.
+
+El demonio `iscsid` se configura mediante el archivo `/etc/iscsi/iscsid.conf`. Este archivo también controla varias de las operaciones de la utilidad `iscsiadm`. iSCSI puede utilizar el Protocolo de autenticación ChallengeHandshake (CHAP) para establecer una conexión segura entre un servidor de destino iSCSI y un cliente iniciador. Este archivo de configuración es donde colocaría las configuraciones CHAP necesarias. Aquí se muestra una versión recortada del archivo de configuración:
+
+```sh
+cat /etc/iscsi/iscsid.conf
+[...]
+node.startup = automatic 
+node.leading_login = No
+[...]
+discovery.sendtargets.iscsi.MaxRecvDataSegmentLength = 32768 
+[...]
+```
+
+En el cliente iniciador, el proceso de encontrar un disco iSCSI en un servidor de destino se denomina _descubrimiento de destino_. Cuando se produce el descubrimiento de destino por primera vez, se utilizan los valores de descubrimiento del archivo de configuración. `*.` El archivo `/etc/iscsi/iscsid.conf` está muy bien documentado. Para determinar cualquier configuración necesaria para su configuración iSCSI particular, examine el archivo con una utilidad de buscapersonas.
+
+Aquí se muestra cómo habilitar el demonio `iscsid` para que se inicie al reiniciar en un cliente iniciador CentOS:
+
+```sh
+systemctl enable iscsid 
+ln -s '/usr/lib/systemd/system/iscsid.service' 
+'/etc/systemd/system/multi-user.target.wants/iscsid.service'
+```
+
+Para comenzar el proceso de descubrimiento de destino, debe utilizar el comando `iscsiadm`. En este ejemplo, el modo de descubrimiento de la utilidad `iscsiadm` (`-m` descubrimiento) se utiliza para localizar cualquier SendTargets. Un SendTarget es un tipo de destino, designado por `-t st`, que le indica al servidor de destino iSCSI que responda a la solicitud con una lista de dispositivos iSCSI disponibles. El servidor de destino iSCSI se designa con la opción `-p`. En el siguiente ejemplo, el servidor de destino está en 192.168.56.103:
+
+```
+iscsiadm -m discovery -t st -p 192.168.56.103 
+192.168.56.103:3260,1 iqn.2016–02.com.example.server07:iscsidisk1
+```
+
+Cuando se descubrió el objetivo en el ejemplo anterior, la herramienta `iscsiadm` también creó dos registros. Uno era un registro de descubrimiento almacenado en el archivo de base de datos `/var/lib/iscsi/send_targets` para el tipo SendTarget. (Los diferentes registros de tipos de destino se almacenan en su archivo de base de datos correspondiente). A continuación se muestra un archivo `send_targets` de ejemplo:
+
+```sh
+cat /var/lib/iscsi/send_targets
+192.168.56.103,3260
+```
+
+El otro registro creado por la herramienta `iscsiadm` durante el proceso de descubrimiento fue un registro de nodo descubierto. El registro del nodo se almacena en el archivo de base de datos `/var/lib/iscsi/nodes` y contiene el IQN del dispositivo iSCSI disponible del servidor de destino, como se muestra aquí:
+
+```sh
+cat /var/lib/iscsi/nodes
+iqn.2016–02.com.example.server07:iscsidisk1
+``` 
+
+Estos registros de la base de datos iSCSI son persistentes (a menos que los elimine). Los nombres de los archivos de la base de datos pueden resultar un poco confusos. Tenga en cuenta que los IQN están en el archivo de nodos, mientras que la dirección IP del servidor de destino está en el archivo `send_targets`. Estos registros completan el proceso de descubrimiento.
+
+Una vez que se completa el proceso de descubrimiento, se debe establecer una sesión entre el servidor de destino y el cliente iniciador. El comando `iscsiadm` se utiliza para iniciar sesión en el destino para crear esta conexión. El comando de ejemplo aquí está dividido en varias líneas para mayor claridad:
+
+```sh
+iscsiadm -m node \
+> -T iqn.2016–02.com.example.server07:iscsidisk1 \
+> -p 192.168.56.103 -l
+Logging in to [iface: default,
+target: iqn.2016–02.com.example.server07:iscsidisk1,
+portal: 192.168.56.103,3260] (multiple)
+Login to [iface: default, target: iqn.2016–02.com.example.server07:iscsidisk1, portal: 192.168.56.103,3260] successful. 
+```
+
+Para este comando, se utiliza el modo de modo (`-m` nodo). El disco iSCSI de destino se designa con la opción `-T` y su IQN. El servidor de destino se selecciona mediante la opción `-p` y su dirección IP (192.168.56.103). Finalmente, la opción `-l` solicita una sesión de inicio de sesión. Ahora la sesión está establecida y se puede utilizar la unidad iSCSI adjunta.
+### Usando un disco iSCSI
+Es una buena idea comprobar la unidad iSCSI adjunta antes de utilizarla. La utilidad `iscsiadm` tiene una buena capacidad de salida. Le permite mostrar una gran cantidad de información a través de su opción `-P#`, como se muestra en este resultado recortado:
+
+```sh
+iscsiadm -m session -P3
+iSCSI Transport Class version 2.0–870
+version 6.2.0.873–28
+Target: iqn.2016–02.com.example.server07:iscsidisk1 (non-flash)
+   Current Portal: 192.168.56.103:3260,1
+   Persistent Portal: 192.168.56.103:3260,1
+[...]       
+      Attached SCSI devices:
+      ************************
+      Host Number: 11   State: running       
+      scsi11 Channel 00 Id 0 Lun: 0
+         Attached scsi disk sdj      State: running
+```
+
+Observe en el resultado que la unidad iSCSI adjunta está designada por el nombre de archivo del dispositivo sdj. Ahora puede utilizar utilidades en el cliente iniciador, como lo haría con los dispositivos SCSI conectados localmente. Por ejemplo, la utilidad `lsblk` permite mostrar información sobre el dispositivo iSCSI, como se muestra aquí:
+
+```sh
+lsblk
+NAME            MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT 
+sda               8:0    0    8G  0 disk
+├─sda1            8:1    0  500M  0 part  /boot 
+└─sda2            8:2    0  7.5G  0 part
+  ├─centos-root 253:0    0  6.7G  0 lvm   /
+  └─centos-swap 253:1    0  820M  0 lvm   [SWAP]
+[...]
+sdj              8:144  0    1G  0 disk 
+sr0              11:0    1 1024M  0 rom 
+```
+
+Una vez que haya verificado su unidad iSCSI, puede particionarla, formatearla y montarla, tal como lo haría con una unidad conectada localmente. En la lista recortada aquí se muestra un ejemplo de cómo hacer esto en una distribución de CentOS:
+
+```sh
+parted /dev/sdj mklabel msdos 
+Information: You may need to update /etc/fstab.
+
+parted /dev/sdj mkpart primary 8192s 100%** 
+Information: You may need to update /etc/fstab.
+
+parted -l
+[...]
+Model: LIO-ORG **iscsidisk1** (scsi)
+Disk /dev/sdj: 1074MB
+[...]
+
+mkfs -t ext4 /dev/sdj1
+mke2fs 1.42.9 (28-Dec-2013)
+[...]
+Writing inode tables: done
+Creating journal (4096 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+mount -t ext4 /dev/sdj1 Temp
+
+ls Temp 
+lost+found
+
+touch Temp/My_iSCSI_file.dat
+
+ls Temp
+lost+found  My_iSCSI_file.dat 
+```
+
+Por último, debes actualizar dos archivos de configuración. Por supuesto, asegúrese de incluir su nueva unidad iSCSI en el archivo `/etc/fstab` del cliente iniciador. El otro archivo de configuración es el archivo `/etc/iscsi/initiatorname.iscsi`. Debe actualizarse para que contenga el nodo descubierto (dispositivos iSCSI disponibles en un servidor de destino y indicados por su IQN) que estás usando ahora en el cliente iniciador. Aquí hay un ejemplo:
+
+```sh
+cat /etc/iscsi/initiatorname.iscsi
+InitiatorName=iqn.2016.02.com.example.server07:iscsidisk1
+```
+
+La palabra clave InitiatorName debe preceder al IQN. Sin embargo, también puede crear un alias utilizando la palabra clave InitiatorAlias. A continuación se muestra un ejemplo de un alias en este archivo de configuración:
+
+```sh
+InitiatorAlias="LUN0 Test iSCSI Drive"
+```
+
+Una vez que se actualicen los archivos de configuración, su unidad iSCSI estará lista para usar.
+
+Las utilidades cubiertas en esta sección son útiles para revisar, monitorear, probar y ocasionalmente modificar los parámetros de los medios de almacenamiento o aquellos asociados con los medios de almacenamiento. Además, si descubre que iSCSI es adecuado para sus necesidades de SAN, los términos y conceptos cubiertos le ayudarán a emplear una SAN iSCSI.
+### Gestión de volúmenes lógicos
+Los datos tienen la costumbre de aumentar. Si bien es posible que pueda predecir con precisión el crecimiento de sus datos en un período de tiempo corto, es mucho más difícil predecir el crecimiento de los datos con precisión durante períodos más largos. Afortunadamente, los volúmenes lógicos son útiles para esos momentos en los que sus predicciones no son tan precisas.
+
+Es bueno comprender este esquema de medios de almacenamiento y tenerlo implementado antes de necesitarlo. 
+### Entendiendo LVM
+_Gestión de volúmenes lógicos_ o _administrador de volúmenes lógicos_ _(LVM)_ permite agrupar varias particiones y utilizarlas como una única partición para formatear, montar en la estructura de directorio virtual de Linux, almacenar datos, etc. Esta agrupación se logra a través de una capa de abstracción, de modo que las múltiples particiones se denominan un solo volumen. También puede agregar particiones adicionales a un volumen lógico a medida que aumentan sus necesidades de datos.
+
+LVM tiene tres partes principales. Cada parte juega un papel importante en la creación y mantenimiento de volúmenes lógicos.
+
+**Volumen físico**  Se crea un _volumen físico (PV)_ usando el comando `/sbin/pvcreate` de LVM. Esta utilidad designa una partición de disco no utilizada (o una unidad completa) para ser utilizada por LVM. Las estructuras LVM, una etiqueta de volumen y metadatos se agregan a la partición durante este proceso.
+
+**Grupo de volúmenes**  Se crea un _grupo de volúmenes (VG)_ usando el comando `/sbin/vgcreate` de LVM, que agrega PV a un grupo de almacenamiento. Este grupo de almacenamiento se utiliza a su vez para crear varios volúmenes lógicos.
+
+Puede tener varios grupos de volúmenes. Cuando se utiliza el comando para agregar PV a un VG, los metadatos del grupo de volúmenes se agregan al PV durante este proceso. Estos metadatos incluyen nombre, nombre de VG único, tamaño de extensión física, etc.
+
+La partición de un disco, designada como PV, puede pertenecer a un solo VG. Sin embargo, las otras particiones de un disco, también designadas como PV, pueden pertenecer a otros VG.
+
+**Volumen lógico**  Se crea un _volumen lógico (LV)_ usando el comando `/sbin/lvcreate` de LVM. Este es el objeto final en la creación de volúmenes lógicos. Un LV consta de fragmentos de espacio de almacenamiento (extensiones lógicas) de un grupo de VG. Puede formatearse con un sistema de archivos, montarse y usarse como una partición de disco típica.
+
+Si bien puede tener varios VG, cada LV se crea a partir de un solo VG designado. Sin embargo, puede tener varios LV que compartan un solo VG. Puede cambiar el tamaño (aumentar o reducir) un LV utilizando los comandos LVM apropiados. Esta característica agrega una gran flexibilidad a la gestión del almacenamiento de datos.
+
+Puede ver que hay muchas formas de dividir y administrar sus medios de almacenamiento de datos usando LVM. Al igual que con muchas otras estructuras de gestión de datos, debe determinar las necesidades de gestión de datos de su empresa antes de determinar un esquema LVM.
+
+Además de conocer los PV, VG y LV, existen algunos términos adicionales que es necesario comprender. Es útil conocer estos términos a medida que comienza a crear LV.
+
+Una _extensión física (PE)_ es el tamaño de bloque más pequeño que se puede asignar en un PV. Este tamaño se establece durante el proceso de agregar un PV a un VG. De forma predeterminada, el comando `vgcreate` elige 4 MiB. Sin embargo, puede elegir una configuración diferente usando la opción `-s` o `--physicalextentsize`. El rango de tamaño típico es de 8 KiB a 16 GiB. Por ejemplo, si tiene un PV de 2 TiB y utiliza el tamaño de PE predeterminado de 4 MiB, se agregarán aproximadamente 500 000 PE al grupo de volúmenes. Después del PV inicial, cualquier PV agregado al VB tendrá el mismo tamaño de PE establecido.
+
+Los LV se componen de _extensiones lógicas (LE)_. Las extensiones lógicas se asignan a extensiones físicas de VG. El mapeo proporciona una manera de acceder a los datos sin preocuparse por dónde se encuentra una extensión física.
+#### Creación de volúmenes lógicos
+
+La utilidad `lvm` es una utilidad interactiva para crear y administrar LV. Si no está instalado, puede instalarlo mediante el paquete `lvm2`. Usando privilegios de superusuario, puede ingresar a la utilidad y ver las diversas herramientas disponibles para LVM, como se muestra en esta distribución de CentOS aquí:
+
+```sh
+lvm
+lvm> help
+Available lvm commands:
+Use 'lvm help <command>' for more information
+
+devtypes    Display recognised built-in block device types
+dumpconfig  Dump configuration 
+formats     List available metadata formats 
+help        Display help for commands
+lvchange    Change the attributes of logical volume(s)
+lvconvert   Change logical volume layout 
+lvcreate    Create a logical volume
+lvdisplay   Display information about a logical volume
+lvextend    Add space to a logical volume
+lvmchange   With the device mapper, this is obsolete and             
+            does nothing.
+lvmdiskscan List devices that may be used as physical volumes
+lvmsadc     Collect activity data 
+lvmsar      Create activity report 
+lvreduce    Reduce the size of a logical volume 
+lvremove    Remove logical volume(s) from the system
+lvrename    Rename a logical volume 
+lvresize    Resize a logical volume 
+lvs         Display information about logical volumes 
+lvscan      List all logical volumes in all volume groups 
+pvchange    Change attributes of physical volume(s)
+pvresize    Resize physical volume(s) 
+pvck        Check the consistency of physical volume(s) 
+pvcreate    Initialize physical volume(s) for use by LVM 
+pvdata      Display the on-disk metadata for physical volume(s) 
+pvdisplay   Display various attributes of physical volume(s) 
+pvmove      Move extents from one physical volume to another 
+pvremove    Remove LVM label(s) from physical volume(s) 
+pvs         Display information about physical volumes
+pvscan      List all physical volumes 
+segtypes    List available segment types 
+tags        List tags defined on this host 
+vgcfgbackup Backup volume group configuration(s) 
+vgcfgrestore Restore volume group configuration 
+vgchange    Change volume group attributes 
+vgck        Check the consistency of volume group(s) 
+vgconvert   Change volume group metadata format
+vgcreate    Create a volume group 
+vgdisplay   Display volume group information 
+vgexport    Unregister volume group(s) from the system 
+vgextend    Add physical volumes to a volume group 
+vgimport    Register exported volume group with system
+vgmerge     Merge volume groups
+vgmknodes   Create the special files for volume group devices
+            in /dev
+vgreduce    Remove physical volume(s) from a volume group
+vgremove    Remove volume group(s) 
+vgrename    Rename a volume group 
+vgs         Display information about volume groups 
+vgscan      Search for all volume groups
+vgsplit     Move physical volumes into a new or existing volume
+            group
+version     Display software and driver version information 
+lvm> quit 
+Exiting.
+```
+
+En este ejemplo, puede ver todas las herramientas disponibles para crear y administrar LV. Generalmente, cualquier herramienta que comience con `pv` es para PV, cualquier herramienta que comience con `vg` es para VG y cualquier herramienta que comience con `lv` es para LV.
+
+Tenga en cuenta que no necesita ingresar a la utilidad `lvm` para acceder a estas herramientas. Por ejemplo, la herramienta `pvcreate` está disponible directamente desde la línea de comando:
+
+```sh
+which pvcreate 
+/sbin/pvcreate
+```
+
+Los cinco pasos necesarios para configurar su primer LV son los siguientes: Los cinco pasos necesarios para configurar su primer LV son los siguientes:
+
+1. Create your PVs.
+2. Create your VG.
+3. Create your LV.
+4. Format your LV.
+5. Mount your LV.
+
+Hay consideraciones importantes en los primeros tres pasos. Cada decisión que tome en los primeros pasos determinará qué tan flexible y fácil será administrar sus LV.
+##### Creando los PV
+Antes de designar unidades como PV, se deben particionar. Luego, puede designar las particiones como PV usando el comando `pvcreate`.
+
+En el siguiente ejemplo de una distribución CentOS, se designan cuatro particiones como PV mediante el comando `pvcreate`. Estas cuatro particiones son pequeñas particiones de muestra creadas con fines de demostración:
+
+```sh
+lsblk
+NAME            MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+[...]
+sdj               8:144  0    1G  0 disk 
+└─sdj1            8:145  0 1023M  0 part sdk               8:160  0    1G  0 disk └─sdk1            8:161  0 1023M  0 part sdl               8:176  0    1G  0 disk └─sdl1            8:177  0 1023M  0 part sdm               8:192  0    1G  0 disk └─sdm1            8:193  0 1023M  0 part
+[...]
+
+pvcreate /dev/sdj1
+Physical volume "/dev/sdj1" successfully created
+
+pvcreate /dev/sdk1
+Physical volume "/dev/sdk1" successfully created
+
+pvcreate /dev/sdl1
+Physical volume "/dev/sdl1" successfully created
+
+pvcreate /dev/sdm1
+Physical volume "/dev/sdm1" successfully created
+```
+
+El comando `pvcreate` designa la partición de disco especificada que usará LVM y agrega estructuras LVM, una etiqueta de volumen y metadatos a la partición. La partición del disco especificada debe estar sin utilizar.
+
+Para ver la información sobre sus PV, puede usar el comando `pvdisplay`. Puede especificar un PV para ver información solo sobre ese PV en particular, o simplemente puede ingresar el comando `pvdisplay` para ver toda la información de sus PV, como se muestra en el fragmento aquí:
+
+```sh
+pvdisplay
+[...]
+  "/dev/sdk1" is a new physical volume of "1023.00 MiB"
+ --- NEW Physical volume ---
+  PV Name               /dev/sdk1
+  VG Name
+  PV Size               1023.00 MiB
+  Allocatable           NO
+  PE Size               0
+  Total PE              0
+  Free PE               0
+  Allocated PE          0
+  PV UUID               8vzvRi-8XZI-98tu-FW82-wwwX-os83-Z2a76L
+
+  "/dev/sdj1" is a new physical volume of "1023.00 MiB"
+[...]
+  Allocated PE          0
+  PV UUID               uFBQqx-OVD6-Vb68–6mjC-P9LR-iND6-ooFdkc
+```
+
+Observe que se crea un UUID de PV único para cada PV. Este UUID se genera mediante el comando `pvcreate` y se puede sobrescribir usando la opción `--uuid` cuando se usa `pvcreate`.
+
+Asegúrese de configurar más de un PV. El objetivo de LVM es tener medios de almacenamiento adicionales para agregar sobre la marcha a sus LV. Una vez que haya configurado los PV, puede comenzar con el siguiente paso: crear un VG.
+### Creando un VG
+Cualquier PV se puede agregar a un VG. El comando a utilizar es `vgcreate` y su sintaxis básica es la siguiente:
+
+```sh
+vgcreate  VG_name  PV
+```
+
+Puede designar más de un PV durante el proceso de creación de VG. Si necesita agregar PV más adelante a un VG, debe usar el comando `vgextend`.
+
+La práctica común nombra el primer VG vg00, el siguiente vg01, y así sucesivamente. Sin embargo, usted elige cómo nombrar su grupo de volúmenes. Debido a que muchas distribuciones durante la instalación configuran LVM para la raíz de la estructura del directorio virtual (`/`) y otros directorios, es una buena idea verificar si hay algún VG actual en su sistema usando el comando `vgdisplay`, como se muestra aquí:
+
+```sh
+vgdisplay | grep Name
+VG Name               centos
+```
+
+El ejemplo anterior se realizó en una distribución CentOS. Observe que ya está configurado un VG llamado centos. Por lo tanto, para crear un nuevo VG en este sistema, _no_ se debe utilizar el nombre centos. A continuación se muestra un ejemplo de creación de un VG en una distribución CentOS, denominado vg00, utilizando cuatro PV:
+
+```sh
+vgcreate vg00 /dev/sdj1 /dev/sdk1 /dev/sdl1 /dev/sdm1
+Volume group "vg00" successfully created
+```
+
+Una vez que haya creado con éxito un VG, tiene sentido verificarlo. Puede hacerlo con el comando `vgdisplay`, que funciona de manera similar al comando `pvdisplay`, como se muestra aquí:
+
+```sh
+vgdisplay vg00
+ --- Volume group ---
+  VG Name               vg00
+  System ID
+  Format                lvm2
+  Metadata Areas        4
+  Metadata Sequence No  1
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                0
+  Open LV               0
+  Max PV                0
+  Cur PV                4
+  Act PV                4
+  VG Size               3.98 GiB
+  PE Size               4.00 MiB
+  Total PE              1020
+  Alloc PE / Size       0 / 0
+  Free  PE / Size       1020 / 3.98 GiB
+  VG UUID               2n3wGF-xPSE-r13R-V5kX-I0pV-LDie-bZBQ5f
+```
+
+Observe en el ejemplo anterior que se creó un UUID de VG único. Observe también que se configuró el tamaño de PE predeterminado. Puede anular muchos de estos valores predeterminados agregando varias opciones al comando `vgcreate` para crear un VG con la configuración necesaria.
+
+Una vez que su grupo de almacenamiento de VG contenga al menos un PV, puede continuar con la creación de un LV.
+### Creando un LV
+Para crear un LV a partir de un grupo de almacenamiento VG, se emplea el comando `lvcreate`. Su sintaxis básica es la siguiente:
+
+```sh
+lvcreate  -L size VG_name
+```
+
+Con el comando `lvcreate`, el tamaño del volumen se designa usando la opción `-L` y el VG desde el cual extraer extensiones lógicas (LE) se designa mediante `VG_name`.
+
+Si por alguna razón un VG no tiene suficientes LE para dárselos al LV para el tamaño designado, entonces no podrá crear el LV. A continuación se muestra un ejemplo en el que el tamaño LV solicitado es 6 GiB (-L 6 g), pero solo 3,98 GiB están disponibles en el VG designado:
+
+```sh
+lvcreate -L 6g vg00   
+Volume group "vg00" has insufficient free space (1020 extents):
+1536 required
+```
+
+El tamaño mínimo que puede especificar para un LV es el tamaño PE del VG. Por lo tanto, si utiliza el tamaño de PE predeterminado al crear su VG, el tamaño más pequeño de LV es 4 MiB.
+
+A continuación se muestra un ejemplo del uso del comando `lvcreate` para crear un LV. Se aceptan muchas opciones predeterminadas, En este ejemplo, la opción `-v` (detallada) se utiliza para mostrar más información durante el proceso de creación de LV:
+
+```sh
+lvcreate -L 2g -v vg00
+
+  Finding volume group "vg00"   Archiving volume group "vg00" metadata (seqno 1)
+  Creating logical volume lvol0   
+  Creating volume group backup "/etc/lvm/backup/vg00" (seqno 2).
+  Activating logical volume "lvol0".   
+  activation/volume_list configuration setting not defined:
+Checking only host tags for vg00/lvol0
+  Creating vg00-lvol0
+  Loading vg00-lvol0 table (253:2)
+  Resuming vg00-lvol0 (253:2)
+  Wiping known signatures on logical volume "vg00/lvol0"
+  Initializing 4.00 KiB of logical volume "vg00/lvol0" 
+with value 0.
+  Logical volume "lvol0" created.
+```
+
+Observe que el primer LV del nombre predeterminado de este VG es `lvol0`. Sin embargo, ahora debe usar su nombre de ruta completo para mostrar la información de este LV, `/dev/vg00/lvol0`. Aquí hay un ejemplo recortado del uso del comando `lvdisplay` para mostrar la información del LV:
+
+```sh
+lvdisplay /dev/vg00/lvol0
+ --- Logical volume ---
+  LV Path                /dev/vg00/lvol0
+  LV Name                lvol0
+  VG Name                vg00
+  LV UUID                rvdLvZ-Mk1r-8CCO-prnv-B82H-LdGI-SgGPxZ
+  LV Write Access        read/write
+[...]
+  Block device           253:2
+```
+
+Observe que a él también se le ha asignado un UUID LV. Puede designar un nombre LV no predeterminado utilizando la opción `-n` del comando `lvcreate`.
+
+Además del comando `lvdisplay`, puede usar los comandos `lvs` y `lvscan` para mostrar información sobre todos los LV de su sistema, como se muestra en este ejemplo recortado aquí:
+
+```sh
+lvscan
+  ACTIVE            '/dev/centos/swap' [820.00 MiB] inherit
+  ACTIVE            '/dev/centos/root' [6.67 GiB] inherit
+  ACTIVE            '/dev/vg00/lvol0' [2.00 GiB] inherit
+
+lvs
+  LV    VG     Attr       LSize   Pool Origin [...]   
+  root  centos -wi-ao----   6.67g             [...]   
+  swap  centos -wi-ao---- 820.00m             [...]   
+  lvol0 vg00   -wi-a-----   2.00g             [...] 
+```
+
+Una vez que haya creado su LV, puede tratarlo como si fuera una partición normal. Por supuesto, la diferencia es que puedes hacer crecer o reducir esta partición sobre la marcha según sea necesario.
+### Formateo y montaje de un LV
+No tiene que hacer nada especial con su LV para crear un sistema de archivos en él y luego montarlo en la estructura de directorio virtual. El sistema la ve como una partición normal, como se muestra en este ejemplo recortado aquí:
+
+```sh
+mkfs -t ext4 /dev/vg00/lvol0
+[...]
+Creating journal (16384 blocks): done
+
+Writing superblocks and filesystem accounting information: done
+
+mount -t ext4 /dev/vg00/lvol0 Temp
+
+ls Temp
+lost+found
+
+touch Temp/My_LVM_File
+
+ls Temp
+lost+found  My_LVM_File #
+```
+
+Ahora que tiene todas las distintas partes de LVM creadas y un LV adjunto a su estructura de directorio virtual, aún debe mantenerlo y administrarlo.
+### Soporte de volúmenes lógicos
+La gestión de los LV de su sistema incluye cambiar su tamaño, lo que normalmente significa aumentar su tamaño. Sin embargo, a veces es necesario reducir el tamaño de un VI. Además, LVM incluye la creación de instantáneas de LV, cambiarles el nombre, eliminar un LV, etc.
+### Haga crecer sus VG y LV
+Llega el momento en que es necesario aumentar el tamaño de un VI. Puede deberse al aumento de datos en el volumen o puede ser que se esté instalando una nueva aplicación. En cualquier caso, cultivar un LV es bastante fácil.
+
+Antes de aumentar el tamaño de un LV, vale la pena considerar aumentar el tamaño de un VG con más PV. No se puede aumentar un LV más allá de lo que su VG tiene para ofrecer.
+
+Una vez que haya agregado o localizado almacenamiento adicional, asegúrese de que esté designado como PV antes de intentar agregarlo a un grupo de VG. En este ejemplo, la nueva partición `/dev/sdn1` se ubica mediante el comando `lsblk` y luego se designa como PV usando la utilidad `pvcreate`:
+
+```sh
+lsblk
+NAME            MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+[...]
+sdk               8:160  0    1G  0 disk 
+└─sdk1            8:161  0 1023M  0 part
+  └─vg00-lvol0  253:2    0    2G  0 lvm
+[...]
+sdn               8:208  0    1G  0 disk 
+└─sdn1            8:209  0 1023M  0 part
+[...]
+
+pvcreate -v /dev/sdn1
+	Set up physical volume for "/dev/sdn1" with 2095104[...]
+    Zeroing start of device /dev/sdn1
+    Writing physical volume data to disk "/dev/sdn1"
+  Physical volume "/dev/sdn1" successfully created
+```
+
+Observe aquí que algunas de las particiones, como sdk1, ya se muestran como parte de un LV. La opción `-v` (detallada) se usó con la utilidad `pvcreate` para mostrar más información porque la partición está designada como PV.
+
+Además del comando `pvdisplay`, puede utilizar la utilidad `pvscan` para verificar el sistema en busca de todos los PV disponibles. Aquí se muestra un ejemplo recortado de ambos:
+
+```sh
+pvscan
+[...]
+  PV /dev/sdj1   VG vg00   lvm2 [1020.00 MiB / 0    free]
+  PV /dev/sdk1   VG vg00   lvm2 [1020.00 MiB / 0    free]
+  PV /dev/sdl1   VG vg00   lvm2 [1020.00 MiB / 1012.00 MiB free]
+  PV /dev/sdm1   VG vg00   lvm2 [1020.00 MiB / 1020.00 MiB free]
+  PV /dev/sdn1             lvm2 [1023.00 MiB]
+  Total: 6 [12.49 GiB] / in use: 5 [11.49 GiB] /
+   in no VG: 1 [1023.00 MiB]
+
+pvdisplay /dev/sdn1
+"/dev/sdn1" is a new physical volume of "1023.00 MiB"
+ --- NEW Physical volume ---
+  PV Name               /dev/sdn1
+  VG Name
+  PV Size               1023.00 MiB
+  Allocatable           NO
+  PE Size               0
+  Total PE              0
+  Free PE               0
+  Allocated PE          0
+  PV UUID               Gx679x-c59d-C0pS-2L7a-8yz9-addf-QBtw3Y
+```
+
+Con los PV adicionales necesarios designados, el VG se puede ampliar. Para aumentar el tamaño de un grupo de VG, use el comando `vgextend`, designando sus PV adicionales como se muestra aquí:
+
+```sh
+vgextend vg00 /dev/sdn1
+volume group "vg00" successfully extended
+```
+
+Una vez que tenga suficiente espacio de almacenamiento en un VG, podrá continuar haciendo crecer su LV. Para hacer crecer un LV, use el comando `lvextend`. La opción `-L` se utiliza para establecer el nuevo tamaño deseado del VI. En este ejemplo, el `LV`, `/dev/vg00/lvol0`, aumenta de 2 GiB a 4 GiB:
+
+```sh
+lvextend -L 4g -v /dev/vg00/lvol0
+    Finding volume group vg00     
+    Archiving volume group "vg00" metadata (seqno 3).
+    Extending logical volume vg00/lvol0 to 4.00 GiB
+  Size of logical volume vg00/lvol0 changed from    2.00 GiB (512 extents) to 4.00 GiB (1024 extents).     Loading vg00-lvol0 table (253:2)
+    Suspending vg00-lvol0 (253:2) with device flush
+    Resuming vg00-lvol0 (253:2)
+    Creating volume group backup "/etc/lvm/backup/vg00"[...]
+  Logical volume lvol0 successfully resized
+```
+
+Observe que se crea una copia de seguridad del grupo de volúmenes. Estas copias de seguridad son solo metadatos de VG y no contienen ningún dato de LV del sistema o del usuario. A menudo se crean automáticamente cuando se utilizan utilidades como `lvextend`. Sin embargo, puede resultar útil crear una copia de seguridad de metadatos de VG manualmente utilizando la utilidad `vgcfgbackup`. Puede restaurar los metadatos usando el comando `vgcfgrestore`.
+
+Una forma útil de verificar su LV extendido es usar la opción `--maps`. Esta opción le permite ver las extensiones lógicas del LV asignadas a las extensiones físicas del PV. Puede ver en este ejemplo recortado que el nuevo `/dev/vg00/lvol0` tiene algunas extensiones físicas asignadas desde el PV `/dev/sdn1` recién agregado:
+
+```sh
+lvdisplay --maps /dev/vg00/lvol0
+ --- Logical volume ---
+  LV Path                /dev/vg00/lvol0
+[...]
+  LV Size                4.00 GiB
+[...]
+ --- Segments --  
+ Logical extents 0 to 254:
+    Type         linear
+    Physical volume  /dev/sdj1
+    Physical extents  0 to 254
+[...]  
+	Logical extents 1020 to 1023:
+    Type        linear
+    Physical volume  /dev/sdn1
+    Physical extents  0 to 3
+[...]
+```
+
+Si necesita hacer crecer un LV que tenga espacio de intercambio, se requieren algunos pasos adicionales. Primero debe habilitar el espacio de intercambio alternativo, si aún no tiene un sistema de archivos de espacio de intercambio secundario en uso. Después de eso, desactive ese espacio de intercambio en el LV usando el comando `swapoff`. Una vez que el espacio de intercambio LV esté deshabilitado, puede utilizar los métodos normales para hacer crecer el LV. En este punto, use el comando `mkswap` para realizar el sistema de archivos de intercambio en el LV ampliado. Finalmente, vuelva a habilitar el espacio de intercambio usando el comando `swapon`.
+### Creación y mantenimiento de una instantánea LV
+Una instantánea LV (a veces llamada instantánea LVM) merece una atención especial. Es más una copia de datos activa que una copia de seguridad estancada.
+
+Una instantánea LV es una instantánea de copia en escritura, o COW. Cuando se crea inicialmente una instantánea LV COW, se configura una ubicación (instantánea LV) para almacenar la instantánea. En ese momento, no se copia ningún dato LV del usuario o del sistema en la ubicación de la instantánea. Sólo se copian los metadatos (relativos a la ubicación de los datos del usuario y del sistema). Por lo tanto, cuando se crea una instantánea, ocurre muy rápidamente y no causa ninguna interrupción del servicio BT.
+
+Después de la creación de la instantánea inicial, cada vez que se van a cambiar datos LV originales, esos datos primero se copian en la ubicación de la instantánea, lo que se conoce como comportamiento de copia en escritura. Debido a la necesidad de copiar cualquier dato del LV original a la ubicación de la instantánea antes de la modificación, una instantánea de LV ralentiza ligeramente el rendimiento de escritura de un LV.
+
+Dado que solo los metadatos y los datos que se han modificado en el LV desde que se creó la instantánea se almacenan físicamente en la instantánea del LV, estas instantáneas contienen copias de datos virtuales.
+
+Además, ocupan menos espacio que el LV original.
+
+Las instantáneas de LV se pueden leer y escribir, y se pueden montar en la estructura de directorio virtual de Linux. Por lo tanto, sirven para algunos propósitos bastante útiles. Por ejemplo, puede usarlos para hacer una copia de seguridad de los datos del LV original en otro medio de almacenamiento sin detener ninguna aplicación que utilice el LV original. También puede realizar pruebas de programas nuevos o modificados utilizando datos de producción. Cualquier escritura de datos que se produzca en la instantánea, pero no en el LV original, no se fusiona automáticamente con los datos del LV original. Esto le permite escribir datos de prueba en la instantánea sin afectar negativamente a los datos de producción. Sin embargo, puede fusionar datos de instantáneas modificados con datos LV originales usando el comando `lvconvert` con la opción `--merge`, si es necesario.
+
+Para crear una instantánea LV, use el comando `lvcreate`. Aquí hay un ejemplo recortado de cómo crear y activar una instantánea LV en una distribución CentOS:
+
+```sh
+lvcreate -v -L 500m -s -n backup_snapshot /dev/vg00/lvol0     
+	Setting chunksize to 4.00 KiB.
+    Finding volume group "vg00"     
+    Archiving volume group "vg00" metadata (seqno 32).
+    Creating logical volume backup_snapshot
+[...]  
+  Logical volume "backup_snapshot" created.
+```
+
+La opción `-s` indica que se debe crear una instantánea LV. El nombre de la instantánea se indica con la opción `-n` y en este caso es `backup_snapshot`. El LV para el cual crear esta instantánea es el último elemento de comando, `/dev/vg00/lvol0`.
+
+La opción `-L` establece el tamaño de la instantánea. Para las instantáneas LV temporales, que se utilizarán para elementos como copias de seguridad, el tamaño puede ser bastante pequeño, como en el ejemplo anterior. Sin embargo, si se trata de una instantánea a largo plazo, dimensione al mínimo el LV original. Esto le permitirá mucho espacio para crecer con el tiempo. Si el volumen de una instantánea se llena, la instantánea no se puede utilizar, por lo que es posible que deba aumentar el tamaño del volumen en algún momento en el futuro o eliminar esta instantánea y crear una nueva.
+
+Debido a que la instantánea de LV es en realidad un LV en sí, puede verla usando el comando `lvdisplay`. Además, si ve el LV original, verá que tiene una instantánea activa configurada, como se muestra en este ejemplo recortado aquí:
+
+```sh
+lvdisplay /dev/vg00/lvol0
+[...]
+  LV snapshot status     source of
+                         backup_snapshot [active]
+[...]
+
+lvdisplay /dev/vg00/backup_snapshot
+ --- Logical volume ---
+  LV Path                /dev/vg00/backup_snapshot
+  LV Name                backup_snapshot
+  VG Name                vg00
+[...]
+  LV snapshot status     active destination for lvol0
+  LV Status              available
+  open                   0
+  LV Size                4.00 GiB
+  Current LE             1024
+  COW-table size         500.00 MiB
+  COW-table LE           125
+  Allocated to snapshot  0.00%
+  Snapshot chunk size    4.00 KiB
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           253:5
+```
+
+Esta instantánea de LV de muestra en particular se creó con fines de copia de seguridad. Por lo tanto, lo siguiente que debe hacer es montar la instantánea LV como de solo lectura en una ubicación temporal, como se muestra aquí:
+
+```sh
+mount -o ro -t ext4 /dev/vg00/backup_snapshot Temp
+
+ls Temp**
+lost+found  My_LVM_File
+```
+
+En este punto, puede realizar una copia de seguridad de los datos de la instantánea LV. Una vez que se complete la copia de seguridad, elimine la instantánea de LV. Si no desmonta la instantánea LV antes de eliminarla, puede obtener el siguiente error:
+
+```sh
+lvremove /dev/vg00/backup_snapshot
+Logical volume vg00/backup_snapshot contains a filesystem in use.
+```
+
+Para evitar errores, simplemente desmonte la instantánea LV antes de intentar eliminarla usando el comando `lvremove`:
+
+```sh
+umount /dev/vg00/backup_snapshot
+
+lvremove /dev/vg00/backup_snapshot
+Do you really want to remove active logical volume
+backup_snapshot? [y/n]: y
+  Logical volume "backup_snapshot" successfully removed
+```
+
+El comando `lvremove` se puede utilizar para eliminar otros LV además de las instantáneas. Funciona igual para otros tipos de BT.
+### Cambiar el nombre de tu LV
+Cambiar el nombre de un LV es sencillo utilizando la utilidad `lvrename`. Esto es especialmente útil si nombraste tu LV incorrectamente cuando lo creaste originalmente.
+
+Aquí hay un ejemplo de cómo cambiar el nombre de `/dev/vg00/lvol0` LV a `/dev/vg00/new_name` en una distribución CentOS:
+
+```sh
+lvrename /dev/vg00/lvol0 /dev/vg00/new_name
+Renamed "lvol0" to "new_name" in volume group "vg00"
+```
+
+También puedes usar un formato ligeramente diferente para cambiar el nombre de un volumen, como se muestra aquí:
+
+```sh
+lvrename vg00 new_name lvol0
+Renamed "new_name" to "lvol0" in volume group "vg00"
+```
+
+Este ejemplo designa el VG `vg00` y cambia el nombre del LV `new_name` a lvol0.
+### Emplear el archivo de configuración LVM
+Cuando se utilizan las distintas utilidades LVM, cada utilidad utiliza un archivo de configuración central para controlar su comportamiento. Este archivo de configuración es el archivo `/etc/lvm/lvm.conf`. El archivo tiene documentación interna maravillosa y se proporciona asistencia adicional cuando escribe `man lvm.conf en la línea de comando.
+
+La existencia del archivo `lvm.conf` no es necesaria porque las utilidades LVM utilizarán la configuración predeterminada. Sin embargo, si el archivo existe y no ha sido modificado, lo más probable es que contenga esta configuración predeterminada. El archivo de configuración `lvm.conf` se considera un archivo global y puede cargar archivos de configuración locales adicionales para refinar su configuración. LVM utiliza marcas de tiempo en asociación con este archivo global y cualquier archivo de configuración local. Si el archivo de configuración global (o local) ha sido modificado, LVM los recarga.
+
+Aquí se muestra un archivo `lvm.conf`, recortado, en una distribución CentOS:
+
+```sh
+cat /etc/lvm/lvm.conf
+
+# This is an example configuration file for the LVM2 system.
+# It contains the default settings that would be used if there was no 
+# /etc/lvm/lvm.conf file.
+# # Refer to 'man lvm.conf' for further information including the file layout.
+#
+# To put this file in a different directory and override /etc/lvm set # the environment variable LVM_SYSTEM_DIR before running the tools.
+[...]     
+	# By default we accept every block device:
+    # filter = [ "a/.*/" ]
+[...]
+```
+
+Aunque es posible que nunca necesite modificar el archivo `lvm.conf`, hay algunos casos en los que puede resultar útil para su entorno particular. Por ejemplo, puede modificar el archivo de configuración `lvm.conf` para usar filtros, que son expresiones regulares. (En el ejemplo anterior se muestra un filtro que comienza con filter =.) Estos filtros, a su vez, limitarán lo que pueden ver las distintas utilidades de escaneo LVM *. Esto es útil para acelerar los análisis si tiene un entorno de almacenamiento mixto grande.
+
+Puede emplear la utilidad `lvm dumpconfig` para mostrar la configuración de `lvm.conf`. Aquí hay un ejemplo recortado de esto:
+
+```sh
+lvm dumpconfig --type default
+config {
+                 checks=1
+                   abort_on_errors=0
+                profile_dir="/etc/lvm/profile" 
+ }
+
+[...]
+tags {
+        hosttags=0         
+        tag {
+              host_list=""
+       }
+}
+```
+
+Se puede agregar una descripción completa a cada elemento de configuración mostrado por el comando `lvm dumpconfig`. Simplemente agregue la opción `--withcomments` al final de cualquier opción `--type`. Para ver todos los elementos que puede ver y hacer con `lvm dumpconfig`, escriba `man lvmdumpconfig` en la línea de comando.
+### Comprender el asignador de dispositivos
+Los LV son asistidos por Device Mapper. _Device Mapper_ es un controlador del kernel y brinda la capacidad de crear dispositivos mapeados. Asigna bloques de almacenamiento físico a bloques de almacenamiento virtual, creando un marco para LVM y RAID.
+
+Puede interactuar con el directorio Device Mapper a través de la utilidad `dmsetup`. Por ejemplo, para ver los distintos LV de su sistema, escriba `dmsetup info`. Para ver información de un solo LV, pase su nombre a la utilidad, como se muestra en el fragmento aquí:
+
+```sh
+dmsetup info /dev/vg00/lvol0
+Name:              vg00-lvol0
+State:             ACTIVE
+[...]
+UUID: LVM-2n3wGFxPSEr13RV5kXI0pVLDiebZB[...]
+```
+
+Puede obtener ayuda sobre la utilidad ingresando `dmsetup help` en la línea de comando. Es poco probable que necesite modificar alguna configuración de Device Mapper. Sin embargo, es necesario conocer el mapper. Cuando crea un LV usando el comando `lvcreate`, no solo puede hacer referencia a él a través de su nombre `/dev`, como `/dev/vg00/lvol0` en ejemplos anteriores, sino que también puede hacer referencia a él a través de `/dev/mapper/LV_name`. Aquí hay un ejemplo recortado del uso del comando `dmsetup` info con el nombre del Device Mapper del `lvol0 LV`:
+
+```sh
+dmsetup info /dev/mapper/vg00-lvol0
+Name:              vg00-lvol0
+State:             ACTIVE
+[...]
+UUID: LVM-2n3wGFxPSEr13RV5kXI0pVLDiebZB[...]
+```
+
+A menudo verá que se utilizan nombres de Device Mapper en el archivo de configuración `/etc/fstab`. Aquí hay un ejemplo recortado de una distribución CentOS:
+
+```sh
+cat /etc/fstab
+[...]
+/dev/mapper/centos-root /     xfs   defaults    0 0
+[...]
+/dev/mapper/centos-swap swap  swap  defaults    0 0
+[...]
+```
+
+Como puede ver, hay nombres `/dev/mapper` en el archivo `/etc/fstab`. En algunas distribuciones, se deben usar los nombres `/dev/mapper` en lugar de los nombres `/dev` para los LV para que el sistema invoque LVM en el inicio del sistema. Por lo tanto, las mejores prácticas recomiendan usar nombres `/dev/mapper` dentro del archivo `/etc/fstab` para montar LV en el inicio del sistema.
