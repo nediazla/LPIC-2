@@ -70,3 +70,36 @@ El software IPv6 en un dispositivo host asigna automáticamente la dirección lo
 
 La dirección global IPv6 funciona de manera similar a la versión IP original: a cada red se le asigna una dirección de red única y cada host de la red debe tener una dirección de host única.
 
+### Default Router
+Con IP e IPv6, los dispositivos sólo pueden comunicarse directamente con otros dispositivos en la misma red física. Para conectar diferentes redes físicas, se utiliza un enrutador. Un enrutador pasa datos de una red a otra red. Los dispositivos que necesitan enviar paquetes a hosts en redes remotas deben utilizar el enrutador como intermediario. Por lo general, una red contendrá un único enrutador para reenviar paquetes a una red de nivel superior. Esto se denomina enrutador predeterminado (o, a veces, puerta de enlace predeterminada).
+Por lo tanto, para que un dispositivo se comunique en una red IP, debe conocer tres datos distintos:
+- Su propia dirección de host en la red
+- La dirección de red de la red física local
+- La dirección de un enrutador local utilizado para enviar paquetes a redes remotas
+
+Ya ha visto cómo especificar direcciones de host utilizando la notación decimal con puntos (como 192.168.1.10). La dirección de red se especifica mediante una dirección de máscara de red, que se trata en la siguiente sección.
+
+### Dirección de máscara de red
+La dirección de máscara de red distingue entre las partes de la dirección de red y de host en la dirección IP usando 1 bit para mostrar qué bits de la dirección IP de 32 bits son utilizados por la red y 0 bits para mostrar qué bits representan la dirección de host. Como a la mayoría de las personas no les gusta trabajar con números binarios, la dirección de la máscara de red generalmente se muestra en formato decimal con puntos. Por ejemplo, la dirección de máscara de red 255.255.255.0 indica que los primeros tres números decimales de la dirección IP representan la dirección de red y el último número decimal representa la dirección del host.
+
+Como se mencionó, para conectar su sistema Linux a una red, debe especificar tres valores. Aquí hay un ejemplo de lo que necesitaría:
+- Dirección de host: 192.168.20.5
+- Dirección de máscara de red: 255.255.255.0
+- Puerta de enlace predeterminada: 192.168.20.1
+
+Con estos tres valores en la mano, está casi listo para configurar su sistema Linux para que funcione en Internet. Sólo hay una pieza más del rompecabezas de la que deberá preocuparse y la veremos en la siguiente sección.
+### Nombres de host
+Con todas estas direcciones IP, puede resultar imposible recordar qué servidores tienen qué direcciones. Afortunadamente para nosotros, existe otro estándar de red que puede ayudarnos. El Sistema de nombres de dominio (DNS) asigna un nombre a los hosts de la red.
+
+Con DNS, a cada dirección de red se le asigna un nombre de dominio (como linux.org) que identifica de manera única la red, y a cada host en esa red se le asigna un nombre de host, que se agrega al nombre de dominio para identificar de manera única al host en la red. .
+
+Por lo tanto, para encontrar el host shadrach en el dominio ejemplo.org, usaría el nombre DNS shadrach.example.org. El sistema DNS utiliza servidores para asignar nombres de dominio y host a las direcciones de red específicas necesarias para comunicarse con ese servidor. Los servidores responsables de definir la red y los nombres de host para una red local interoperan con servidores DNS de nivel superior para resolver nombres de host remotos.
+
+Para usar DNS en sus aplicaciones de red, todo lo que necesita configurar es la dirección del servidor DNS que da servicio a su red local. Desde allí, su servidor DNS local puede encontrar la dirección de cualquier nombre de host en cualquier lugar de Internet.
+### Dynamic Host Configuration Protocol
+Necesitamos analizar una característica más de la capa de red antes de pasar a configurar el sistema Linux. Intentar realizar un seguimiento de las direcciones de host de todos los dispositivos en una red grande puede resultar engorroso. Mantener las asignaciones de direcciones IP individuales en orden puede ser un desafío y, a menudo, se encontrará con la situación en la que a dos o más dispositivos se les asigna accidentalmente la misma dirección IP.
+
+El Protocolo de configuración dinámica de host (DHCP) se creó para facilitar la configuración de las estaciones de trabajo de los clientes, que no necesariamente necesitan usar la misma dirección IP todo el tiempo. Con DHCP, el cliente se comunica con un servidor DHCP en la red mediante una dirección temporal. Luego, el servidor DHCP le dice al cliente exactamente qué dirección IP, dirección de máscara de red, puerta de enlace predeterminada e incluso servidor DNS usar. Cada vez que el cliente se reinicia, puede recibir una dirección IP diferente, pero eso no importa siempre que sea única en la red.
+
+La mayoría de los enrutadores de redes domésticas incluyen una función de servidor DHCP, por lo que todo lo que necesita hacer es configurar su cliente Linux para que use DHCP y listo. No necesita conocer ninguno de los detalles "entre bastidores" de las direcciones de red.
+
