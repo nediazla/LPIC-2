@@ -242,3 +242,380 @@ Una vez que su sistema esté conectado a un punto de acceso inalámbrico, el íc
 ![](img/6.5.png)
 
 Puede seleccionar la conexión de red que desea configurar (ya sea inalámbrica o por cable) y luego hacer clic en el botón Editar para cambiar la configuración actual. Network Manager le permite especificar los cuatro valores de configuración de red usando la opción de configuración manual, o puede configurar la configuración para usar DHCP para determinar la configuración. Network Manager actualiza automáticamente los archivos de configuración de red apropiados con la configuración actualizada.
+### Herramientas de línea de comandos
+Si no está trabajando con un entorno de cliente de escritorio gráfico, deberá utilizar las herramientas de línea de comandos de Linux para configurar la información de configuración de la red. Necesitará conocer tres comandos principales para hacerlo:
+`ifconfig`: este comando establece los valores de dirección IP y máscara de red para una interfaz de red. 
+`iwconfig`: este comando establece el SSID y la clave de cifrado para una interfaz inalámbrica. 
+`route`: este comando establece la dirección predeterminada del enrutador.
+
+Antes de poder llegar muy lejos, necesitará saber el nombre del dispositivo que Linux asigna a su tarjeta de red. La forma más sencilla de hacerlo es utilizar el comando `ifconfig` solo, sin ningún parámetro, como se muestra en Listado
+
+```shell-session
+$ ifconfig
+
+eth0      Link encap:Ethernet  HWaddr 08:00:27:b0:e3:02
+          inet addr:192.168.1.67  Bcast:192.168.1.255  Mask:255.255.255.0
+          inet6 addr: fe80::a00:27ff:feb0:e302/64 Scope:Link           
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:677 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:118 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:97003 (97.0 KB)  TX bytes:15225 (15.2 KB)
+
+lo        Link encap:Local Loopback           
+		  inet addr:127.0.0.1  Mask:255.0.0.0           
+		  inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:171 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:171 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:39325 (39.3 KB)  TX bytes:39325 (39.3 KB)
+$
+```
+
+Este ejemplo muestra dos interfaces de red en el sistema Linux:
+`eth0`: la interfaz Ethernet cableada 
+`lo`: la interfaz de bucle invertido local La interfaz de bucle invertido local es una interfaz de red virtual especial. Cualquier programa local puede usarlo para comunicarse con otros programas como si estuvieran a través de una red. Eso puede simplificar la transferencia de datos entre programas.
+La interfaz de red `eth0` es la conexión de red por cable para el sistema Linux. El comando `ifconfig` muestra la dirección IP asignada a la interfaz (se asignan tanto una dirección IP como una dirección local de enlace IPv6), el valor de la máscara de red y algunas estadísticas básicas sobre los paquetes en la interfaz.
+
+Si el resultado no muestra una dirección de red asignada a la interfaz, puede usar el comando `ifconfig` para especificar la dirección del host y los valores de máscara de red para la interfaz.
+
+```shell-session
+OPTIONS
+
+       -a     display all interfaces which are currently available, even
+              if down
+
+       -s     display a short list (like netstat -i)
+
+       -v     be more verbose for some error conditions
+
+       interface
+
+              The name of the interface.  This is usually a driver name
+              followed by a unit number, for example eth0 for the first
+              Ethernet interface. If your kernel supports alias
+              interfaces, you can specify them with syntax like eth0:0
+              for the first alias of eth0. You can use them to assign
+              more addresses. To delete an alias interface use ifconfig
+              eth0:0 down.  Note: for every scope (i.e. same net with
+              address/netmask combination) all aliases are deleted, if
+              you delete the first (primary).
+
+       up     This flag causes the interface to be activated.  It is
+              implicitly specified if an address is assigned to the
+              interface; you can suppress this behavior when using an
+              alias interface by appending an - to the alias (e.g.
+              eth0:0-).  It is also suppressed when using the IPv4
+              0.0.0.0 address as the kernel will use this to implicitly
+              delete alias interfaces.
+
+       down   This flag causes the driver for this interface to be shut
+              down.
+
+       [-]arp Enable or disable the use of the ARP protocol on this
+              interface.
+
+       [-]promisc
+
+              Enable or disable the promiscuous mode of the interface.
+              If selected, all packets on the network will be received
+              by the interface.
+
+       [-]allmulti
+
+              Enable or disable all-multicast mode.  If selected, all
+              multicast packets on the network will be received by the
+              interface.
+
+       mtu N  This parameter sets the Maximum Transfer Unit (MTU) of an
+              interface.
+
+       dstaddr addr
+              Set the remote IP address for a point-to-point link (suc
+              as PPP).  This keyword is now obsolete; use the
+              pointopoint keyword instead.
+
+       netmask addr
+              Set the IP network mask for this interface.  This value
+              defaults to the usual class A, B or C network mask (as
+              derived from the interface IP address), but it can be set
+              to any value.
+
+       add addr/prefixlen
+
+              Add an IPv6 address to an interface.
+
+       del addr/prefixlen
+              Remove an IPv6 address from an interface.
+
+       tunnel ::aa.bb.cc.dd
+              Create a new SIT (IPv6-in-IPv4) device, tunnelling to the
+              given destination.
+
+       irq addr
+              Set the interrupt line used by this device.  Not all
+              devices can dynamically change their IRQ setting.
+
+       io_addr addr
+              Set the start address in I/O space for this device.
+
+       mem_start addr
+              Set the start address for shared memory used by this
+              device.  Only a few devices need this.
+
+       media type
+              Set the physical port or medium type to be used by the
+              device.  Not all devices can change this setting, and
+              those that can vary in what values they support.  Typical
+              values for type are 10base2 (thin Ethernet), 10baseT
+              (twisted-pair 10Mbps Ethernet), AUI (external transceiver)
+              and so on.  The special medium type of auto can be used to
+              tell the driver to auto-sense the media.  Again, not all
+              drivers can do this.
+
+       [-]broadcast [addr]
+              If the address argument is given, set the protocol
+              broadcast address for this interface.  Otherwise, set (or
+              clear) the IFF_BROADCAST flag for the interface.
+
+       [-]pointopoint [addr]
+              This keyword enables the point-to-point mode of an
+              interface, meaning that it is a direct link between two
+              machines with nobody else listening on it.
+              If the address argument is also given, set the protocol
+              address of the other side of the link, just like th
+              obsolete dstaddr keyword does.  Otherwise, set or clear
+              the IFF_POINTOPOINT flag for the interface.
+
+       hw class address
+              Set the hardware address of this interface, if the device
+              driver supports this operation.  The keyword must be
+              followed by the name of the hardware class and the
+              printable ASCII equivalent of the hardware address.
+              Hardware classes currently supported include ether
+              (Ethernet), ax25 (AMPR AX.25), ARCnet and netrom (AMPR
+              NET/ROM).
+
+       multicast
+              Set the multicast flag on the interface. This should not
+              normally be needed as the drivers set the flag correctly
+              themselves.
+
+       address
+              The IP address to be assigned to this interface.
+
+       txqueuelen length
+              Set the length of the transmit queue of the device. It is
+              useful to set this to small values for slower devices with
+              a high latency (modem links, ISDN) to prevent fast bulk
+              transfers from disturbing interactive traffic like telnet
+              too much.
+
+       name newname
+              Change the name of this interface to newname. The
+              interface must be shut down first.
+```
+
+Esta larga lista de opciones le permite personalizar muchas funciones de la interfaz de red. Sin embargo, normalmente sólo necesitas utilizar un par de opciones para definir la configuración básica de la red. Por ejemplo, para configurar los valores de dirección y máscara de red y luego activar la interfaz eth0, usaría el siguiente comando:
+
+```shell-session
+# ifconfig eth0 up 192.168.1.67 netmask 255.255.255.0
+```
+
+El parámetro `up` le dice al sistema Linux que active la interfaz después de configurarla. También puede asignar una dirección a una interfaz y dejarla desactivada usando el parámetro `down`.
+Si su sistema Linux utiliza una conexión de red inalámbrica, lo más probable es que vea una interfaz `wlan0` en la salida de `ifconfig`:
+
+```shell-session
+wlan0   Link encap:Ethernet  HWaddr 00:23:15:a6:1b:dc
+         inet addr:192.168.1.65  Bcast:192.168.1.255  Mask:255.255.255.0
+         inet6 addr:fe80::223:15ff:fea6:1bdc/64 Scope:Link          
+         UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+         RX packets:13513 errors:0 dropped:0 overruns:0 frame:0
+         TX packets:6894 errors:0 dropped:0 overruns:0 carrier:0
+         collisions:0 txqueuelen:1000          
+         RX bytes:20016644 (20.0 MB)  TX bytes:608292 (608.2 KB)
+```
+
+Antes de poder usar el comando `ifconfig` para asignar una dirección a una interfaz inalámbrica, debe asignar los valores de clave de cifrado y SSID inalámbrico usando el comando `iwconfig`:
+
+```shell-session
+# iwconfig wlan0 essid "MyNetwork" key s:mypassword
+```
+
+El parámetro `essid` especifica el nombre SSID del punto de acceso y el parámetro `key` especifica la clave de cifrado necesaria para conectarse a él. Observe que la clave de cifrado está precedida por `s:`. Eso le permite especificar la clave de cifrado en caracteres de texto ASCII; de lo contrario, deberá especificar la clave utilizando valores hexadecimales.
+
+Si no conoce el nombre de una conexión inalámbrica local, puede usar el comando `iwlist` para mostrar todas las señales inalámbricas que detecta su tarjeta inalámbrica. Simplemente especifique el nombre del dispositivo inalámbrico y use la opción de escaneo:
+
+```shell-session
+$ iwlist wlan0 scan
+```
+
+Para especificar el enrutador predeterminado para su red, debe usar el comando `route`:
+
+```shell-session
+# route add default gw 192.168.1.1
+```
+
+También puede usar el comando `route` por sí solo para ver el enrutador predeterminado actual configurado para el sistema.
+
+```shell-session
+$ route
+
+Kernel IP routing table
+
+Destination     Gateway         Genmask         Flags Metric Ref Use Iface default         192.168.1.254   0.0.0.0         UG    0      0   0   eth0 192.168.1.0     *               255.255.255.0   U     1      0   0   eth0
+
+$
+```
+
+El enrutador predeterminado definido para el sistema Linux es 192.168.1.254 y está disponible desde la interfaz de red `eth0`. El resultado también muestra que para acceder a la red 192.168.1.0 no necesita una puerta de enlace, ya que esa es la red local a la que está conectado el sistema Linux.
+
+Si su red está conectada a varias redes a través de varios enrutadores, puede crear manualmente la tabla de enrutamiento en el sistema usando la opción de línea de comando `add` o `del` para el comando `route`. El formato para esto es ruta [add] [eliminar] puerta de enlace `gw` de destino donde el destino es el host o red de destino y la puerta de enlace es la dirección del enrutador.
+
+Si su red utiliza DHCP, deberá asegurarse de que se esté ejecutando un programa cliente DHCP adecuado en su sistema Linux. El programa cliente DHCP se comunica con el servidor DHCP de la red en segundo plano y asigna la configuración de dirección IP necesaria según las indicaciones del servidor DHCP. Hay tres programas DHCP comunes disponibles para sistemas Linux:
+
+- dhcpcd
+- dhclient
+- pump
+
+El programa `dhcpcd` se está convirtiendo en el más popular de los tres, pero aún verás los otros dos utilizados en algunas distribuciones de Linux.
+
+Cuando utiliza la utilidad de administración de paquetes de software de su sistema Linux para instalar el programa cliente DHCP, configura el programa para que se inicie automáticamente en el momento del arranque y maneje la configuración de la dirección IP necesaria para interactuar en la red.
+### Solución de problemas básicos de red
+Una vez que tenga instalada una interfaz de red Linux, hay algunas cosas que puede hacer para asegurarse de que funcione correctamente. Esta sección lo guía a través de los comandos que debe conocer para monitorear la interfaz de red y solucionar problemas si algo no funciona correctamente.
+### Comprobación de los archivos de registro
+Una razón principal de la falta de conectividad de red es que algo salió mal con el kernel al cargar el módulo apropiado para el hardware de la tarjeta de red. La forma de solucionar este problema es mirar los mensajes de arranque del kernel.
+
+Una forma de hacerlo es con el comando `dmesg`, que muestra el contenido del búfer circular del núcleo. El búfer circular del núcleo contiene mensajes del núcleo, pero realiza un ciclo de mensajes antiguos.
+
+a medida que se reciben nuevos mensajes. Si inició recientemente el sistema Linux, es posible que los mensajes de inicio aún estén en el búfer. A continuación se muestra un ejemplo de los mensajes de arranque del kernel para una conexión de red por cable cargada correctamente:
+
+```shell-session
+[2.06] e1000 0000:00:03.0 eth0: (PCI:33MHz:32-bit) 08:00:27:b0:e3:02
+[2.06] e1000 0000:00:03.0 eth0: Intel(R) PRO/1000 Network Connection
+[21.89] e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX
+[21.90] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[21.90] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+```
+
+Si ha pasado un tiempo desde que inició el sistema Linux, es posible que los mensajes de inicio del kernel se hayan eliminado del búfer circular del kernel. En ese caso, deberá verificar los archivos de registro en el directorio `/var/log`. Dependiendo de su distribución de Linux, los mensajes de arranque del kernel pueden estar en el archivo `dmesg`, `syslog` o `message`.
+### Ver la caché ARP
+Cada sistema Linux en la red tiene dos direcciones únicas asignadas. Ha visto que requiere una dirección IP única (o IPv6), pero también tiene una dirección de hardware única asignada a la propia tarjeta de red. Esta es la dirección de control de acceso a medios (MAC) y la asigna el fabricante de la tarjeta de red para identificar cada tarjeta de red de forma única en la red.
+
+A medida que su sistema Linux se comunica con otros dispositivos en la red, asigna las direcciones MAC de hardware asociadas con cada sistema con el que habla a las direcciones IP de la red individuales. Lo hace utilizando el _Protocolo de resolución de direcciones (ARP)_. Linux mantiene un caché de estas direcciones, llamado _tabla ARP_. Puede ver el contenido de la tabla ARP utilizando el comando `arp`:
+
+```shell-session
+$ arp
+
+Address          HWtype  HWaddress           Flags Mask            Iface 10.0.2.2         ether   52:54:00:12:35:02   C                     enp0s3
+
+$
+```
+
+Esto le ayuda a asignar direcciones IP a dispositivos de hardware específicos en la red. La Tabla 6.4 muestra algunas opciones de línea de comandos para el comando `arp` que le permiten manipular la tabla ARP si tiene problemas.
+
+```shell-session
+OPTIONS      
+
+       -v, --verbose
+              Tell the user what is going on by being verbose.
+
+       -n, --numeric
+              shows numerical addresses instead of trying to determine
+              symbolic host, port or user names.
+
+       -H type, --hw-type type, -t type
+              When setting or reading the ARP cache, this optional
+              parameter tells arp which class of entries it should check
+              for.  The default value of this parameter is ether (i.e.
+              hardware code 0x01 for IEEE 802.3 10Mbps Ethernet).  Other
+              values might include network technologies such as ARCnet
+              (arcnet) , PROnet (pronet) , AX.25 (ax25) and NET/ROM
+              (netrom).
+
+       -a     Use alternate BSD style output format (with no fixed
+              columns).
+
+       -e     Use default Linux style output format (with fixed
+              columns).
+
+       -D, --use-device
+              Instead of a hw_addr, the given argument is the name of an
+              interface.  arp will use the MAC address of that interface
+              for the table entry. This is usually the best option to
+              set up a proxy ARP entry to yourself.
+
+       -i If, --device If
+              Select an interface. When dumping the ARP cache only
+              entries matching the specified interface will be printed.
+              When setting a permanent or temp ARP entry this interface
+              will be associated with the entry; if this option is not
+              used, the kernel will guess based on the routing table.
+              For pub entries the specified interface is the interface
+              on which ARP requests will be answered.
+              
+              NOTE: This has to be different from the interface to which
+              the IP datagrams will be routed.  NOTE: As of kernel 2.2.0
+              it is no longer possible to set an ARP entry for an entire
+              subnet. Linux instead does automagic proxy arp when a
+              route exists and it is forwarding.
+
+              Also the dontpub option which is available for delete and
+              set operations cannot be used with 2.4 and newer kernels.
+
+       -f filename, --file filename
+              Similar to the -s option, only this time the address info
+              is taken from file filename.  This can be used if ARP
+              entries for a lot of hosts have to be set up.  The name of
+              the data file is very often /etc/ethers, but this is not
+              official. If no filename is specified /etc/ethers is used
+              as default.
+
+              The format of the file is simple; it only contains ASCII
+              text lines with a hostname, and a hardware address
+              separated by whitespace. Additionally the pub, temp and
+              netmask flags can be used.
+```
+
+Al comparar las direcciones MAC asignadas a las direcciones IP, es posible que pueda detectar direcciones IP duplicadas asignadas a diferentes dispositivos en su red local.
+### Envío de paquetes de prueba
+Una forma de probar la conectividad de la red es enviar paquetes de prueba a hosts conocidos. Linux proporciona los comandos `ping` y `ping6` para hacer precisamente eso. Los comandos `ping` y `ping6` envían paquetes _Protocolo de mensajes de control de Internet (ICMP)_ a hosts remotos mediante IP (ping) o IPv6 (ping6). Los paquetes ICMP funcionan entre bastidores para rastrear la conectividad y proporcionar mensajes de control entre sistemas. Si el host remoto admite ICMP, enviará un paquete de respuesta cuando reciba un paquete ping.
+
+El formato básico para el comando ping es simplemente especificar la dirección IP del host remoto:
+
+```shell-session
+$ ping 10.0.2.2 
+PING 10.0.2.2 (10.0.2.2) 56(84) bytes of data.
+64 bytes from 10.0.2.2: icmp_seq=1 ttl=63 time=14.6 ms
+64 bytes from 10.0.2.2: icmp_seq=2 ttl=63 time=3.82 ms
+64 bytes from 10.0.2.2: icmp_seq=3 ttl=63 time=2.05 ms
+64 bytes from 10.0.2.2: icmp_seq=4 ttl=63 time=0.088 ms
+64 bytes from 10.0.2.2: icmp_seq=5 ttl=63 time=3.54 ms
+64 bytes from 10.0.2.2: icmp_seq=6 ttl=63 time=3.97 ms
+64 bytes from 10.0.2.2: icmp_seq=7 ttl=63 time=0.040 ms
+^C
+
+--- 10.0.2.2 ping statistics ---
+7 packets transmitted, 7 received, 0% packet loss, time 6020ms
+rtt min/avg/max/mdev = 0.040/4.030/14.696/4.620 ms 
+$
+```
+
+El comando `ping` continúa enviando paquetes hasta que presiona Ctrl+C. También puede usar la opción de línea de comando `-c` para especificar una cantidad determinada de paquetes para enviar y luego detener.
+
+Para el comando `ping6`, las cosas se vuelven un poco más complicadas. Si está utilizando una dirección local de enlace IPv6, también debe indicarle al comando a qué interfaz enviar los paquetes:
+
+```shell-session
+$ ping6 –c 4 fe80::c418:2ed0:aead:cbce%eth0
+PING fe80::c418:2ed0:aead:cbce%eth0(fe80::c418:2ed0:aead:cbce) 56 data bytes
+64 bytes from fe80::c418:2ed0:aead:cbce: icmp_seq=1 ttl=128 time=1.47 ms
+64 bytes from fe80::c418:2ed0:aead:cbce: icmp_seq=2 ttl=128 time=0.478 ms
+64 bytes from fe80::c418:2ed0:aead:cbce: icmp_seq=3 ttl=128 time=0.777 ms 64 bytes from fe80::c418:2ed0:aead:cbce: icmp_seq=4 ttl=128 time=0.659 ms
+
+--- fe80::c418:2ed0:aead:cbce%eth0 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3003ms
+rtt min/avg/max/mdev = 0.478/0.847/1.475/0.378 ms $
+```
+
+La parte `%eth0` le dice al sistema que envíe los paquetes de ping a la interfaz de red `eth0` para la dirección local del enlace.
