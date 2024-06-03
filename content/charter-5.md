@@ -51,28 +51,28 @@ Antes de configurar una matriz RAID en Linux, debe verificar algunas cosas en su
 ### Comprobando su sistema
 El primer elemento que debe verificar en su sistema es si el kernel admite RAID. El kernel de Linux v2.6 y superior puede admitir todos los niveles de RAID. Puede verificar la versión de su kernel usando el comando `uname -r`, como se muestra aquí en una distribución de Ubuntu:
 
-```sh
+```shell-session
 uname -r 
 3.13.0–71-generic
 ```
 
 Además, verifique si su sistema tiene el archivo `/proc/mdstat`. Este útil archivo proporciona información sobre el estado actual del RAID del sistema. Sólo su presencia es otro indicador positivo de que su sistema admite RAID:
 
-```sh
+```shell-session
 ls /proc/mdstat
 /proc/mdstat
 ```
 
 Otra verificación utiliza el comando `modprobe` para ver si puede cargar varios módulos del kernel RAID. Usando privilegios de super usuario, escriba `modprobe raid6` en la línea de comando, como se muestra aquí:
 
-```sh
+```shell-session
 sudo modprobe raid6
 [sudo] password for christine:
 ```
 
 No recibir ningún mensaje de error después de ejecutar este comando `modprobe` es una buena señal. Sin embargo, verifique que funcionó mostrando el contenido actual del `/proc/mdstat file`:
 
-```sh
+```shell-session
 cat /proc/mdstat
 Personalities: [raid6] [raid5] [raid4]
 unused devices: <none> 
@@ -82,7 +82,7 @@ Observe que la línea Personalidades en el archivo `/proc/mdstat` de esta distri
 
 En este punto, puede verificar los niveles RAID adicionales admitidos continuando emitiendo `modprobe raid#`, donde `#` es el nivel RAID que desea verificar. Normalmente, encontrará que los niveles RAID 0, 1, 10, 4, 5 y 6 son compatibles con las distribuciones actuales de Linux sin ninguna modificación. Si un nivel no es compatible actualmente, recibirá un mensaje de error similar al siguiente:
 
-```sh
+```shell-session
 sudo modprobe raid3
 [sudo] password for christine:
 modprobe: FATAL: Module raid3 not found.
@@ -90,7 +90,7 @@ modprobe: FATAL: Module raid3 not found.
 
 Una vez que sepa que su sistema Linux puede admitir el nivel RAID deseado, deberá ver si su sistema tiene instalada la utilidad Administración de dispositivos o discos múltiples (`mdadm`). En esta distribución de Ubuntu, no está instalado de forma predeterminada:
 
-```sh
+```shell-session
 dpkg -s mdadm
 dpkg-query: package 'mdadm' is not installed and
  no information is available
@@ -99,7 +99,7 @@ dpkg-query: package 'mdadm' is not installed and
 
 Sin embargo, en este sistema CentOS, la utilidad `mdadm` está instalada de forma predeterminada:
 
-```sh
+```shell-session
 rpm -qa | grep mdadm
 mdadm-3.3.2–2.el7_1.1.x86_64 
 ```
@@ -122,7 +122,7 @@ Para las unidades que se utilizarán en la misma matriz RAID (miembros y repuest
 
 Ahora que ha determinado el código de tipo de partición y el tamaño, está listo para particionar sus unidades. Utilice la herramienta de partición adecuada, como `fdisk` o `parted`, para crear las particiones necesarias. En el ejemplo recortado aquí, se particionan cinco unidades en una distribución CentOS utilizando privilegios de super usuario para prepararlas para la membresía en una matriz RAID:
 
-```sh
+```shell-session
 lsblk
 
 NAME       MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT 
@@ -239,7 +239,7 @@ Cuando se creó la matriz RAID nivel 6 en el ejemplo anterior, se utilizaron opc
 
 Anteriormente mencionamos que cada modo de utilidad `mdadm` tiene su propio conjunto de opciones. Puede ver rápidamente estas opciones en la línea de comando ingresando al modo y luego escribiendo `--help`, como se muestra aquí:
 
-```sh
+```shell-session
 mdadm --create --help 
 Usage:  mdadm --create device -chunk=X --level=Y --raid-devices=Z devices
 [...] 
@@ -312,7 +312,7 @@ Este comando proporciona una gran cantidad de información útil. Observe en el 
 ### Formatee y monte la matriz RAID
 Una vez que se ha creado (o ensamblado) y verificado una matriz RAID, se puede tratar como cualquier otra partición: formateándola con un sistema de archivos y montándola. En el ejemplo recortado aquí, puede ver que la matriz RAID 6 de muestra, `/dev/md0`, está formateada con un sistema de archivos ext4 y luego montada en un directorio temporal:
 
-```sh
+```shell-session
 mkfs -t ext4 /dev/md0
 mke2fs 1.42.9 (28-Dec-2013)
 Filesystem label=
@@ -341,7 +341,7 @@ El archivo de configuración de `mdadm`, `mdadm.conf`, debe almacenarse en el di
 
 Una vez que se determina la ubicación adecuada para su archivo de configuración, puede crearlo. La mejor manera de crear este archivo es utilizando la opción `--scan` de la utilidad `mdadm`. Primero, simplemente haga un escaneo simple para ver qué producirá el comando, como se muestra aquí en este ejemplo recortado:
 
-```sh
+```shell-session
 mdadm --verbose --detail --scan /dev/md0
 ARRAY /dev/md0 level=raid6 num-devices=4 metadata=1.2
 name=localhost.localdomain:0 UUID=38edfd0d:45092996:954[...]
@@ -352,7 +352,7 @@ Esta es la información que debe almacenarse dentro de su archivo de configuraci
 
 En lugar de escribir esta información, lo que podría introducir errores tipográficos, redirija la salida estándar del comando al nombre de archivo de configuración adecuado, como se muestra aquí en esta distribución de CentOS:
 
-```sh
+```shell-session
 ls /etc/mdadm.conf
 ls: cannot access /etc/mdadm.conf: No such file or directory
 
@@ -432,7 +432,7 @@ Tenga en cuenta que cuando la utilidad `mdadm` inicia su modo de monitoreo y enc
 
 Puede configurar varias opciones con el modo monitor para satisfacer las necesidades de su sistema. Aquí se muestra una lista de las opciones del monitor `mdadm` en una distribución CentOS:
 
-```sh
+```shell-session
 mdadm --monitor --help
 [...] 
 Options that are valid with the monitor (-F --follow) mode are:
@@ -458,7 +458,7 @@ Puede agregar un disco de repuesto a una matriz RAID cuando la crea. Sin embargo
 
 Cuando necesite agregar una unidad de repuesto a una matriz RAID, primero debe asegurarse de que no sea miembro de la matriz RAID. Es posible que esto no sea necesario para un solo sistema de matriz RAID, pero si tiene una instalación de matriz grande, vale la pena dedicar unos minutos adicionales. A continuación se muestra un ejemplo recortado de cómo verificar la pertenencia a una matriz en una unidad:
 
-```sh
+```shell-session
 mdadm --misc --examine /dev/sde1
 mdadm: No md superblock detected on /dev/sde1.
 
@@ -473,14 +473,14 @@ Este ejemplo anterior muestra el resultado que recibe tanto para un miembro que 
 
 Antes de agregar un repuesto a su matriz RAID, verifique la cantidad actual de repuestos de la matriz usando el comando `grep`, junto con la opción `--detail` del modo misceláneo de la utilidad `mdadm`. Aquí se muestra un ejemplo:****
 
-```sh
+```shell-session
 mdadm --misc --detail /dev/md0 | grep Spare
 Spare Devices: 0
 ```
 
 La matriz RAID `/dev/md0` actualmente no tiene unidades de repuesto. Para solucionar esta situación, la partición `/dev/sde1` se agrega en caliente aquí usando el modo de administración de la utilidad `mdadm`:
 
-```sh
+```shell-session
 mdadm --manage --add /dev/md0 /dev/sde1
 mdadm: added /dev/sde1
 
@@ -498,14 +498,14 @@ Si lo desea, puede eliminar una matriz RAID completa. Para hacerlo, primero debe
 
 La matriz RAID `/dev/md0` de muestra se detiene en este ejemplo:
 
-```sh
+```shell-session
 mdadm --manage --stop /dev/md0
 mdadm: stopped /dev/md0
 ```
 
 Una vez que se detiene una matriz RAID, sus miembros y unidades de repuesto se pueden eliminar eliminando su superbloque. Puede hacer esto una unidad a la vez o eliminar los superbloques de todas las unidades al mismo tiempo, como se muestra aquí:
 
-```sh
+```shell-session
 mdadm --zero-superblock  /dev/sde1
 
 mdadm --zero-superblock  /dev/sdf1 /dev/sdg1 /dev/sdh1
@@ -537,7 +537,7 @@ Históricamente en Linux, las unidades de disco PATA se indicaban mediante los a
 
 En Linux, los SSD con interfaz NVMe están representados por los archivos de dispositivo `/dev/nvme*`. Sin embargo, la convención de nomenclatura de archivos de dispositivo `/dev/nvme*` es ligeramente diferente a la convención de nomenclatura para unidades SATA y SCSI. El estándar NVMe utiliza una arquitectura de espacio de nombres, que es una capa superior adicional disponible para subdividir en particiones. Por ejemplo, aquí hay una referencia de archivo de dispositivo NVMe:
 
-```sh
+```shell-session
 /dev/nmve0n1p1
 ```
 
@@ -561,7 +561,7 @@ Para fines de demostración aquí, en una distribución de Ubuntu, hemos configu
 
 Al usar `hdparm` con la opción `-I` en la unidad SATA, `/dev/sde`, puede obtener mucha información útil, como se muestra en la lista recortada aquí:
 
-```sh
+```shell-session
 sudo hdparm -I /dev/sde
 [sudo] password for christine:
 
@@ -591,7 +591,7 @@ Checksum: correct
 
 Observe que la caché de escritura está habilitada. El asterisco (*) junto a udma6 indica que este formulario DMA también está habilitado. Esto también funciona bien con la unidad PATA, `/dev/sda`, que Linux trata como un disco SCSI, como se muestra aquí:
 
-```sh
+```shell-session
 $ sudo hdparm -I /dev/sda
 [sudo] password for christine: 
 /dev/sda:
@@ -613,7 +613,7 @@ Las diversas funciones de la utilidad `hdparm` pueden funcionar o no con unidade
 
 Varias opciones de `hdparm` le permiten ver si una sola característica está configurada. A continuación se muestra un ejemplo de cómo verificar la configuración de devolución de caché de escritura en la unidad `/dev/sda`:
 
-```sh
+```shell-session
 sudo hdparm -W /dev/sde
 [sudo] password for christine:
 
@@ -1297,7 +1297,7 @@ OPTIONS         
 
 Una de las opciones de hdparm más útiles (y no peligrosas) es para probar el rendimiento de la unidad. Es mejor utilizar estas pruebas cuando la unidad esté inactiva. Aquí se prueba una unidad de distribución de Ubuntu tanto para lecturas de dispositivo como de caché:
 
-```sh
+```shell-session
 sudo hdparm -tT /dev/sde\
 [sudo] password for christine:
 
@@ -1365,7 +1365,7 @@ Para ver una lista de parámetros del kernel que se pueden modificar, escriba `s
 
 Cualquier archivo listado en los directorios y subdirectorios `/proc/sys/` también es un parámetro del kernel que se puede modificar. A continuación se muestra un ejemplo de una distribución de Ubuntu que utiliza `sysctl` y el archivo `/proc/sys/` para ver la configuración de los parámetros del kernel para expulsar automáticamente los discos ópticos cuando se han desmontado:
 
-```sh
+```shell-session
 sudo sysctl dev.cdrom.autoeject
 [sudo] password for christine:
 
@@ -1382,7 +1382,7 @@ Muchos parámetros del kernel son valores booleanos, lo que significa que 0 indi
 
 Para cambiar la configuración de un parámetro del kernel, puede utilizar la utilidad `sysctl`. En este ejemplo, el parámetro `dev.cdrom.autoeject` está activado, lo que hace que los dispositivos ópticos se expulsen automáticamente cuando se desmontan:
 
-```sh
+```shell-session
 sudo sysctl -w dev.cdrom.autoeject=1
 [sudo] password for christine:
 
@@ -1397,7 +1397,7 @@ cat /proc/sys/dev/cdrom/autoeject
 
 Puede ver que el archivo `/proc/sys/` asociado se actualiza instantáneamente cuando se utiliza la utilidad `sysctl` para modificar el parámetro del kernel. Sin embargo, esta modificación no es persistente. Para que la modificación sea persistente, debe modificar el archivo de configuración `/etc/sysctl.conf`. La siguiente es una lista de archivos recortados en una distribución de Ubuntu:
 
-```sh
+```shell-session
 cat /etc/sysctl.conf
 
 #/etc/sysctl.conf-Configuration file for setting system variables 
@@ -1414,7 +1414,7 @@ Una vez que haya realizado cambios de configuración en este archivo, puede prob
 
 Se deben modificar relativamente pocos parámetros del kernel para ajustar el acceso y el uso del disco. Sin embargo, estos dos parámetros RAID particulares pueden resultar útiles para ajustar:
 
-```sh
+```shell-session
 sudo sysctl -a | grep raid
 dev.raid.speed_limit_max = 200000 
 dev.raid.speed_limit_min = 1000
@@ -1425,7 +1425,7 @@ Estos dos parámetros del kernel controlan la velocidad de RAID. Aumentar los l�
 
 No puede restablecer ni modificar los atributos SMART de una unidad porque están configurados en el área protegida de una unidad. Solo puede habilitar/deshabilitar SMART usando la utilidad `smartctl`:
 
-```sh
+```shell-session
 sudo smartctl -s on /dev/sda
 ```
 
@@ -1435,7 +1435,7 @@ Si `smartd` se inicia durante la inicialización del sistema, habilitará el mon
 
 Usted cambia los horarios de las encuestas, las pruebas que se realizan y quién recibe los mensajes a través del archivo de configuración. La palabra clave DEVICESCAN se puede configurar con varias opciones. Por ejemplo, para ejecutar una prueba larga en todos los dispositivos SMART de su sistema los domingos de 1 a.m. a 2 a.m., ingresaría el siguiente registro en el archivo de configuración:
 
-```sh
+```shell-session
 DEVICESCAN -s L/../../7/01
 ```
 
@@ -1446,7 +1446,7 @@ Para ajustar y ver registros de SSD con interfaz NVMe, debe utilizar comandos co
 
 Una vez instalado, vea todos los diversos comandos disponibles para ajustar sus SSD con interfaz NVMe escribiendo `nvme help` en la línea de comando. Aquí se muestra un ejemplo recortado de una distribución de Ubuntu:
 
-```sh
+```shell-session
 nvme help
 
 [...]The following are all implemented sub-commands:  
@@ -1499,7 +1499,7 @@ La utilidad `nvme` es muy útil. Le permite realizar cualquier ajuste o administ
 
 El comando `fstrim` se puede utilizar periódicamente para evitar problemas de rendimiento en los SSD debido a la fragmentación interna. Sin embargo, antes de intentar utilizar el comando `fstrim`, debe verificar que su SSD sea compatible con TRIM. Puede usar el comando `hdparm` y `grep` para verificar su unidad, como se muestra en una distribución de Ubuntu aquí:
 
-```sh
+```shell-session
 sudo hdparm -I /dev/sda  | grep TRIM
 ```
 
@@ -1621,7 +1621,7 @@ También puede obtener ayuda sobre la utilidad `fstrim` escribiendo `fstrim` y u
 
 Debe utilizar privilegios de superusuario y el SSD debe estar montado. En este ejemplo, el comando `fstrim` se emite usando la opción detallada en una distribución CentOS:
 
-```sh
+```shell-session
 fstrim -v /home
 /home: 1503238553 bytes were trimmed
 ```
@@ -1673,7 +1673,7 @@ La herramienta principal para configurar un disco iSCSI en un servidor de destin
 
 Primero, en su sistema, debe asegurarse de que el subsistema de destino se inicie en el momento del arranque y que el servicio se esté ejecutando. A continuación se muestra un ejemplo de cómo habilitar el subsistema de destino en una distribución CentOS para que se inicie al reiniciar:
 
-```sh
+```shell-session
 systemctl enable target
 ln -s '/usr/lib/systemd/system/target.service'
 '/etc/systemd/system/multi-user.target.wants/target.service'
@@ -1681,7 +1681,7 @@ ln -s '/usr/lib/systemd/system/target.service'
 
 Una vez que se asegure de que el subsistema de destino se esté ejecutando, utilizando privilegios de superusuario, ingrese a la utilidad targetcli. Recibirá un mensaje /> cuando haya ingresado a la utilidad. Aquí se muestra un ejemplo:
 
-```sh
+```shell-session
 targetcli
 Warning: Could not load preferences file /root/.targetcli/prefs.bin. 
 targetcli shell version 2.1.fb37 
@@ -1692,7 +1692,7 @@ For help on commands, type 'help'.
 
 Ahora que está dentro de la utilidad `targetcli`, puede crear un almacén trasero. Un _backstore_ es un método de acceso a datos que apunta y permite el acceso a un medio de almacenamiento físico (una unidad completa, una partición de disco o incluso un archivo simple) en una estructura de almacenamiento SAN. En `targetcli`, cambia su directorio de trabajo actual usando un comando `cd` y luego emite un comando de creación, como se muestra en el ejemplo aquí:
 
-```sh
+```shell-session
 /> cd /backstores/block
 
 /backstores/block> create iscsidisk1 dev=/dev/sde 
@@ -1706,7 +1706,7 @@ En este ejemplo, se creó el almacén de respaldo SCSI, se le dio el ID SCSI ún
 
 Una vez que se crea un backstore, debe crear el IQN para el iSCSI de destino. Sin embargo, es mejor primero cambiar su directorio de trabajo actual al directorio iscsi dentro de `targetcli`, como se muestra aquí:
 
-```sh
+```shell-session
 /backstores/block> cd /iscsi
 
 /iscsi> create iqn.2016–02.com.example.server07:iscsidisk1
@@ -1718,7 +1718,7 @@ Created default portal listening on all IPs (0.0.0.0), port 3260.
 
 Tenga en cuenta que una vez creado el IQN, el servicio escucha en el puerto 3260. El único problema es que, según la designación 0.0.0.0, el servicio está abierto a todas las redes IP, lo que puede representar un riesgo para la seguridad. Esto se soluciona fácilmente de la siguiente manera:
 
-```sh
+```shell-session
 /iscsi> cd iqn.2016–02.com.example.server07:iscsidisk1/tpg1
 /iscsi/iqn.20...csidisk1/tpg1> cd portals
 /iscsi/iqn.20.../tpg1/portals> delete 0.0.0.0 3260
@@ -1732,7 +1732,7 @@ Ahora solo el nodo cliente iniciador designado (192.168.56.103) puede usar este 
 
 Una vez que el IQN esté configurado correctamente, debe crear un LUN para hacer referencia a la unidad iSCSI. Nuevamente, deberá cambiar los directorios y usar el comando `create`, como se muestra en este ejemplo:
 
-```sh
+```shell-session
 /iscsi/iqn.20.../tpg1/portals> cd ..
 /iscsi/iqn.20...csidisk1/tpg1> cd luns
 /iscsi/iqn.20...sk1/tpg1/luns> create /backstores/block/iscsidisk1
@@ -1745,7 +1745,7 @@ o- lun0 .................... [block/iscsidisk1 (/dev/sde)]
 
 Para fines de prueba, puede desactivar cualquier autenticación, como se muestra en el siguiente ejemplo. Sin embargo, si utiliza esto en un entorno de producción, revise los comandos `get auth` y `set auth`.
 
-```sh
+```shell-session
 /iscsi/iqn.20...sk1/tpg1/luns> cd ..
 /iscsi/iqn.20...csidisk1/tpg1> set attribute authentication=0
 Parameter authentication is now '0'. 
@@ -1757,7 +1757,7 @@ Parameter generate_node_acls is now '1'.
 
 Una vez configurada la unidad iSCSI del servidor de destino, puede volver a verificar la configuración, como se muestra aquí:
 
-```sh
+```shell-session
 /iscsi/iqn.20...csidisk1/tpg1> cd /
 /> ls
 o- / ................................................. [...]
@@ -1794,7 +1794,7 @@ Para muchas operaciones, la utilidad `iscsiadm` necesita que el demonio `iscsi`,
 
 El demonio `iscsid` se configura mediante el archivo `/etc/iscsi/iscsid.conf`. Este archivo también controla varias de las operaciones de la utilidad `iscsiadm`. iSCSI puede utilizar el Protocolo de autenticación ChallengeHandshake (CHAP) para establecer una conexión segura entre un servidor de destino iSCSI y un cliente iniciador. Este archivo de configuración es donde colocaría las configuraciones CHAP necesarias. Aquí se muestra una versión recortada del archivo de configuración:
 
-```sh
+```shell-session
 cat /etc/iscsi/iscsid.conf
 [...]
 node.startup = automatic 
@@ -1808,7 +1808,7 @@ En el cliente iniciador, el proceso de encontrar un disco iSCSI en un servidor d
 
 Aquí se muestra cómo habilitar el demonio `iscsid` para que se inicie al reiniciar en un cliente iniciador CentOS:
 
-```sh
+```shell-session
 systemctl enable iscsid 
 ln -s '/usr/lib/systemd/system/iscsid.service' 
 '/etc/systemd/system/multi-user.target.wants/iscsid.service'
@@ -1823,14 +1823,14 @@ iscsiadm -m discovery -t st -p 192.168.56.103
 
 Cuando se descubrió el objetivo en el ejemplo anterior, la herramienta `iscsiadm` también creó dos registros. Uno era un registro de descubrimiento almacenado en el archivo de base de datos `/var/lib/iscsi/send_targets` para el tipo SendTarget. (Los diferentes registros de tipos de destino se almacenan en su archivo de base de datos correspondiente). A continuación se muestra un archivo `send_targets` de ejemplo:
 
-```sh
+```shell-session
 cat /var/lib/iscsi/send_targets
 192.168.56.103,3260
 ```
 
 El otro registro creado por la herramienta `iscsiadm` durante el proceso de descubrimiento fue un registro de nodo descubierto. El registro del nodo se almacena en el archivo de base de datos `/var/lib/iscsi/nodes` y contiene el IQN del dispositivo iSCSI disponible del servidor de destino, como se muestra aquí:
 
-```sh
+```shell-session
 cat /var/lib/iscsi/nodes
 iqn.2016–02.com.example.server07:iscsidisk1
 ``` 
@@ -1839,7 +1839,7 @@ Estos registros de la base de datos iSCSI son persistentes (a menos que los elim
 
 Una vez que se completa el proceso de descubrimiento, se debe establecer una sesión entre el servidor de destino y el cliente iniciador. El comando `iscsiadm` se utiliza para iniciar sesión en el destino para crear esta conexión. El comando de ejemplo aquí está dividido en varias líneas para mayor claridad:
 
-```sh
+```shell-session
 iscsiadm -m node \
 > -T iqn.2016–02.com.example.server07:iscsidisk1 \
 > -p 192.168.56.103 -l
@@ -1853,7 +1853,7 @@ Para este comando, se utiliza el modo de modo (`-m` nodo). El disco iSCSI de des
 ### Usando un disco iSCSI
 Es una buena idea comprobar la unidad iSCSI adjunta antes de utilizarla. La utilidad `iscsiadm` tiene una buena capacidad de salida. Le permite mostrar una gran cantidad de información a través de su opción `-P#`, como se muestra en este resultado recortado:
 
-```sh
+```shell-session
 iscsiadm -m session -P3
 iSCSI Transport Class version 2.0–870
 version 6.2.0.873–28
@@ -1870,7 +1870,7 @@ Target: iqn.2016–02.com.example.server07:iscsidisk1 (non-flash)
 
 Observe en el resultado que la unidad iSCSI adjunta está designada por el nombre de archivo del dispositivo sdj. Ahora puede utilizar utilidades en el cliente iniciador, como lo haría con los dispositivos SCSI conectados localmente. Por ejemplo, la utilidad `lsblk` permite mostrar información sobre el dispositivo iSCSI, como se muestra aquí:
 
-```sh
+```shell-session
 lsblk
 NAME            MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT 
 sda               8:0    0    8G  0 disk
@@ -1885,7 +1885,7 @@ sr0              11:0    1 1024M  0 rom
 
 Una vez que haya verificado su unidad iSCSI, puede particionarla, formatearla y montarla, tal como lo haría con una unidad conectada localmente. En la lista recortada aquí se muestra un ejemplo de cómo hacer esto en una distribución de CentOS:
 
-```sh
+```shell-session
 parted /dev/sdj mklabel msdos 
 Information: You may need to update /etc/fstab.
 
@@ -1918,14 +1918,14 @@ lost+found  My_iSCSI_file.dat
 
 Por último, debes actualizar dos archivos de configuración. Por supuesto, asegúrese de incluir su nueva unidad iSCSI en el archivo `/etc/fstab` del cliente iniciador. El otro archivo de configuración es el archivo `/etc/iscsi/initiatorname.iscsi`. Debe actualizarse para que contenga el nodo descubierto (dispositivos iSCSI disponibles en un servidor de destino y indicados por su IQN) que estás usando ahora en el cliente iniciador. Aquí hay un ejemplo:
 
-```sh
+```shell-session
 cat /etc/iscsi/initiatorname.iscsi
 InitiatorName=iqn.2016.02.com.example.server07:iscsidisk1
 ```
 
 La palabra clave InitiatorName debe preceder al IQN. Sin embargo, también puede crear un alias utilizando la palabra clave InitiatorAlias. A continuación se muestra un ejemplo de un alias en este archivo de configuración:
 
-```sh
+```shell-session
 InitiatorAlias="LUN0 Test iSCSI Drive"
 ```
 
@@ -1964,7 +1964,7 @@ Los LV se componen de _extensiones lógicas (LE)_. Las extensiones lógicas se a
 
 La utilidad `lvm` es una utilidad interactiva para crear y administrar LV. Si no está instalado, puede instalarlo mediante el paquete `lvm2`. Usando privilegios de superusuario, puede ingresar a la utilidad y ver las diversas herramientas disponibles para LVM, como se muestra en esta distribución de CentOS aquí:
 
-```sh
+```shell-session
 lvm
 lvm> help
 Available lvm commands:
@@ -2031,7 +2031,7 @@ En este ejemplo, puede ver todas las herramientas disponibles para crear y admin
 
 Tenga en cuenta que no necesita ingresar a la utilidad `lvm` para acceder a estas herramientas. Por ejemplo, la herramienta `pvcreate` está disponible directamente desde la línea de comando:
 
-```sh
+```shell-session
 which pvcreate 
 /sbin/pvcreate
 ```
@@ -2050,7 +2050,7 @@ Antes de designar unidades como PV, se deben particionar. Luego, puede designar 
 
 En el siguiente ejemplo de una distribución CentOS, se designan cuatro particiones como PV mediante el comando `pvcreate`. Estas cuatro particiones son pequeñas particiones de muestra creadas con fines de demostración:
 
-```sh
+```shell-session
 lsblk
 NAME            MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
 [...]
@@ -2075,7 +2075,7 @@ El comando `pvcreate` designa la partición de disco especificada que usará LVM
 
 Para ver la información sobre sus PV, puede usar el comando `pvdisplay`. Puede especificar un PV para ver información solo sobre ese PV en particular, o simplemente puede ingresar el comando `pvdisplay` para ver toda la información de sus PV, como se muestra en el fragmento aquí:
 
-```sh
+```shell-session
 pvdisplay
 [...]
   "/dev/sdk1" is a new physical volume of "1023.00 MiB"
@@ -2102,7 +2102,7 @@ Asegúrese de configurar más de un PV. El objetivo de LVM es tener medios de al
 ### Creando un VG
 Cualquier PV se puede agregar a un VG. El comando a utilizar es `vgcreate` y su sintaxis básica es la siguiente:
 
-```sh
+```shell-session
 vgcreate  VG_name  PV
 ```
 
@@ -2110,21 +2110,21 @@ Puede designar más de un PV durante el proceso de creación de VG. Si necesita 
 
 La práctica común nombra el primer VG vg00, el siguiente vg01, y así sucesivamente. Sin embargo, usted elige cómo nombrar su grupo de volúmenes. Debido a que muchas distribuciones durante la instalación configuran LVM para la raíz de la estructura del directorio virtual (`/`) y otros directorios, es una buena idea verificar si hay algún VG actual en su sistema usando el comando `vgdisplay`, como se muestra aquí:
 
-```sh
+```shell-session
 vgdisplay | grep Name
 VG Name               centos
 ```
 
 El ejemplo anterior se realizó en una distribución CentOS. Observe que ya está configurado un VG llamado centos. Por lo tanto, para crear un nuevo VG en este sistema, _no_ se debe utilizar el nombre centos. A continuación se muestra un ejemplo de creación de un VG en una distribución CentOS, denominado vg00, utilizando cuatro PV:
 
-```sh
+```shell-session
 vgcreate vg00 /dev/sdj1 /dev/sdk1 /dev/sdl1 /dev/sdm1
 Volume group "vg00" successfully created
 ```
 
 Una vez que haya creado con éxito un VG, tiene sentido verificarlo. Puede hacerlo con el comando `vgdisplay`, que funciona de manera similar al comando `pvdisplay`, como se muestra aquí:
 
-```sh
+```shell-session
 vgdisplay vg00
  --- Volume group ---
   VG Name               vg00
@@ -2154,7 +2154,7 @@ Una vez que su grupo de almacenamiento de VG contenga al menos un PV, puede cont
 ### Creando un LV
 Para crear un LV a partir de un grupo de almacenamiento VG, se emplea el comando `lvcreate`. Su sintaxis básica es la siguiente:
 
-```sh
+```shell-session
 lvcreate  -L size VG_name
 ```
 
@@ -2162,7 +2162,7 @@ Con el comando `lvcreate`, el tamaño del volumen se designa usando la opción `
 
 Si por alguna razón un VG no tiene suficientes LE para dárselos al LV para el tamaño designado, entonces no podrá crear el LV. A continuación se muestra un ejemplo en el que el tamaño LV solicitado es 6 GiB (-L 6 g), pero solo 3,98 GiB están disponibles en el VG designado:
 
-```sh
+```shell-session
 lvcreate -L 6g vg00   
 Volume group "vg00" has insufficient free space (1020 extents):
 1536 required
@@ -2172,7 +2172,7 @@ El tamaño mínimo que puede especificar para un LV es el tamaño PE del VG. Por
 
 A continuación se muestra un ejemplo del uso del comando `lvcreate` para crear un LV. Se aceptan muchas opciones predeterminadas, En este ejemplo, la opción `-v` (detallada) se utiliza para mostrar más información durante el proceso de creación de LV:
 
-```sh
+```shell-session
 lvcreate -L 2g -v vg00
 
   Finding volume group "vg00"   Archiving volume group "vg00" metadata (seqno 1)
@@ -2192,7 +2192,7 @@ with value 0.
 
 Observe que el primer LV del nombre predeterminado de este VG es `lvol0`. Sin embargo, ahora debe usar su nombre de ruta completo para mostrar la información de este LV, `/dev/vg00/lvol0`. Aquí hay un ejemplo recortado del uso del comando `lvdisplay` para mostrar la información del LV:
 
-```sh
+```shell-session
 lvdisplay /dev/vg00/lvol0
  --- Logical volume ---
   LV Path                /dev/vg00/lvol0
@@ -2208,7 +2208,7 @@ Observe que a él también se le ha asignado un UUID LV. Puede designar un nombr
 
 Además del comando `lvdisplay`, puede usar los comandos `lvs` y `lvscan` para mostrar información sobre todos los LV de su sistema, como se muestra en este ejemplo recortado aquí:
 
-```sh
+```shell-session
 lvscan
   ACTIVE            '/dev/centos/swap' [820.00 MiB] inherit
   ACTIVE            '/dev/centos/root' [6.67 GiB] inherit
@@ -2225,7 +2225,7 @@ Una vez que haya creado su LV, puede tratarlo como si fuera una partición norma
 ### Formateo y montaje de un LV
 No tiene que hacer nada especial con su LV para crear un sistema de archivos en él y luego montarlo en la estructura de directorio virtual. El sistema la ve como una partición normal, como se muestra en este ejemplo recortado aquí:
 
-```sh
+```shell-session
 mkfs -t ext4 /dev/vg00/lvol0
 [...]
 Creating journal (16384 blocks): done
@@ -2253,7 +2253,7 @@ Antes de aumentar el tamaño de un LV, vale la pena considerar aumentar el tama�
 
 Una vez que haya agregado o localizado almacenamiento adicional, asegúrese de que esté designado como PV antes de intentar agregarlo a un grupo de VG. En este ejemplo, la nueva partición `/dev/sdn1` se ubica mediante el comando `lsblk` y luego se designa como PV usando la utilidad `pvcreate`:
 
-```sh
+```shell-session
 lsblk
 NAME            MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
 [...]
@@ -2276,7 +2276,7 @@ Observe aquí que algunas de las particiones, como sdk1, ya se muestran como par
 
 Además del comando `pvdisplay`, puede utilizar la utilidad `pvscan` para verificar el sistema en busca de todos los PV disponibles. Aquí se muestra un ejemplo recortado de ambos:
 
-```sh
+```shell-session
 pvscan
 [...]
   PV /dev/sdj1   VG vg00   lvm2 [1020.00 MiB / 0    free]
@@ -2303,14 +2303,14 @@ pvdisplay /dev/sdn1
 
 Con los PV adicionales necesarios designados, el VG se puede ampliar. Para aumentar el tamaño de un grupo de VG, use el comando `vgextend`, designando sus PV adicionales como se muestra aquí:
 
-```sh
+```shell-session
 vgextend vg00 /dev/sdn1
 volume group "vg00" successfully extended
 ```
 
 Una vez que tenga suficiente espacio de almacenamiento en un VG, podrá continuar haciendo crecer su LV. Para hacer crecer un LV, use el comando `lvextend`. La opción `-L` se utiliza para establecer el nuevo tamaño deseado del VI. En este ejemplo, el `LV`, `/dev/vg00/lvol0`, aumenta de 2 GiB a 4 GiB:
 
-```sh
+```shell-session
 lvextend -L 4g -v /dev/vg00/lvol0
     Finding volume group vg00     
     Archiving volume group "vg00" metadata (seqno 3).
@@ -2326,7 +2326,7 @@ Observe que se crea una copia de seguridad del grupo de volúmenes. Estas copias
 
 Una forma útil de verificar su LV extendido es usar la opción `--maps`. Esta opción le permite ver las extensiones lógicas del LV asignadas a las extensiones físicas del PV. Puede ver en este ejemplo recortado que el nuevo `/dev/vg00/lvol0` tiene algunas extensiones físicas asignadas desde el PV `/dev/sdn1` recién agregado:
 
-```sh
+```shell-session
 lvdisplay --maps /dev/vg00/lvol0
  --- Logical volume ---
   LV Path                /dev/vg00/lvol0
@@ -2362,7 +2362,7 @@ Las instantáneas de LV se pueden leer y escribir, y se pueden montar en la estr
 
 Para crear una instantánea LV, use el comando `lvcreate`. Aquí hay un ejemplo recortado de cómo crear y activar una instantánea LV en una distribución CentOS:
 
-```sh
+```shell-session
 lvcreate -v -L 500m -s -n backup_snapshot /dev/vg00/lvol0     
 	Setting chunksize to 4.00 KiB.
     Finding volume group "vg00"     
@@ -2378,7 +2378,7 @@ La opción `-L` establece el tamaño de la instantánea. Para las instantáneas 
 
 Debido a que la instantánea de LV es en realidad un LV en sí, puede verla usando el comando `lvdisplay`. Además, si ve el LV original, verá que tiene una instantánea activa configurada, como se muestra en este ejemplo recortado aquí:
 
-```sh
+```shell-session
 lvdisplay /dev/vg00/lvol0
 [...]
   LV snapshot status     source of
@@ -2409,7 +2409,7 @@ lvdisplay /dev/vg00/backup_snapshot
 
 Esta instantánea de LV de muestra en particular se creó con fines de copia de seguridad. Por lo tanto, lo siguiente que debe hacer es montar la instantánea LV como de solo lectura en una ubicación temporal, como se muestra aquí:
 
-```sh
+```shell-session
 mount -o ro -t ext4 /dev/vg00/backup_snapshot Temp
 
 ls Temp**
@@ -2418,14 +2418,14 @@ lost+found  My_LVM_File
 
 En este punto, puede realizar una copia de seguridad de los datos de la instantánea LV. Una vez que se complete la copia de seguridad, elimine la instantánea de LV. Si no desmonta la instantánea LV antes de eliminarla, puede obtener el siguiente error:
 
-```sh
+```shell-session
 lvremove /dev/vg00/backup_snapshot
 Logical volume vg00/backup_snapshot contains a filesystem in use.
 ```
 
 Para evitar errores, simplemente desmonte la instantánea LV antes de intentar eliminarla usando el comando `lvremove`:
 
-```sh
+```shell-session
 umount /dev/vg00/backup_snapshot
 
 lvremove /dev/vg00/backup_snapshot
@@ -2440,14 +2440,14 @@ Cambiar el nombre de un LV es sencillo utilizando la utilidad `lvrename`. Esto e
 
 Aquí hay un ejemplo de cómo cambiar el nombre de `/dev/vg00/lvol0` LV a `/dev/vg00/new_name` en una distribución CentOS:
 
-```sh
+```shell-session
 lvrename /dev/vg00/lvol0 /dev/vg00/new_name
 Renamed "lvol0" to "new_name" in volume group "vg00"
 ```
 
 También puedes usar un formato ligeramente diferente para cambiar el nombre de un volumen, como se muestra aquí:
 
-```sh
+```shell-session
 lvrename vg00 new_name lvol0
 Renamed "new_name" to "lvol0" in volume group "vg00"
 ```
@@ -2460,7 +2460,7 @@ La existencia del archivo `lvm.conf` no es necesaria porque las utilidades LVM u
 
 Aquí se muestra un archivo `lvm.conf`, recortado, en una distribución CentOS:
 
-```sh
+```shell-session
 cat /etc/lvm/lvm.conf
 
 # This is an example configuration file for the LVM2 system.
@@ -2479,7 +2479,7 @@ Aunque es posible que nunca necesite modificar el archivo `lvm.conf`, hay alguno
 
 Puede emplear la utilidad `lvm dumpconfig` para mostrar la configuración de `lvm.conf`. Aquí hay un ejemplo recortado de esto:
 
-```sh
+```shell-session
 lvm dumpconfig --type default
 config {
                  checks=1
@@ -2502,7 +2502,7 @@ Los LV son asistidos por Device Mapper. _Device Mapper_ es un controlador del ke
 
 Puede interactuar con el directorio Device Mapper a través de la utilidad `dmsetup`. Por ejemplo, para ver los distintos LV de su sistema, escriba `dmsetup info`. Para ver información de un solo LV, pase su nombre a la utilidad, como se muestra en el fragmento aquí:
 
-```sh
+```shell-session
 dmsetup info /dev/vg00/lvol0
 Name:              vg00-lvol0
 State:             ACTIVE
@@ -2512,7 +2512,7 @@ UUID: LVM-2n3wGFxPSEr13RV5kXI0pVLDiebZB[...]
 
 Puede obtener ayuda sobre la utilidad ingresando `dmsetup help` en la línea de comando. Es poco probable que necesite modificar alguna configuración de Device Mapper. Sin embargo, es necesario conocer el mapper. Cuando crea un LV usando el comando `lvcreate`, no solo puede hacer referencia a él a través de su nombre `/dev`, como `/dev/vg00/lvol0` en ejemplos anteriores, sino que también puede hacer referencia a él a través de `/dev/mapper/LV_name`. Aquí hay un ejemplo recortado del uso del comando `dmsetup` info con el nombre del Device Mapper del `lvol0 LV`:
 
-```sh
+```shell-session
 dmsetup info /dev/mapper/vg00-lvol0
 Name:              vg00-lvol0
 State:             ACTIVE
@@ -2522,7 +2522,7 @@ UUID: LVM-2n3wGFxPSEr13RV5kXI0pVLDiebZB[...]
 
 A menudo verá que se utilizan nombres de Device Mapper en el archivo de configuración `/etc/fstab`. Aquí hay un ejemplo recortado de una distribución CentOS:
 
-```sh
+```shell-session
 cat /etc/fstab
 [...]
 /dev/mapper/centos-root /     xfs   defaults    0 0

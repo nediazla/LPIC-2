@@ -168,7 +168,7 @@ El tipo de sistema de archivos deseado se puede elegir mediante el comando `mkfs
 
 El siguiente es un ejemplo del uso de la utilidad `mkfs` para formatear una partición al tipo de sistema de archivos ext4. Se completó en una distribución de Ubuntu. Por lo tanto, `sudo` se utiliza para obtener los privilegios de super usuario necesarios.
 
-```sh
+```shell-session
 sudo mkfs.ext4 /dev/sdb1
 [sudo] password for christine: mke2fs 1.42.9 (4-Feb-2014)
 Filesystem label=
@@ -195,7 +195,7 @@ Observe en el resultado del ejemplo anterior que se configuraron varias estructu
 
 Puede verificar el tipo de sistema de archivos creado usando la utilidad separada y los privilegios de super usuario, como se muestra en este ejemplo recortado en un sistema Ubuntu:
 
-```sh
+```shell-session
 sudo parted -l
 [...]
 Model: ATA VBOX HARDDISK (scsi)
@@ -209,7 +209,7 @@ Number  Start   End     Size    Type     File system  Flags 
 El sistema de archivos en `/dev/sdb1` es de hecho un sistema de archivos ext4. Esta es una manera práctica de verificar el formato `mkfs`.
 También puedes usar la utilidad `blkid` para verificar el tipo de sistema de archivos, como se muestra en este ejemplo recortado de un sistema Ubuntu:
 
-```sh
+```shell-session
 sudo blkid
 /dev/sda1: [...] TYPE="ext4"
 /dev/sda5: [...] TYPE="swap"
@@ -227,7 +227,7 @@ El `fstype` es el tipo de sistema de archivos que está montando. Aquí se utili
 El dispositivo es un nombre de ruta absoluta a la partición o volumen que contiene este sistema de archivos, como `/dev/sdb1`. 
 El punto de montaje en el comando de montaje es la ubicación dentro del directorio virtual donde residirá el sistema de archivos, como `/home/christine/Temp`. El siguiente ejemplo demuestra cómo montar un sistema de archivos en una distribución de Ubuntu:
 
-```sh
+```shell-session
 mkdir /home/christine/Temp
 
 sudo mount -t ext4 /dev/sdb1 /home/christine/Temp 
@@ -239,7 +239,7 @@ lost+found/
 
 Una vez montado el sistema de archivos, puede almacenar, modificar y acceder a datos utilizando el punto de montaje como referencia. A continuación se muestra un ejemplo utilizando el sistema de archivos previamente montado:
 
-```sh
+```shell-session
 touch /home/christine/Temp/a_file.txt
 
 ls -F /home/christine/Temp a_file.txt  
@@ -250,7 +250,7 @@ Observe que cuando se montó el sistema de archivos, ya existía un directorio `
 
 El comando `mount`, cuando se usa sin opciones ni parámetros, extrae los datos que muestra directamente del archivo `/etc/mtab`. El archivo `/etc/mtab` contiene una lista de todos los sistemas de archivos actualmente montados. Por lo tanto, puede verificar fácilmente que su sistema de archivos se montó correctamente en la ubicación deseada usando el comando `mount`. A continuación se muestra un ejemplo con el resultado recortado que se muestra en la distribución de Ubuntu utilizada anteriormente:
 
-```sh
+```shell-session
 mount 
 /dev/sda1 on / type ext4 (rw,errors=remount-ro)
 [...]
@@ -508,7 +508,7 @@ Allow every user to mount and unmount the filesystem. This option implies the op
 ### Desconectar un sistema de archivos
 Puede desconectar un sistema de archivos de la estructura de directorio virtual de Linux con el comando `umount`. ¡Cuidado aquí! No hay una `n` en el comando `umount` y necesitarás privilegios de super usuario para usarlo, como se muestra en este sistema Ubuntu:
 
-```sh
+```shell-session
 ls -F /home/christine/Temp 
 a_file.txt  lost+found/
 
@@ -522,7 +522,7 @@ Observe en el directorio anterior que el punto de montaje del directorio, `/home
 
 Tenga en cuenta que si el sistema de archivos que desea desmontar está siendo utilizado por un proceso o tiene archivos abiertos, no puede separarlo de la estructura de directorios. El siguiente ejemplo muestra un sistema de archivos montado en un sistema Ubuntu que no se puede desmontar porque el sistema de archivos está en uso:
 
-```sh
+```shell-session
 sudo mount -t ext4 /dev/sdb1 Temp 
 [sudo] password for christine:
 
@@ -534,7 +534,7 @@ umount: /home/christine/Temp: device is busy.
 
 Afortunadamente, el comando `umount` ofrece algunos consejos útiles. Puede utilizar el comando `lsof` o `fuser` para determinar qué mantiene ocupado el sistema de archivos, como se muestra aquí:
 
-```sh
+```shell-session
 lsof Temp
 COMMAND PID USER       FD   TYPE DEVICE SIZE/OFF NODE NAME 
 bash    1580 christine cwd  DIR  8,17   4096     2    Temp 
@@ -550,7 +550,7 @@ Muchas distribuciones detectan y montan automáticamente medios extraíbles. Sin
 
 Para montar medios extraíbles manualmente, el comando no es diferente del comando que usa para montar temporalmente un sistema de archivos. Sólo asegúrese de que el punto de montaje exista previamente y utilice el tipo de sistema de archivos correcto como se muestra aquí:
 
-```sh
+```shell-session
 sudo mount -t vfat /dev/sdd1 Temp 
 [sudo] password for christine:
 
@@ -564,7 +564,7 @@ Las unidades flash a menudo se formatean como VFAT o NTFS. El sistema de archivo
 
 Si no conoce el tipo de sistema de archivos o el nombre del dispositivo para sus medios extraíbles, puede usar el comando `DMESG` o `BLKID` (o ambos). Aquí se muestra un ejemplo de estos dos comandos en acción:
 
-```sh
+```shell-session
 dmesg
 [...]
 [ 3882.584572]  sdd: sdd1
@@ -582,7 +582,7 @@ sudo blkid
 El uso de estos comandos le permite encontrar que el nombre de archivo del dispositivo de unidad flash es `/dev/sdd1` y que está formateado como un tipo de sistema de archivos VFAT. Observe que el comando `BLKID` también proporciona información de UUID y etiqueta para los medios extraíbles.
 Una útil utilidad para usar con medios extraíbles es el comando `Sync`. El comando `Sync` le permite "descargar" los buffers del sistema de archivos. En otras palabras, las actualizaciones de metadatos del sistema de archivos que residen en la memoria se escriben en las estructuras del sistema de archivos en los medios. La utilidad `sync` obliga al proceso de compromiso de datos a tener lugar de inmediato. Esto le permite separar los medios extraíbles de manera segura de la estructura del directorio sin preocuparse por la corrupción. Aquí se muestra un ejemplo de usar sincronización:
 
-```sh
+```shell-session
 cp Documents/Listing_c04_Ubuntu_mount-t.odt Temp/
 
 sync 
@@ -620,7 +620,7 @@ A 1 indica que este sistema de archivos tiene prioridad, y debe verificarse, si 
 A 2 indica que este sistema de archivos debe verificarse, si es necesario, en el arranque del sistema. Sin embargo, él y cualquier otro sistema de archivos debido a una verificación y establecido en 2 se verificarán después de que se verifique los sistemas de archivos establecidos en 1.
 Se muestra un archivo de muestra `/etc/fstab` en el Listado 4.1. Este archivo de muestra no es de ninguna distribución en particular, sino que se creó solo con fines educativos. 
 
-```sh
+```shell-session
 #partition          mount point fs type  options       dump  fsck
 /dev/sda1           /           ext4     defaults      0     1
 UUID=7e32f35e-[...] /boot       xfs      defaults      0     0
@@ -655,7 +655,7 @@ Se crea un solo archivo de unidad de montaje para cada punto de montaje, y el no
 
 El contenido de un archivo de unidades de montaje imita otros archivos de la unidad `Systemd`, con algunas secciones y opciones especiales. Usando el punto `/home/temp/mount`, aquí hay un archivo de unidad de montaje de ejemplo para ello:
 
-```sh
+```shell-session
 cat /etc/systemd/system/home-temp.mount
 [Unit]
 Description=Test Mount Units
@@ -679,7 +679,7 @@ El `sloppyOptions` es útil, ya que si se establece en `On`, ignora cualquier op
 Asegúrese de incluir la sección [Install] y configure las opciones `WantedBy` o las Opciones requeridas. Si no hace esto, el sistema de archivos no se montará en un reinicio del servidor.
 Se debe probar cualquier archivo de unidad de montaje recién configurado, especialmente antes de realizar un reinicio del sistema. Primero pruebe un montaje manual del sistema de archivos como se muestra cortado aquí:
 
-```sh
+```shell-session
 blkid | grep /dev/sdo1 
 /dev/sdo1: UUID="474c1322-[...]" TYPE="ext4"
 
@@ -703,7 +703,7 @@ test_mount_units.txt
 
 Una vez que haya probado el nuevo sistema de archivos a través del montaje manual y desmontándolo, se prueba el archivo de la unidad de montaje. Usando el archivo de unidad de montaje de ejemplo, lo siguiente demuestra probarlo en una distribución de CentOS:
 
-```sh
+```shell-session
 systemctl daemon-reload
 
 systemctl start home-temp.mount
@@ -716,7 +716,7 @@ En el ejemplo anterior, el primer comando vuelve a cargar `Systemd` y el segundo
 
 A continuación, asegúrese de que el sistema de archivos esté montado correctamente. El comando `mount` funciona en esta situación, y también lo hace el comando `SystemCTL`. Al igual que un servicio, utiliza el comando `SystemCTL` para obtener el estado de un sistema de archivos montado como se muestra cortado aquí:
 
-```sh
+```shell-session
 mount | grep /home/temp 
 /dev/sdo1 on /home/temp type ext4 (rw,relatime,data=ordered)
 
@@ -732,7 +732,7 @@ systemctl status home-temp.mount
 
 Se requiere un paso adicional. Para garantizar que `Systemd` monte el sistema de archivos de manera persistente, el archivo de la unidad de montaje debe habilitarse como se muestra aquí:
 
-```sh
+```shell-session
 systemctl enable home-temp.mount
 Created symlink from
 /etc/systemd/system/multi-user.target.wants/home-temp.mount to /etc/systemd/system/home-temp.mount.
@@ -744,7 +744,7 @@ Si desea ver la estructura de accesorio del sistema de archivos actual de su sis
 
 Un comando simple para comenzar es el comando `MountPoint`. No requiere privilegios de súper usuario. Simplemente escriba en `MountPoint Directory_Reference` en la línea de comandos, y si recibe el mensaje es un punto de montaje, entonces se ha montado un sistema de archivos en esa ubicación de directorio en particular, como se muestra en la distribución de Ubuntu aquí:
 
-```sh
+```shell-session
 mountpoint  / 
 / is a mountpoint
 
@@ -754,7 +754,7 @@ mountpoint /home
 
 Otro buen comando es `Blkid`. Con el comando `BLKID`, puede ver los diversos dispositivos de bloque y sus atributos. No se requieren privilegios de súper usuario para ver parte de la información; Sin embargo, las cuentas sin privilegios de súper usuario reciben información en caché no verificada o ninguna. Aquí hay un ejemplo recortado de usar el comando `BLKID` en una distribución de Ubuntu:
 
-```sh
+```shell-session
 blkid
 
 sudo blkid 
@@ -776,14 +776,14 @@ $
 
 Observe en el ejemplo anterior de que el uso de privilegios de súper usuario con el comando `BLKID` generalmente proporciona información más exhaustiva (y, por lo tanto, es una buena idea usarla con privilegios de súper usuarios). Observe también que puede mostrar información sobre un dispositivo de bloque particular utilizando su etiqueta (`opción -l`) o su UUID (`-U opción`). Si lo desea, puede especificar un solo nombre de archivo de dispositivo con el comando `BLKID`, como se muestra aquí en una distribución de CentOS:
 
-```sh
+```shell-session
 blkid /dev/sda1 
 /dev/sda1: UUID="7e32f35e-[...] TYPE="xfs"
 ```
 
 El comando `LSBLK` también puede ser una utilidad útil. Funciona de manera similar al comando `BLKID` en el sentido de que también muestra la información del dispositivo de bloque. Dado que algunas de sus opciones extraen información del comando `BLKID`, es mejor tener privilegios de súper usuarios al emplearla. Aquí hay dos ejemplos de comando `LSBLK SNPED` en una distribución de CentOS:
 
-```sh
+```shell-session
 lsblk
 NAME            MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT 
 sda               8:0    0    8G  0 disk
@@ -811,7 +811,7 @@ La opción `-f` utilizada con `LSBLK` mostrará los UUID y etiquetas del disposi
 
 Otra utilidad que puede encontrar útil es el comando `E2Label`. Con esta utilidad, puede ver cualquier etiqueta del sistema de archivos para un sistema de archivos Ext2, Ext3 o Ext4, como se muestra aquí en una distribución de Ubuntu:
 
-```sh
+```shell-session
 sudo e2label /dev/sdc2
 [sudo] password for christine:
 Extra
@@ -821,7 +821,7 @@ Observe que se requieren privilegios de súper usuario para usar el comando `E2L
 
 La utilidad `FindFS` también puede ser útil para administrar sus sistemas de archivos. Le permite ver el dispositivo de bloque asociado con un UUID o etiqueta particular, como se muestra en un sistema Ubuntu aquí:
 
-```sh
+```shell-session
 findfs LABEL=Extra
 /dev/sdc2
 
@@ -837,7 +837,7 @@ Además de las utilidades mencionadas hasta ahora, otras utilidades pueden ser �
 `mount`: muestra sistemas de archivos montados e incluye el punto de montaje del sistema de archivos.
 Puede usar la opción `-l` en el comando `mount` para mostrar etiquetas y puede usar el comando `-t fstype` para reducir su lista solo para ciertos tipos de sistemas de archivos, como se muestra en este Snip desde una distribución de CentOS:
 
-```sh
+```shell-session
 mount -t xfs
 /dev/mapper/centos-root on / type xfs [...]
 /dev/sda1 on /boot type xfs [...]
@@ -852,14 +852,14 @@ A menudo encontrará estos sistemas de archivos basados en la memoria montados e
 
 Para comprender esto un poco mejor, veamos archivos `PROC`. Los archivos en el sistema de archivos `PROC` están basados en memoria (virtual), generalmente contienen información del sistema y se actualizan continuamente, aunque no muestran información de tamaño en sus listados de archivos. Aquí se muestra el listado largo de un archivo de `Proc` virtual en un ejemplo del sistema CentOS:
 
-```sh
+```shell-session
 ls -l /proc/cpuinfo
 -r--r--r--. 1 root root 0 Jan 13 13:12 /proc/cpuinfo
 ```
 
 Aunque el archivo `/proc/cpuinfo` reside en la memoria, al utilizar el punto de montaje del sistema de archivos, se puede acceder o ver los datos. Aquí hay un ejemplo recortado de cómo mostrar los datos del archivo `/proc/cpuinfo`, que reside en la memoria:
 
-```sh
+```shell-session
 cat /proc/cpuinfo
 processor    : 0
 vendor_id    : GenuineIntel
@@ -884,7 +884,7 @@ Unos pocos ejemplos sencillos le ayudarán a comprender el sistema de archivos `
 
 Primero, formatear particiones con el sistema de archivos `Btrfs` es similar a realizar otro formateo de alto nivel usando el comando `mkfs`. El ejemplo que se muestra aquí se realiza en dos particiones, porque necesitará al menos dos particiones para implementar `Btrfs RAID`:
 
-```sh
+```shell-session
 mkfs -t btrfs  /dev/sdb  /dev/sdc
 Btrfs v3.16.2 
 See [http://btrfs.wiki.kernel.org f](http://btrfs.wiki.kernel.org/)or more information.
@@ -898,7 +898,7 @@ fs created label (null) on /dev/sdb
 En el ejemplo anterior, debido a que no se usaron opciones además de `-t btrfs` y se incluyeron dos particiones, `Btrfs` está configurado para usar RAID 0 (división de discos) para datos y RAID 1 (duplicación) para sus metadatos. Otras opciones le permitirán configurar diferentes tipos de RAID. Además, puedes incluir más de dos particiones.
 Luego puede montar el sistema de archivos `Btrfs`. Sin embargo, sólo necesita montar una de las particiones para montar el volumen RAID del sistema de archivos `Btrfs`, como se muestra aquí:
 
-```sh
+```shell-session
 mkdir BTrial
 
 mount /dev/sdb BTrial
@@ -914,7 +914,7 @@ file_b.txt
 Una vez montado el volumen del sistema de archivos `Btrfs`, puede usarlo como cualquier otro sistema de archivos, como se muestra en el ejemplo anterior. Sin embargo, tenga en cuenta que no hay ningún directorio `lost+found` como lo vería en un punto de montaje del sistema de archivos ext4.
 Un comando útil para ayudarle con su sistema de archivos `Btrfs` es el comando `btrfs filesystem show`. Aquí se muestra un ejemplo de este comando:
 
-```sh
+```shell-session
 btrfs filesystem show
 Label: none  uuid: 5125431c-37c3–4d70-aa85–42b8b4fea161
        Total devices 2 FS bytes used 384.00KiB        
@@ -929,14 +929,14 @@ Otra característica interesante de `Btrfs` son los subvolúmenes. Los subvolúm
 Los subvolúmenes `Btrfs` son útiles en determinadas situaciones. Por ejemplo, puede mantener un conjunto de subvolúmenes y montarlos según sean necesarios los datos que contienen.
 Para crear un subvolumen, primero se debe montar el volumen `Btrfs` principal. La sintaxis básica para crear un subvolumen es la siguiente.
 
-```sh
+```shell-session
 btrfs subvolume create Mount_Point/Subvolume_Name
 ```
 
 `Mount_Point` es el punto de montaje del volumen `Btrfs` principal actual. `Subvolume_Name` es el nombre del subvolumen.
 Para demostrar la creación de un subvolumen, usaremos el sistema de archivos `Btrfs` creado anteriormente. Antes de crear un subvolumen, el sistema de archivos `Btrfs` (volumen principal) debe montarse como se muestra aquí en una distribución CentOS usando privilegios de superusuario:
 
-```sh
+```shell-session
 mount /dev/sdb BTrial
 
 ls BTrial/ 
@@ -950,7 +950,7 @@ Una vez creado el subvolumen, denominado `subvolumen_1` en el ejemplo anterior, 
 
 Verifica los subvolúmenes mediante el comando `subvolume list` del volumen principal junto con `mount point` . La opción `-t` es útil porque muestra la información en formato de tabla como se muestra aquí:
 
-```sh
+```shell-session
 btrfs subvolume list  BTrial
 ID 258 gen 13 top level 5 path subvolume_1
 
@@ -962,7 +962,7 @@ ID   gen   top level   path
 
 Para acceder al subvolumen, utiliza una referencia de directorio que incluye el punto de montaje de su volumen principal y el nombre del subvolumen. En esencia, se accede al subvolumen como un subdirectorio del punto de montaje del volumen principal. Aquí hay un ejemplo:
 
-```sh
+```shell-session
 cd BTrial/subvolume_1
 
 pwd
@@ -988,7 +988,7 @@ file_b_subvol.txt
 
 De forma predeterminada, para montar un volumen principal y un subvolumen Btrfs, solo necesita montar el volumen principal:
 
-```sh
+```shell-session
 umount BTrial
 
 mount /dev/sdb BTrial
@@ -1004,7 +1004,7 @@ Una vez montado el volumen principal, se pueden verificar los subvolúmenes mont
 El acceso a los volúmenes principales y subvolúmenes de Btrfs se realiza a través de un punto de entrada. Este punto de entrada se denomina nivel predeterminado y normalmente se establece en el nivel superior (a veces denominado subvolumen de nivel superior). El nivel superior estándar tiene un ID 5, como se muestra en el ejemplo anterior.
 Puede determinar el nivel predeterminado de un subvolumen mediante el comando `subvolume get-default`. El ejemplo que se muestra aquí confirma que el nivel predeterminado actual es el nivel superior (ID 5):
 
-```sh
+```shell-session
 btrfs subvolume get-default BTrial
 ID 5 (FS_TREE)
 ```
@@ -1013,7 +1013,7 @@ Un subvolumen se puede montar independientemente de su volumen principal. Sin em
 
 Existen dos métodos para montar un subvolumen y no permitir el acceso al volumen principal. Para el primer método, debe modificar las opciones de `mount`. En el siguiente ejemplo, el volumen principal y el subvolumen se desmontan y luego el subvolumen se monta de manera que impida el acceso al volumen principal:
 
-```sh
+```shell-session
 umount BTrial
 
 mkdir BTrial_subvol
@@ -1030,7 +1030,7 @@ Después de desmontar el volumen principal, se crea un nuevo directorio (punto d
 
 El segundo método para montar un subvolumen y bloquear el acceso al volumen principal es cambiar el número de identificación de nivel predeterminado del subvolumen. El número de identificación del nivel predeterminado cambia de 5 al número de identificación del subvolumen. El subvolumen debe estar montado porque el punto de montaje se utiliza en el comando que cambia este número de ID. El comando `subvolume set-default` se utiliza para realizar esta tarea, como se muestra aquí:
 
-```sh
+```shell-session
 mount /dev/sdb BTrial
 
 btrfs subvolume list -t BTrial
@@ -1051,7 +1051,7 @@ umount BTrial
 
 Una vez que se cambia el nivel predeterminado del subvolumen, solo se usa un comando de montaje simple. No se concede acceso al volumen principal. Un ejemplo de esto se muestra aquí:
 
-```sh
+```shell-session
 mount /dev/sdb BTrial_subvol
 
 ls BTrial_subvol/
@@ -1077,7 +1077,7 @@ El `Volume_Mount_Point` en el comando de instantánea del subvolumen designa qu�
 
 A partir de los ejemplos anteriores de Btrfs, se crea una instantánea del subvolumen montado en `BTrial_subvol`. El comando `Snapshot` está dividido en dos líneas para mayor claridad y se muestra en el ejemplo aquí:
 
-```sh
+```shell-session
 mount /dev/sdb BTrial_subvol
 
 ls BTrial_subvol/
@@ -1097,7 +1097,7 @@ file_b_subvol.txt #
 
 Debido a que un `snapshot` es un subvolumen, puede ver sus detalles mediante el comando `subvolume list`. Aquí se muestra un ejemplo, utilizando la instantánea creada anteriormente:
 
-```sh
+```shell-session
 btrfs subvolume list BTrial_subvol
 ID 258 gen 27 top level 5 path subvolume_1
 ID 259 gen 26 top level 258 path my_snapshot
@@ -1112,7 +1112,7 @@ Normalmente, se crea, formatea y agrega una partición de intercambio al archivo
 
 Hay un par de utilidades útiles disponibles para verificar su espacio de intercambio actual. Lo más probable es que ya estés familiarizado con el comando `free`. Pero es posible que no esté familiarizado con el uso del comando `swapon` para las estadísticas del espacio de intercambio, como se muestra aquí en una distribución de CentOS:
 
-```sh
+```shell-session
 free -m
 	  total   used   free   shared   buff/cache   available
 Mem:   993     467    136    7        390          365
@@ -1129,7 +1129,7 @@ La columna Prioridad dentro de las estadísticas del espacio de intercambio del 
 
 Una vez que haya creado una nueva partición de disco, el comando `mkswap` se usa para "formatear" la partición en una partición de intercambio. A continuación se muestra un ejemplo en un sistema CentOS, utilizando privilegios de super usuario:
 
-```sh
+```shell-session
 mkswap /dev/sdd1
 
 Setting up swapspace version 1, size = 838652 KiB 
@@ -1142,7 +1142,7 @@ blkid
 
 Ahora que la partición de intercambio se ha preparado adecuadamente, puede activarla usando el comando `swapon`, como se muestra aquí:
 
-```sh
+```shell-session
 swapon /dev/sdd1
 
 swapon -s
@@ -1158,7 +1158,7 @@ Swap:  1638    0      1638
 
 Puede ver que el tamaño del espacio de intercambio ha aumentado significativamente debido a la adición de una segunda partición de intercambio. Si lo desea, la prioridad de uso de la nueva partición de intercambio se puede cambiar de su actual negativo dos (-2) a una prioridad más alta usando el comando `swapon`, como se muestra aquí:
 
-```sh
+```shell-session
 swapoff /dev/sdd1
 
 swapon -p 0 /dev/sdd1
@@ -1186,7 +1186,7 @@ Otro tipo de montaje automático está orientado a sistemas de archivos basados 
 `AutoFS` utiliza el archivo `/etc/auto.master`, también llamado mapa maestro, como su archivo de configuración principal para administrar el almacenamiento de red conectado automáticamente. El archivo de mapa maestro brinda al servicio `AutoFS` información sobre los sistemas de archivos basados en red, incluido dónde se encuentran actualmente, dónde se montarán y las opciones a usar.
 Excepto por las líneas de comentarios que están precedidas por una almohadilla (`#`), cada entrada del mapa maestro tiene este formato básico:
 
-```sh
+```shell-session
 mount-point map-name [ mount-options ]
 ```
 
@@ -1197,19 +1197,19 @@ Por ejemplo, si desea montar el sistema de archivos NFS del servidor NFS, Server
 
 Una entrada de mapa incorporada típica en el archivo de mapa maestro se ve así:
 
-```sh
+```shell-session
 /net   -hosts
 ```
 
 **Direct map** Una entrada de mapa directo es simplemente un puntero a otro archivo. El otro archivo es `/etc/auto.direct`. Esta entrada normalmente no está en el mapa maestro de forma predeterminada, por lo que si la deseas, tendrás que agregarla. Una entrada típica de mapa directo en el archivo de mapa maestro se ve así:
 
-```sh
+```shell-session
 /-  /etc/auto.direct
 ```
 
 Dentro del archivo `/etc/auto.direct`, se enumeran los nombres de ruta de directorio absolutos para los puntos de montaje, así como las opciones y sus servidores asociados. Dos entradas típicas en el archivo de mapa directo pueden verse así:
 
-```sh
+```shell-session
 /home/bucket server01.acme.com:/home/bucket
 /mnt/nfs/var/nfsshare  192.168.56.101:/var/nfsshare
 ```
@@ -1273,7 +1273,7 @@ A menos que tenga un buen conocimiento del cifrado, no se recomienda utilizar el
 
 Una de las cosas más interesantes de `eCryptfs` es que no hay nuevos comandos de utilidad que aprender. Siempre que tenga el paquete de software `ecryptfs-utils` en su sistema, simplemente use el comando `mount` con `eCryptfs` de la siguiente manera:
 
-```sh
+```shell-session
 mount -t ext4 /dev/sdd1 /home
 mount -t eCryptfs /home /home
 ```
@@ -1301,13 +1301,13 @@ Las utilidades para ajustar sistemas de archivos suelen ser específicas de un d
 
 Antes de ejecutar **dumpe2fs**, asegúrese de ejecutar el comando `df -hT` para conocer los nombres de los dispositivos del sistema de archivos.
 
-```sh
+```shell-session
 sudo dumpe2fs /dev/sda10
 ```
 
 ##### Sample Output
 
-```sh
+```shell-session
 dumpe2fs 1.42.13 (17-May-2015)
 Filesystem volume name:   
 Last mounted on:          /
@@ -1362,7 +1362,7 @@ Journal start:            12055
 
 Puedes pasar el indicador `-b` para mostrar cualquier bloque reservado como incorrecto en el sistema de archivos (ninguna salida implica bloques incorrectos):
 
-```sh
+```shell-session
 dumpe2fs -b
 ```
 
@@ -1374,14 +1374,14 @@ Recuerde que Linux ejecuta `e2fack/fsck` automáticamente al iniciar el sistem
 
 **Atención**: No ejecute `e2fsck` o `fsck` en sistemas de archivos montados, siempre desmonte una partición antes de poder ejecutar estas herramientas en ella, como se muestra a continuación.
 
-```sh
+```shell-session
 sudo unmount /dev/sda10
 sudo fsck /dev/sda10
 ```
 
 Alternativamente, habilite la salida detallada con el interruptor `-V` y use `-t` para especificar un tipo de sistema de archivos como este:
 
-```sh
+```shell-session
 sudo fsck -Vt ext4 /dev/sda10
 ```
 
@@ -1391,12 +1391,12 @@ Mencionamos desde el principio que una de las causas del daño del sistema de ar
 
 Para ver el contenido del super bloque del sistema de archivos, incluidos los valores actuales de los parámetros, use la opción `-l` como se muestra.
 
-```sh
+```shell-session
 sudo tune2fs -l /dev/sda10
 ```
 ##### Sample Output
 
-```sh
+```shell-session
 tune2fs 1.42.13 (17-May-2015)
 Filesystem volume name:   
 Last mounted on:          /
@@ -1446,7 +1446,7 @@ Journal backup:           inode blocks
 
 A continuación, utilizando el indicador `-c` , puedes establecer el número de montajes después de los cuales `e2fsck` comprobará el sistema de archivos. Este comando indica al sistema que ejecute `e2fsck` en `/dev/sda10` después de cada **4** montajes.
 
-```sh
+```shell-session
 sudo tune2fs -c 4 /dev/sda10
 
 tune2fs 1.42.13 (17-May-2015)
@@ -1455,7 +1455,7 @@ Setting maximal mount count to 4
 
 También puedes definir el tiempo entre dos comprobaciones del sistema de archivos con la opción `-i` . El siguiente comando establece un intervalo de **2** días entre comprobaciones del sistema de archivos.
 
-```sh
+```shell-session
 sudo tune2fs  -i  2d  /dev/sda10
 
 tune2fs 1.42.13 (17-May-2015)
@@ -1464,13 +1464,13 @@ Setting interval between checks to 172800 seconds
 
 Ahora, si ejecuta este comando a continuación, el intervalo de verificación del sistema de archivos para `/dev/sda10` ahora está configurado.
 
-```sh
+```shell-session
 sudo tune2fs -l /dev/sda10
 ```
 
 ##### Sample Output
 
-```sh
+```shell-session
 Filesystem created:       Sun Jul 31 16:19:36 2016
 Last mount time:          Mon Nov  6 10:25:28 2017
 Last write time:          Mon Nov  6 13:49:50 2017
@@ -1497,13 +1497,13 @@ Para cambiar los parámetros de registro predeterminados, utilice la opción `-
 
 Tenga en cuenta que solo se puede configurar una de las opciones de tamaño o dispositivo para un sistema de archivos:
 
-```sh
+```shell-session
 sudo tune2fs -J size=4MB /dev/sda10
 ```
 
 Por último, pero no menos importante, la etiqueta de volumen de un sistema de archivos se puede configurar usando la opción `-L` como se muestra a continuación.
 
-```sh
+```shell-session
 sudo tune2fs -L "ROOT" /dev/sda10
 ```
 
@@ -1511,7 +1511,7 @@ sudo tune2fs -L "ROOT" /dev/sda10
 
 **debugfs** es un depurador de sistemas de archivos ext2/ext3/ext4, sencillo e interactivo, basado en una línea de comandos. Le permite modificar los parámetros del sistema de archivos de forma interactiva. Para ver subcomandos o solicitudes, escriba `"?"`.
 
-```sh
+```shell-session
 sudo debugfs /dev/sda10
 ```
 
@@ -1519,7 +1519,7 @@ De forma predeterminada, el sistema de archivos debe abrirse en modo lectura-esc
 
 ##### Sample Output
 
-```sh
+```shell-session
 debugfs 1.42.13 (17-May-2015)
 debugfs:  ?
 Available debugfs requests:
@@ -1546,7 +1546,7 @@ debugfs: freefrag
 
 ##### Sample Output
 
-```sh
+```shell-session
 Device: /dev/sda10
 Blocksize: 4096 bytes
 Total blocks: 86154752
@@ -1697,7 +1697,7 @@ Cuando XFS detecta daños en el sistema de archivos o en los metadatos del siste
 
 **System log entry reporting an XFS corruption**
 
-```sh
+```shell-session
 # dmesg --notime | tail -15
 
 XFS (loop0): Mounting V5 Filesystem
@@ -1719,7 +1719,7 @@ XFS (loop0): Failed to read root inode 0x80, error 11
 
 Las utilidades de espacio de usuario suelen informar el mensaje de error de entrada/salida cuando intentan acceder a un sistema de archivos XFS dañado. Montar un sistema de archivos XFS con un registro dañado da como resultado un montaje fallido y el siguiente mensaje de error:
 
-```sh
+```shell-session
 mount: : mount(2) system call failed: Structure needs cleaning.
 ```
 
@@ -1730,20 +1730,20 @@ Este procedimiento realiza una verificación de solo lectura de un sistema de ar
 Procedimiento
 Reproduzca el registro montando y desmontando el sistema de archivos:
 
-```sh
+```shell-session
 mount file-system
 umount file-system
 ```
 
 Utilice la utilidad `xfs_repair` para realizar un ensayo y comprobar el sistema de archivos. Cualquier error se imprime y una indicación de las acciones que se tomarían, sin modificar el sistema de archivos.
 
-```sh
+```shell-session
 xfs_repair -n _block-device_
 ```
 
 Monte el sistema de archivos:
 
-```sh
+```shell-session
 mount file-system
 ```
 
@@ -1754,13 +1754,13 @@ Cree una imagen de metadatos antes de la reparación con fines de diagnóstico o
 
 Utilice la herramienta de depuración `xfs_metadump` para copiar los metadatos de un sistema de archivos XFS a un archivo. El archivo de metavolcado resultante se puede comprimir utilizando utilidades de compresión estándar para reducir el tamaño del archivo si es necesario enviar archivos de metavolcado grandes al soporte.
 
-```sh
+```shell-session
 xfs_metadump block-device metadump-file
 ```
 
 Vuelva a reproducir el registro volviendo a montar el sistema de archivos:
 
-```sh
+```shell-session
 mount file-system
 umount file-system
 ```
@@ -1769,19 +1769,19 @@ Utilice la utilidad `xfs_repair` para reparar el sistema de archivos desmontado:
 
 Si el montaje se realizó correctamente, no se requieren opciones adicionales:
 
-```sh
+```shell-session
 xfs_repair block-device
 ```
 
 Si el montaje falló con el error La estructura necesita limpieza, el registro está dañado y no se puede reproducir. Utilice la opción `-L` (forzar la puesta a cero del registro) para borrar el registro:
 
-```sh
+```shell-session
 xfs_repair -L block-device
 ```
 
 Monte el sistema de archivos:
 
-```sh
+```shell-session
 mount file-system
 ```
 ### Usando SMART
@@ -1795,7 +1795,7 @@ Puede configurar `smartd` utilizando su archivo de configuración. Dependiendo d
 
 Puede interactuar directamente con dispositivos SMART utilizando el comando `smartctl`. Para ver la información de un dispositivo individual, puede usar el comando `smartctl -i dispositivo`, donde dispositivo es el nombre de archivo del dispositivo. Aquí hay un ejemplo recortado del uso de este comando en una Distribución basada en Debian, que muestra una unidad conectada por USB sin capacidades SMART:
 
-```sh
+```shell-session
 sudo smartctl -i /dev/sda1
 [...]
 Vendor:               Maxtor
@@ -1808,7 +1808,7 @@ No es necesario montar el dispositivo en el sistema para obtener su información
 
 Muchos discos duros tienen capacidades SMART. Aquí hay un ejemplo recortado del uso del comando `smartctl` en una distribución de Ubuntu, que muestra un disco duro antiguo que tiene capacidades SMART:
 
-```sh
+```shell-session
 sudo smartctl -i /dev/sda6
 [...]
 === START OF INFORMATION SECTION ===
@@ -1822,7 +1822,7 @@ Observe en el ejemplo anterior no solo que la unidad tiene capacidades SMART sin
 
 Puede realizar una serie de pruebas en su disco duro mediante la opción `-t` en el comando `smartctl`. La opción toma diferentes argumentos para determinar qué tipo de prueba realizar. Por ejemplo, puede realizar una prueba automática, corta o larga. Tanto la opción de autoprueba como la de prueba corta son bastante rápidas. La opción de prueba larga puede ser bastante larga, como se muestra en este ejemplo recortado:
 
-```sh
+```shell-session
 sudo smartctl -t long /dev/sda6
 [...]
 === START OF OFFLINE IMMEDIATE AND SELF-TEST SECTION ===
@@ -1835,7 +1835,7 @@ Use smartctl -X to abort test.
 
 En el ejemplo anterior, puede ver que la prueba tardará 74 minutos en completarse. ¡Algunos viajes pueden tardar incluso más! No se mostrará ningún resultado en su terminal cuando se complete la prueba. Sin embargo, puede verificar el progreso de la prueba, como se muestra aquí:
 
-```sh
+```shell-session
 sudo smartctl -a /dev/sda6 | grep -A1 "Self-test execution"
 Self-test execution status:  ( 249)Self-test routine in progress                                    
 					90% of test remaining.
@@ -1845,7 +1845,7 @@ No deje que el término rutina de autoprueba del listado anterior le confunda. T
 
 Una vez realizada la prueba, puede ver los resultados utilizando el comando `smartctl -a dispositivo`. De hecho, puede utilizar este comando en cualquier momento para determinar el estado general actual de su disco. La opción `smartctl -a` muestra una gran cantidad de información. Por lo tanto, puede ser una buena idea redirigir la salida a un archivo o canalizarla a la utilidad less. Aquí se muestra un ejemplo recortado de este comando en una distribución de Ubuntu:
 
-```sh
+```shell-session
 sudo smartctl -a /dev/sda6
 [...]
 Self-test execution status: (   0) The previous self-test routine
@@ -1856,7 +1856,7 @@ Self-test execution status: (   0) The previous self-test routine
 
 Puede obtener un resumen del estado del dispositivo SMART preguntando por su estado. La información de estado se deriva de varias pruebas. Aquí hay un ejemplo recortado del resumen del estado de salud de una unidad:
 
-```sh
+```shell-session
 sudo smartctl -H /dev/sda6
 [...]
 SMART overall-health self-assessment test result: PASSED

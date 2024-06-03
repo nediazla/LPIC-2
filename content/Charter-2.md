@@ -20,7 +20,7 @@ El comando `/usr/bin/wall` envía mensajes simples a ciertos usuarios del sistem
 - Usuarios que tienen su estado de mensaje establecido en "sí"
 El comando `/bin/mesg` o `/usr/bin/mesg` le permite ver y configurar el estado de su mensaje. El comando `mesg` se demuestra aquí:
 
-```sh
+```shell-session
 mesg 
 is n
 
@@ -39,7 +39,7 @@ is n
 Observe en el ejemplo anterior que el comando `mesg` usado por sí solo simplemente muestra el estado actual del mensaje. Al ejecutar el comando `mesg` y se activa la mensajería y al emitir `mesg n` se desactiva.
 La sintaxis general del comando de escritura se muestra aquí:
 
-```sh
+```shell-session
 write username terminal_id
 ```
 
@@ -69,7 +69,7 @@ El comando `wall` es útil, pero si un usuario no ha iniciado sesión en una ter
 Puede probar el comando `notify-send`r enviándose mensajes a sí mismo en la GUI.
 La sintaxis general de notificación y envío se ve así:
 
-```sh
+```shell-session
 notify-send "Title" "Message"
 ```
 
@@ -110,7 +110,7 @@ Observe en la Figura 2.9 que el parámetro [wall messaje] se muestra debajo del 
 
 Para la distribución que se muestra en la Figura 2.9, el usuario que emite el comando de apagado no recibe un símbolo del sistema. Por lo tanto, en este caso, en lugar de ingresar el comando `shutdown -c` para cancelar el apagado, se necesita la combinación de teclas Ctrl+C para cancelar. Cuando se utiliza este método para cancelar un apagado, no se envían mensajes. Cuando se utiliza el comando `Shutdown -c`, se transmite un mensaje en el muro a los usuarios de la terminal. Aquí se muestra una versión recortada:
 
-```sh
+```shell-session
 shutdown -c
 
 Broadcast message from root@localhost.localdomain ...
@@ -120,7 +120,7 @@ The system shutdown has been canceled at Wed ...
 Obviamente es importante saber cómo su distribución de Linux maneja el comando `/sbin/shutdown` antes de comenzar a usarlo en un sistema en vivo. Sería una buena práctica no sólo leer las páginas de manual de su distribución sino también probar el comando `shutdown` en un sistema de prueba.
 Hay algunas [opciones] de apagado adicionales que pueden ser útiles en relación con el parámetro [wall messaje]. La opción -k deshabilitará los inicios de sesión y enviará mensajes de advertencia, pero no derribará el sistema. Aquí se muestra un ejemplo recortado de esto:
 
-```sh
+```shell-session
 $ sudo shutdown -k +20 "Please log out..."
 $
 Broadcast message from christine@server01
@@ -135,7 +135,7 @@ Tenga en cuenta que cuando se utiliza la opción -k, el [wall messaje] de apagad
 
 Algunas distribuciones ofrecen la opción `--no-wall`. Permite que se realice un apagado sin mensajes en el muro para los usuarios del terminal. Sólo el super usuario que emita el comando recibirá un mensaje, similar al que se muestra aquí:
 
-```sh
+```shell-session
 shutdown --no-wall +5
 
 Shutdown scheduled for Wed 2016–12–02 09:02:48 EST, 
@@ -144,7 +144,7 @@ use 'shutdown -c' to cancel.
 
 Tenga en cuenta que si decide cancelar el apagado después de usar la opción `--no-wall`, los usuarios del terminal seguirán recibiendo el mensaje de cancelación. Por lo tanto, si utilizó esta opción en el comando de apagado original y necesita cancelar el apagado, asegúrese de suprimir el mensaje de cancelación como este:
 
-```sh
+```shell-session
 shutdown -c --no-wall
 ```
 
@@ -161,7 +161,7 @@ Cada archivo tiene un propósito ligeramente diferente y es posible que no esté
 # Usando el archivo `/etc/issue`
 El archivo `/etc/issue` permite mostrar texto en las pantallas de inicio de sesión del terminal tty. Por lo general, contiene la política de acceso al sistema de una empresa y rara vez cambia. También puede contener próximas interrupciones planificadas del sistema. Cuando no se modifica, el archivo `/etc/issue` generalmente simplemente contiene información del sistema, como qué versión del kernel de Linux se está ejecutando. Aquí se muestra un ejemplo de este archivo sin modificar de una distribución de CentOS:
 
-```sh
+```shell-session
 $ cat /etc/issue
 \S
 Kernel \r on an \m
@@ -171,7 +171,7 @@ $
 Observe que se utilizan algunos caracteres especiales en el archivo. Puede utilizar los arreglos @character y \character siempre que sean compatibles con el programa getty de su distribución (el programa responsable de administrar terminales tty).
 Con privilegios de super usuario, puede modificar el archivo, por ejemplo, si los usuarios del sistema necesitan ser informados de una próxima interrupción:
 
-```sh
+```shell-session
 cat /etc/issue
 \S
 Kernel \r on an \m
@@ -195,7 +195,7 @@ El archivo `/etc/issue` no contendrá comentarios útiles para que los lea deten
 # Usando el archivo `/etc/issue.net`
 El archivo `/etc/issue.net` es muy similar al archivo `/etc/issue`. Su objetivo principal es mostrar mensajes de inicio de sesión para inicios de sesión remotos. De forma predeterminada, normalmente está habilitado sólo para conexiones Telnet. A continuación se muestra un ejemplo de un archivo `/etc/issue.net` predeterminado en una distribución de Ubuntu:
 
-```sh
+```shell-session
 cat /etc/issue.net
 Ubuntu 14.04.3 LTS
 ```
@@ -204,14 +204,14 @@ No existe nada demasiado interesante en este archivo. Simplemente contiene la ve
 
 Para permitir que OpenSSH utilice el archivo `/etc/issue.net`, debe realizar un pequeño cambio en el archivo de configuración. Edite el archivo `/etc/ssh/sshd_config` en su sistema. (Este archivo de configuración no existirá si no tiene OpenSSH instalado en su sistema). Debería encontrar una línea similar a la siguiente:
 
-```sh
+```shell-session
 Banner  /etc/issue.net
 ```
 
 Elimine la marca de almohadilla (#) de la línea. Si aparece la palabra `none`, en lugar del archivo` .net` del problema, cámbielo a `/etc/issue.net`. Deberá reiniciar su servidor OpenSSH para que el cambio surta efecto.
 El siguiente es un archivo `/etc/issue.net` modificado:
 
-```sh
+```shell-session
 cat /etc/issue.net
 
 ********************************
@@ -235,7 +235,7 @@ El archivo `/etc/motd` (archivo Mensaje del día) proporciona un método de comu
 Tradicionalmente, el archivo contenía mensajes más alegres, como próximos eventos de la empresa o dichos. Ahora normalmente contiene información sobre próximos eventos del sistema, a menudo porque los archivos `/etc/issue` y `/etc/issue.net` son necesarios para mostrar mensajes de inicio de sesión legales.
 En algunas distribuciones, el archivo ya existe pero está vacío. En otros, no se instala de forma predeterminada, pero se crea fácilmente. Como era de esperar, debe tener privilegios de super usuario para crearlo o modificarlo. Aquí hay un archivo `/etc/motd` modificado ubicado en una distribución CentOS:
 
-```sh
+```shell-session
 cat /etc/motd 
 Hello, I'm a modified MOTD file.
 ```
@@ -419,7 +419,7 @@ La Tabla 2.2 enumera varias, pero ciertamente no todas, las opciones del comando
 
 Lo más probable es que ya hayas creado archivos tar usando el comando `tar`. Sin embargo, tal vez convenga hacer un pequeño repaso. Aquí hay un ejemplo:
 
-```sh
+```shell-session
 ls Project42.dat   ProjectFileA.dat   ProjectFileB.dat
 
 tar -Jcvf Project42.tar.xz *.dat
@@ -432,7 +432,7 @@ En el comando `tar` anterior, se utilizan cuatro opciones. La opción `-J` se us
 
 Puede utilizar una variación de este comando para crear copias de seguridad completas e incrementales. Un ejemplo sencillo ayuda a explicar este concepto. Este es el proceso para crear una copia de seguridad completa:
 
-```sh
+```shell-session
 ls *.dat Project42.dat   ProjectFileA.dat   ProjectFileB.dat
 
 tar -g Archive1.snar -Jcvf Project42_Full.tar.xz *.dat
@@ -445,7 +445,7 @@ Observe la opción `-g` en el ejemplo de copia de seguridad completa anterior. L
 
 El ejemplo anterior creó una copia de seguridad completa de los archivos designados junto con el archivo de instantánea de metadatos, `Archive1.snar`. Ahora se utilizará el mismo archivo de instantánea para ayudar a determinar si algún archivo se ha modificado, es nuevo o se ha eliminado para crear una copia de seguridad incremental:
 
-```sh
+```shell-session
 echo "Answer to everything" >> ProjectFileC.dat
 
 tar -g Archive1.snar -Jcvf Project42_Incremental.tar.xz *.dat 
@@ -458,7 +458,7 @@ Esta vez, los metadatos dentro de `Archive1.snar` le permiten al comando `tar` s
 
 Puede continuar creando copias de seguridad incrementales adicionales utilizando el mismo archivo de instantánea:
 
-```sh
+```shell-session
 echo "42 is the answer to everything" >> ProjectFileD.dat
 
 tar -g Archive1.snar -Jcvf Project42_Incremental_2.tar.xz *.dat
@@ -478,7 +478,7 @@ El uso de estas diversas opciones de tar le permite crear una gran variedad de c
 La verificación de la copia de seguridad puede adoptar varias formas diferentes. Puede asegurarse de que los archivos deseados estén incluidos en su copia de seguridad usando la opción `-v` en el comando `tar` para ver los archivos que se enumeran a medida que se incluyen en el archivo tar.
 También puede verificar que los archivos deseados estén incluidos en su copia de seguridad después del hecho. Utilice la opción `-t` para enumerar el contenido del archivo tarball o tar:
 
-```sh
+```shell-session
 tar -tf Project42_Full.tar.xz
 Project42.dat
 ProjectFileA.dat
@@ -489,13 +489,13 @@ ProjectFileC.dat $ **tar -tf Project42_Incremental_2.tar.xz** ProjectFileD.dat
 
 Puede verificar archivos (a veces llamados miembros) dentro de un archivo comparándolos con los archivos actuales. La opción para realizar esta tarea es `-d`. En este primer ejemplo no se encuentran diferencias:
 
-```sh
+```shell-session
 tar -df  Project42.tar.xz
 ```
 
 Sin embargo, cuando un archivo incluido en este tarball se modifica en el directorio actual y se usa nuevamente la opción `-d`, el comando `tar` enumera las diferencias del archivo:
 
-```sh
+```shell-session
 mv ProjectFileB.dat ../
 cp ProjectFileA.dat ProjectFileB.dat
 
@@ -511,7 +511,7 @@ tar -df Project42.tar.xz ProjectFileB.dat: Mod time differs
 
 Otro buen método para verificar su copia de seguridad es verificarla automáticamente inmediatamente después de crear el archivo tar. Puede lograr esto fácilmente agregando la opción `-W`, como se muestra en este fragmento:
 
-```sh
+```shell-session
 tar -Wcvf Project_Verify.tar *.dat
 Project42.dat
 ProjectFileA.dat
@@ -539,7 +539,7 @@ La Tabla 2.4 enumera algunas de las opciones que puede usar con el comando `tar`
 
 Lo más probable es que haya extraído archivos de archivos tar y archivos tar. Sin embargo, una pequeña reseña puede resultar útil. A continuación se muestra un ejemplo en el que los archivos de copia de seguridad incrementales, creados anteriormente en este capítulo, se restauran en un nuevo directorio:
 
-```sh
+```shell-session
 mkdir test
 cd test
 tar -Jxvf ../Project42_Incremental.tar.xz ProjectFileC.dat
@@ -557,7 +557,7 @@ Una cinta magnética contiene marcadores especiales, como el comienzo de la cint
 
 Para crear archivos y copias de seguridad, las unidades de cinta SCSI son populares porque se consideran las más confiables. Linux conecta los dispositivos de cinta SCSI al sistema a través de dos archivos de dispositivo principales, `/dev/st*` y `/dev/nst*`, como se muestra en una lista recortada aquí:
 
-```sh
+```shell-session
 ls -ld /dev/st[0–7]
 crw-rw----. 1 root tape 9, 0 Dec   5   08:38 /dev/st0 
 crw-rw----. 1 root tape 9, 1 Dec   5   08:38 /dev/st1
@@ -596,7 +596,7 @@ Algunas de las opciones de operación de dispositivos de cinta más relevantes s
 
 A continuación se muestra un ejemplo sencillo y resumido del uso del comando `mt`. Se carga una cinta dentro de una unidad de cinta SCSI, representada por el archivo de dispositivo `/dev/st0`, y se usa el comando `mt` para verificar su estado:
 
-```sh
+```shell-session
 mt -f  /dev/st0 status SCSI 2 tape drive:
 File number=0, block number=0, partition=0.
 [...]
@@ -607,7 +607,7 @@ El código de estado EN LÍNEA que se muestra indica que la unidad de cinta tien
 
 Ahora que la cinta está cargada y lista, puede utilizar el comando `tar` para realizar una copia de seguridad de los archivos en la cinta. Lo que realmente sucede es que se coloca un archivo tarball en la cinta, como se muestra en este ejemplo recortado:
 
-```sh
+```shell-session
 tar -Jcvf  /dev/st0  /home/chris/Project tar: Removing leading '/' from member names
 /home/chris/Project/
 /home/chris/Project/ProjectFileA.dat
@@ -619,7 +619,7 @@ Dado que se trata de un dispositivo de cinta que se rebobina automáticamente, `
 
 Los archivos se pueden restaurar posteriormente, si se desea, desde la cinta también utilizando el comando tar. Por supuesto, primero debe cargar la cinta adecuada en la unidad de cinta. A continuación se muestra un ejemplo recortado de cómo restaurar los archivos en un directorio diferente al de la cinta:
 
-```sh
+```shell-session
 mkdir temp
 cd temp
 tar -Jxvf  /dev/st0
@@ -651,7 +651,7 @@ El dispositivo de salida es una unidad completa o una partición. El dispositivo
 
 Si desea deshacerse de un disco, también puede usar el comando dd para poner a cero el disco, como se muestra aquí:
 
-```sh
+```shell-session
 dd of=/dev/sdc if=/dev/zero count=10
 ```
 
@@ -684,7 +684,7 @@ Para descomprimir los archivos de instalación, simplemente los extrae del archi
 
 Para fines de demostración en este capítulo, instalaremos el programa curl desde el código fuente. Su tarball usa compresión `gzip` y se muestra aquí:
 
-```sh
+```shell-session
 ls 
 curl-7.46.0.tar.gz
 ```
@@ -693,7 +693,7 @@ Para descomprimir y descomprimir los archivos de instalación del tarball, use e
 
 Aquí hay un ejemplo recortado de cómo extraer los archivos de instalación del tarball del programa curl:
 
-```sh
+```shell-session
 tar -zxvf curl-7.46.0.tar.gz 
 curl-7.46.0/ 
 curl-7.46.0/projects
@@ -703,7 +703,7 @@ curl-7.46.0/Makefile.in
 
 Una vez que se extraen los archivos de instalación, debería ver un directorio creado dentro de su directorio de trabajo actual. Este directorio contiene los archivos de instalación que necesita para completar la instalación de este programa en su sistema.
 
-```sh
+```shell-session
 ls -F
 curl-7.46.0/ curl-7.46.0.tar.gz
 ```
@@ -732,7 +732,7 @@ El `Makefile` es creado (o actualizado) por el script de configuración utilizan
 
 Debido a que un script de configuración puede producir una gran cantidad de resultados, es una buena idea canalizarlo en un archivo, usando tee, así como observar su visualización en la pantalla del terminal. Usando el script de configuración del programa curl como ejemplo, aquí hay una lista resumida de su ejecución:
 
-```SH
+```shell-session
 cd curl-7.46.0
 ./configure | tee  ../curl_configure.log checking whether to enable maintainer-specific por[...]
 checking whether make supports nested variables... yes
@@ -747,7 +747,7 @@ En este punto, está listo para compilar el código fuente en binario. El comand
 
 El siguiente es un ejemplo recortado de cómo compilar el programa curl. Observe nuevamente que la salida se conserva al canalizarla a la utilidad en `T`.
 
-```SH
+```shell-session
 make | tee  ../curl_make.log
 Making all in lib
 make[1]: Entering directory '/root/curl-7.46.0/lib'
@@ -762,7 +762,7 @@ Para completar la instalación, solo necesita ejecutar el comando `make install`
 
 Usando el ejemplo de curl, aquí hay un ejemplo resumido del uso de `make install`. Observe nuevamente que se canaliza a través del programa tee para preservar su salida si es necesario:
 
-```SH
+```shell-session
 make install | tee  ../curl_make_install.log
 Making install in lib
 make[1]: Entering directory '/root/curl-7.46.0/lib'
@@ -773,7 +773,7 @@ make[1]: Leaving directory '/root/curl-7.46.0'
 
 Una vez que todo esté colocado en su ubicación adecuada, ¡pruebe su nuevo programa! Aquí se utiliza el programa curl con su opción de versión a modo de prueba:
 
-```sh
+```shell-session
 curl --version 
 curl 7.46.0 (x86_64-pc-linux-gnu) libcurl/7.46.0
 [...]
@@ -837,7 +837,7 @@ La utilidad sar (acrónimo de System Activity Reporter) es especial porque puede
 Normalmente se instala de forma predeterminada en la mayoría de las distribuciones, pero si por alguna razón no lo encuentra en la suya, se encuentra en el paquete `sysstat`.
 La utilidad sar utiliza datos almacenados por la utilidad `sadc` en `/var/log/sa/` y, de forma predeterminada, muestra datos del archivo actual, aunque puede cambiar este comportamiento mediante ciertas opciones de comando. Usado sin ninguna opción, el comando sar mostrará la información de uso de CPU almacenada hoy en intervalos de 10 minutos, como se muestra en este ejemplo recortado:
 
-```sh
+```shell-session
 sar
 [...]
 12:20:01 PM   CPU   %user    %nice   %system   %iowait   %steal[...]
@@ -848,7 +848,7 @@ sar
 
 Puede mostrar información actual de la CPU y cambiar los intervalos mostrados también. En este ejemplo recortado, `sar` muestra el uso de la CPU cuatro veces y con un intervalo de un segundo:
 
-```sh
+```shell-session
 sar 1 4
 [...]
 06:49:50 PM   CPU   %user    %nice   %system   %iowait   %steal[...]

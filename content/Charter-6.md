@@ -52,13 +52,13 @@ Para complicar aún más las cosas, se ha vuelto popular un protocolo de red IP 
 
 El método IPv6 utiliza números hexadecimales para identificar direcciones. La dirección de 128 bits se divide en ocho grupos de cuatro dígitos hexadecimales separados por dos puntos, como este:
 
-```
+```shell-session
 fed1:0000:0000:08d3:1319:8a2e:0370:7334
 ```
 
 Si uno o más grupos de cuatro dígitos son 0000, ese grupo o esos grupos pueden omitirse, dejando dos dos puntos:
 
-```
+```shell-session
 fed1::08d3:1319:8a2e:0370:7334
 ```
 
@@ -102,4 +102,142 @@ Necesitamos analizar una característica más de la capa de red antes de pasar a
 El Protocolo de configuración dinámica de host (DHCP) se creó para facilitar la configuración de las estaciones de trabajo de los clientes, que no necesariamente necesitan usar la misma dirección IP todo el tiempo. Con DHCP, el cliente se comunica con un servidor DHCP en la red mediante una dirección temporal. Luego, el servidor DHCP le dice al cliente exactamente qué dirección IP, dirección de máscara de red, puerta de enlace predeterminada e incluso servidor DNS usar. Cada vez que el cliente se reinicia, puede recibir una dirección IP diferente, pero eso no importa siempre que sea única en la red.
 
 La mayoría de los enrutadores de redes domésticas incluyen una función de servidor DHCP, por lo que todo lo que necesita hacer es configurar su cliente Linux para que use DHCP y listo. No necesita conocer ninguno de los detalles "entre bastidores" de las direcciones de red.
+
+### La capa de transporte
+La _capa de transporte_ a menudo puede ser la parte más confusa de la red. Mientras que la capa de red ayuda a llevar datos a un host específico en la red, la capa de transporte ayuda a llevar los datos a la aplicación correcta contenida en el host. Lo hace mediante el uso de _puertos_.
+
+Los puertos son como números de apartamentos. A cada aplicación que se ejecuta en un servidor de red se le asigna su propio número de puerto, del mismo modo que a cada apartamento del mismo edificio se le asigna un número de apartamento único. Para enviar datos a una aplicación específica en un servidor, el software cliente necesita conocer tanto la dirección IP del servidor (como la dirección del edificio de apartamentos) como el número de puerto de la capa de transporte (como el número de apartamento).
+
+Hay dos protocolos de transporte comunes que se utilizan en el mundo de las redes IP:
+
+- Protocolo de control de transmisión
+- Protocolo de datagramas de usuario
+
+El _Protocolo de control de transmisión (TCP)_ envía datos utilizando un método de entrega garantizado. Garantiza que el servidor reciba cada porción de datos que envía la computadora cliente y viceversa. La desventaja de esto es que se requiere una gran cantidad de gastos generales para rastrear y verificar todos los datos enviados, lo que puede disminuir la velocidad de transferencia de datos.
+
+Para los datos que son sensibles a la velocidad de transferencia (como datos en tiempo real como voz y video), esto puede causar retrasos no deseados. La alternativa a esto es el _Protocolo de datagramas de usuario (UDP)_. UDP no se molesta en garantizar la entrega de cada parte de los datos; ¡simplemente envía los datos a la red y espera que lleguen al servidor!
+
+Si bien la pérdida de datos puede parecer algo malo, para algunas aplicaciones (como voz y video) es perfectamente aceptable. Los paquetes de audio o vídeo que faltan simplemente aparecen como interrupciones y cortes en el resultado final de audio o vídeo. Mientras lleguen la mayoría de los paquetes de datos, el audio y el vídeo serán comprensibles.
+### La capa de aplicación
+La capa de aplicación es donde ocurre toda la acción. Aquí es donde los programas de red procesan los datos enviados a través de la red y luego devuelven un resultado. La mayoría de las aplicaciones de red se comportan utilizando el paradigma cliente/servidor. Con el paradigma cliente/servidor, un dispositivo de red actúa como servidor, ofreciendo algún tipo de servicio a múltiples clientes de la red (como un servidor web que ofrece contenido a través de páginas web). El servidor escucha conexiones entrantes en puertos de capa de transporte específicos asignados a la aplicación. Los clientes deben saber qué puerto de la capa de transporte utilizar para enviar solicitudes a la aplicación del servidor.
+
+Para simplificar ese proceso, tanto TCP como UDP utilizan puertos conocidos para representar aplicaciones comunes. Estos números de puerto están reservados para que los clientes de la red sepan utilizarlos cuando busquen hosts de aplicaciones específicas en la red. La Tabla 6.1 muestra algunos de los puertos de aplicaciones más comunes y conocidos.
+
+| **Port** | **Protocol** | **Application**                         |
+| -------- | ------------ | --------------------------------------- |
+| 22       | TCP          | Secure Shell Protocol (SSH)             |
+| 23       | TCP          | Telnet (interactive command lines)      |
+| 25       | TCP          | SMTP (Simple Mail Transport Protocol)   |
+| 53       | UDP          | DNS (Dynamic Name System)               |
+| 80       | TCP          | HTTP (Hypertext Transport Protocol)     |
+| 143      | TCP          | IMAP (Internet Message Access Protocol) |
+| 443      | TCP          | HTTPS (Secure HTTP)                     |
+
+Ahora que ha visto los conceptos básicos de cómo Linux utiliza las redes para transferir datos entre sistemas, la siguiente sección profundiza en los detalles sobre cómo configurar estas funciones en su sistema Linux.
+### Configuración de funciones de red
+Como vio en la sección anterior, necesitará configurar cinco piezas principales de información en su sistema Linux para interactuar en una red:
+- La dirección del host
+- La dirección de red
+- El enrutador predeterminado (a veces llamado puerta de enlace)
+- El nombre de host del sistema
+- Una dirección de servidor DNS para resolver nombres de host
+
+Hay tres formas diferentes de configurar esta información en sistemas Linux:
+- Edición manual de archivos de configuración de red
+- Utilizar una herramienta gráfica
+- Uso de herramientas de línea de comandos
+
+Las siguientes secciones lo guiarán a través de cada uno de estos métodos.
+### Archivos de configuración de red
+Cada distribución de Linux utiliza archivos de configuración de red para definir las configuraciones de red necesarias para comunicarse en la red. Desafortunadamente, sin embargo, no existe un único archivo de configuración estándar que utilicen todas las distribuciones. En cambio, diferentes distribuciones utilizan diferentes archivos de configuración para definir la configuración de red.
+
+| **Distribution** | **Network Configuration Location**       |
+| ---------------- | ---------------------------------------- |
+| Debian-based     | /etc/network/interfaces file             |
+| Red Hat–based    | /etc/sysconfig/network-scripts directory |
+| OpenSUSE         | /etc/sysconfig/network file              |
+
+Si bien cada una de las distribuciones de Linux utiliza un método diferente para definir la configuración de red, todas tienen características similares. La mayoría de los archivos de configuración definen cada una de las configuraciones de red requeridas como valores separados en el archivo de configuración. Ejemplo de un sistema Linux basado en Debian.
+
+```shell-session
+auto eth0
+iface eth0 inet static    
+	address 192.168.1.77    
+	netmask 255.255.255.0    
+	gateway 192.168.1.254
+
+iface eth0 inet6 static    
+address 2003:aef0::23d1::0a10:00a1
+   netmask 64
+   gateway 2003:aef0::23d1::0a10:0001
+```
+
+El ejemplo asigna una dirección IP y una dirección IPv6 a la interfaz de red cableada designada como eth0.
+
+Ejemplo de configuración de DHCP de red Debian `auto eth0 iface eth0`
+
+```shell-session
+inet dhcp iface eth0 inet6 dhcp
+```
+
+Si solo desea asignar una dirección local de enlace IPv6 y no recuperar una dirección IPv6 de un servidor DHCP, reemplace la línea inet6 con esto:
+
+```shell-session
+iface eth0 inet6 auto
+```
+
+El atributo auto le dice a Linux que asigne la dirección local del enlace, lo que permite que el sistema Linux se comunique con cualquier otro dispositivo IPv6 en la red local pero no con una dirección global.
+
+Para los sistemas basados ​​en Red Hat, deberá configurar la configuración de red en dos archivos separados. El primer archivo define las direcciones de red y máscara de red en un archivo que lleva el nombre del nombre de la interfaz de red (como `ifcfg-eth0`). Ejemplo de un sistema CentOS Linux.
+
+```shell-session
+DEVICE="eth0"
+NM_CONTROLLED="no"
+ONBOOT=yes
+TYPE=Ethernet
+BOOTPROTO=static
+NAME="System eth0"
+IPADDR=192.168.1.77
+NETMASK=255.255.255.0
+IPV6INIT=yes
+IPV6ADDR=2003:aef0::23d1::0a10:00a1/64
+```
+
+El segundo archivo requerido en los sistemas basados ​​en Red Hat es el archivo de red, que define el nombre de host y la puerta de enlace predeterminada.
+
+Ejemplos de configuración de archivos de red CentOS
+
+```shell-session
+NETWORKING=yes
+HOSTNAME=mysystem
+GATEWAY=192.168.1.254
+IPV6FORWARDING=yes
+IPV6_AUTOCONF=no
+IPV6_AUTOTUNNEL=no
+IPV6_DEFAULTGW=2003:aef0::23d1::0a10:0001
+IPV6_DEFAULTDEV=eth0
+```
+
+Observe que el archivo de configuración de red de Red Hat también define el nombre de host asignado al sistema Linux. Para otros tipos de sistemas Linux, almacenar el nombre de host en el archivo `/etc/hostname` se ha convertido en una especie de estándar de facto. Sin embargo, algunas distribuciones de Linux utilizan `/etc/HOSTNAME` en su lugar.
+
+También deberá definir un servidor DNS para que el sistema pueda usar nombres de host DNS. Afortunadamente, todos los sistemas Linux siguen este estándar y se maneja en el archivo de configuración `/etc/resolv.conf`:
+
+```shell-session
+domain mydomain.com 
+search mytest.com 
+nameserver 192.168.1.1
+```
+
+La entrada de dominio define el nombre de dominio asignado a la red. De forma predeterminada, el sistema agregará este nombre de dominio a cualquier nombre de host que especifique. La entrada de búsqueda define cualquier dominio adicional utilizado para buscar nombres de host. La entrada del servidor de nombres es donde especifica el servidor DNS asignado a su red. Algunas redes pueden tener más de un servidor DNS; simplemente agregue varias entradas de servidor de nombres en el archivo.
+### Herramientas gráficas
+La herramienta Network Manager es un programa popular utilizado por muchas distribuciones de Linux para proporcionar una interfaz gráfica para definir conexiones de red. Network Manager se inicia automáticamente en el momento del arranque y aparece en el área de la bandeja del sistema del escritorio como un icono.
+
+Si su sistema detecta una conexión de red por cable, el icono aparece como dos flechas que apuntan en direcciones opuestas. Si su sistema detecta una conexión de red inalámbrica, el icono aparece como una señal de radio vacía. Cuando hace clic en el icono, verá una lista de las redes inalámbricas disponibles detectadas por la tarjeta de red, como se muestra en la Figura 6.4.
+
+![](img/6.4.png)
+
+Haga clic en su punto de acceso para seleccionarlo de la lista. Si su punto de acceso está cifrado, se le pedirá que ingrese la contraseña para acceder a la red.
+Una vez que su sistema esté conectado a un punto de acceso inalámbrico, el ícono aparece como una señal de radio. Haga clic en el icono y luego seleccione Editar conexiones para editar la configuración de conexión de red para el sistema, como se muestra en la Figura 6.5.
+
+![](img/6.5.png)
 

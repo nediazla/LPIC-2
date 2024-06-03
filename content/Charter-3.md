@@ -38,7 +38,7 @@ Las ubicaciones de la memoria se agrupan en bloques llamados páginas de memoria
 El kernel realiza un seguimiento de qué páginas de memoria están en uso y copia automáticamente las páginas de memoria a las que no se ha accedido durante un período de tiempo al área de espacio de intercambio (esto se llama intercambio), incluso si hay otra memoria disponible. Cuando un programa quiere acceder a una página de memoria que ha sido intercambiada, el núcleo debe dejarle espacio en la memoria física intercambiando una página de memoria diferente e intercambiando la página requerida desde el espacio de intercambio. Obviamente, este proceso lleva tiempo y puede ralentizar un proceso en ejecución. El proceso de intercambio de páginas de memoria para ejecutar aplicaciones continúa mientras el sistema Linux esté en ejecución.
 Puede ver el estado actual de la memoria virtual en su sistema Linux viendo el archivo especial `/proc/meminfo`. El Listado 3.1 muestra un ejemplo de una entrada `/proc/meminfo` de muestra.
 
-```sh
+```shell-session
 cat /proc/meminfo
 MemTotal:        1908188 kB
 MemFree:          408188 kB
@@ -92,7 +92,7 @@ Para facilitar el intercambio de datos, puede crear páginas de memoria comparti
 
 El comando especial `ipcs` le permite ver las páginas de memoria compartida actuales en el sistema. Aquí está el resultado de un comando `ipcs` de muestra:
 
-```sh
+```shell-session
 ipcs -m
 ———Shared Memory Segments————
 
@@ -121,7 +121,7 @@ Para la mayoría de las distribuciones de Linux, el nivel de ejecución de inici
 El sistema Linux puede controlar la funcionalidad general del sistema controlando el nivel de ejecución inicial. Por ejemplo, al cambiar el nivel de ejecución de 3 a 5, el sistema puede cambiar de un sistema basado en consola a un sistema X Window gráfico avanzado.
 El comando `ps` le permite ver los procesos que se ejecutan actualmente en el sistema Linux. El Listado 3.2 muestra un ejemplo de lo que verá usando el comando `ps`.
 
-```sh
+```shell-session
 ps ax
    PID TTY      STAT   TIME COMMAND
 	1    ?        S      0:03 init
@@ -203,7 +203,7 @@ Los tipos de archivos de dispositivos de red se utilizan para dispositivos que u
 
 Linux crea archivos especiales, llamados nodos, para cada dispositivo del sistema. Toda la comunicación con el dispositivo se realiza a través del nodo del dispositivo. Cada nodo tiene un par de números único que lo identifica ante el kernel de Linux. El par de números incluye un número de dispositivo mayor y otro menor. Los dispositivos similares se agrupan en el mismo número de dispositivo principal. El número de dispositivo menor se utiliza para identificar un dispositivo específico dentro del grupo de dispositivos principal. El Listado 3.3 muestra un ejemplo de algunos archivos de dispositivo en un servidor Linux.
 
-```sh
+```shell-session
 cd /dev
 ls -al sda* ttyS*
 brw-rw----.   1 root   disk    8,    0   Sep 10 16:27   sda 
@@ -366,7 +366,7 @@ Los paquetes de código fuente se empaquetan usando la utilidad de archivo tar y
 
 Para descargar un paquete completo de código fuente del kernel, haga clic en el enlace `tar.xz` para obtener la versión que necesita. El nombre del archivo de descarga tendrá el formato `linux-version.tar.xz` donde versión es la versión del kernel. Para extraer el archivo de código fuente, utilice el siguiente comando:
 
-```sh
+```shell-session
 tar xvf linux-version.tar.xz
 ```
 
@@ -374,7 +374,7 @@ El comando tar extraerá todos los archivos de código fuente en una carpeta lla
 
 Puede extraer los archivos del código fuente del kernel en una carpeta debajo de su directorio de inicio si solo desea examinar los archivos y la documentación. Sin embargo, si planea compilar e instalar el kernel en su sistema Linux, es mejor extraer los archivos del código fuente en la estructura de carpetas `/usr/src/`. No coloque los nuevos archivos de código fuente directamente en la carpeta `/usr/src/linux`; en su lugar, cree un enlace entre la carpeta `/usr/src/linux` y la carpeta del código fuente que creó al extraer los archivos:
 
-```sh
+```shell-session
 ln /usr/src/linux-4.3.3 /usr/src/linux
 ```
 
@@ -383,7 +383,7 @@ Antes de poder compilar el nuevo kernel a partir del código fuente, necesita de
 
 El archivo de configuración del kernel es un archivo de texto que contiene líneas separadas para cada característica del kernel, que muestra el nombre de la característica y su configuración. El archivo de configuración del kernel se almacena en el archivo `/usr/src/linux/.config`. Si ya tiene instalado el código fuente del kernel, puede consultar este archivo para ver qué funciones están disponibles para la configuración. El Listado 3.4 muestra un pequeño fragmento de un archivo .config de un sistema Ubuntu.
 
-```sh
+```shell-session
 CONFIG_64BIT=y
 CONFIG_X86_64=y
 CONFIG_X86=y
@@ -412,7 +412,7 @@ El destino `make config` es el script básico que se ejecutará para crear el ar
 
 Hace muchas preguntas sobre cada característica que puede incluir en el kernel. El Listado 3.5 muestra algunas de las preguntas que se formulan.
 
-```sh
+```shell-session
 make config 
 ...
 *
@@ -463,25 +463,25 @@ Cuando haya terminado de completar la configuración de categorías y subopcione
 Una vez que haya creado el archivo de configuración para el kernel, estará listo para comenzar el proceso de compilación. Gracias a la utilidad make, este paso es muy sencillo.
 Primero, si hizo algún intento previo de compilar el kernel, querrá eliminar los archivos objeto antiguos creados usando el objetivo limpio:
 
-```sh
+```shell-session
 make clean
 ```
 
 Luego, si desea crear un archivo binario del kernel sin comprimir, simplemente ingrese el comando
 
-```sh
+```shell-session
 make
 ```
 
 Luego, el script se hará cargo y compilará todo el código del kernel para producir el nuevo kernel. (Esté preparado; este proceso llevará mucho tiempo). Si prefiere crear un archivo de kernel comprimido, simplemente use el destino `bzImage`:
 
-```sh
+```shell-session
 make bzImage
 ```
 
 A medida que funciona el proceso de compilación, verá muchos mensajes pasar por la consola, como estos:
 
-```sh
+```shell-session
   CC      lib/list_sort.o
   CC      lib/uuid.o
   CC      lib/flex_array.o
@@ -498,19 +498,19 @@ Una vez que se complete el proceso de compilación, estará listo para instalar 
 
 Puede instalar manualmente el archivo binario del kernel simplemente copiando el archivo `bzImage` en la carpeta `/boot` de su sistema. Querrá agregar el número de versión al archivo para poder distinguirlo de los otros archivos binarios del kernel. Nómbralo usando el nombre de archivo `vmlinuz`, que es reconocido por la mayoría de las distribuciones de Linux:
 
-```sh
+```shell-session
 cp /usr/src/linux/arch/x86/boot/bzImage /boot/vmlinuz-4.3.3
 ```
 
 Además del archivo binario del kernel, también hay un archivo `System.map` en la carpeta `/usr/src/linux` asociado con el archivo binario del kernel generado. El archivo `System.map` se utiliza para depurar el kernel, por lo que no es necesario, pero también puede ser útil copiarlo en la carpeta `/boot`. Al igual que con el archivo binario del kernel, querrás agregar la versión del kernel al final del nombre del archivo `System.map`:
 
-```sh
+```shell-session
 cp /usr/src/linux/System.map /boot/System.map-4.3.3
 ```
 
 Como probablemente puedas adivinar, también hay un destino de script `make` para instalar automáticamente los archivos binarios del kernel y `System.map`:
 
-```sh
+```shell-session
 make install
 ```
 
@@ -519,13 +519,13 @@ Esto copia automáticamente el nuevo binario del kernel desde la carpeta `/usr/s
 Después de compilar e instalar el kernel, querrás compilar e instalar la versión más nueva de los módulos necesarios para tu sistema. Al igual que con la compilación del kernel, utiliza la utilidad `make` para crear e instalar los nuevos archivos de la biblioteca de objetos del módulo.
 Primero, deberá crear los archivos de la biblioteca de objetos del módulo utilizando el destino del módulo:
 
-```sh
+```shell-session
 make modules
 ```
 
 Una vez que se complete, puede instalarlos usando el destino de instalación `make_modules`:
 
-```sh
+```shell-session
 make modules_install
 ```
 
@@ -540,7 +540,7 @@ Hay dos utilidades comunes que se utilizan para crear un archivo de disco RAM in
 ### La utilidad `mkinitrd`
 Las distribuciones de Linux basadas en Red Hat (como Red Hat Enterprise Linux, Fedora y CentOS) utilizan la utilidad `mkinitrd` para generar un archivo de disco RAM inicial y copiar los archivos del módulo en él. El formato general del comando es:
 
-```sh
+```shell-session
 mkinitrd outputfile version
 ```
 
@@ -580,7 +580,7 @@ donde archivo de salida es el nombre del archivo de disco RAM inicial que se cre
 
 En la mayoría de las situaciones, puede ejecutar el comando `mkinitrd` sin ninguna opción para generar el archivo de imagen de disco RAM inicial:
 
-```sh
+```shell-session
 mkinitrd /boot/initrd.img-4.3.3 4.3.3
 ```
 
@@ -588,7 +588,7 @@ Debido a que el archivo de disco RAM inicial se utiliza en el momento del arranq
 ### La utilidad `mkinitramfs`
 Las distribuciones de Linux basadas en Debian (como Debian y Ubuntu) utilizan la utilidad `mkinitramfs` para generar el archivo de disco RAM inicial. El formato general del comando es:
 
-```sh
+```shell-session
 mkinitramfs –o outputfile version
 ```
 
@@ -627,7 +627,7 @@ donde archivo de salida es el archivo de imagen a crear y versión es la versió
 
 En la mayoría de las situaciones, puedes usar la opción `-o` para especificar el archivo de imagen de salida:
 
-```sh
+```shell-session
 mkinitramfs –o /boot/initramfs-4.3.3.img 4.3.3
 ```
 
@@ -635,7 +635,7 @@ La mayoría de las distribuciones de Debian Linux también almacenan el archivo 
 ### Arrancando el nuevo kernel
 Una vez que haya compilado e instalado los archivos binarios del kernel y de imagen de disco RAM inicial, estará listo para usarlos para iniciar su sistema Linux. Hoy en día, la mayoría de las distribuciones de Linux utilizan el programa de arranque GRUB Legacy o GRUB2 para iniciar el sistema. Si su distribución de Linux utiliza el gestor de arranque GRUB Legacy, debe actualizar manualmente el archivo de configuración de GRUB `/boot/grub/menu.lst` o `/boot/grub/grub.conf` para agregar una nueva sección de arranque para el nuevo kernel. La nueva sección de inicio debe comenzar con un título e incluir el nuevo archivo binario del kernel y los archivos de imagen del disco RAM inicial:
 
-```sh
+```shell-session
 title Test (4.3.3)    
 	root (hd0,0)
 	kernel /vmlinuz-4.3.3 ro root=/dev/sda1
@@ -644,7 +644,7 @@ title Test (4.3.3)   
 
 Si su distribución de Linux usa el gestor de arranque GRUB2, después de instalar el nuevo binario del kernel en el menú de inicio, solo necesita ejecutar el comando `update-grub`:
 
-```sh
+```shell-session
 update-grub
 ```
 
@@ -652,7 +652,7 @@ El comando `update-grub` escanea la carpeta `/boot` y agrega automáticamente el
 
 Si por alguna razón el comando `update-grub` no detecta automáticamente el nuevo archivo binario del kernel, tendrá que agregar una entrada manualmente a uno de los archivos de opciones de arranque en la carpeta `/etc/grub.d`. Puede elegir uno de los archivos de opciones de arranque personalizados, como el archivo `40_custom`. Simplemente agregue la nueva entrada que apunta al nuevo kernel al final de las entradas existentes:
 
-```sh
+```shell-session
 menuentry "Test (4.3.3)"    
 	set root=(hd0,1)
 	linux /vmlinuz-4.3.3 ro root=/dev/sda1    
@@ -689,7 +689,7 @@ Puede utilizar una gran cantidad de comandos de línea de comandos para ayudarle
 ### Listado de Módulos
 El primer comando es `lsmod`, que enumera todos los módulos instalados en su sistema. El Listado 3.6 muestra un ejemplo del uso del comando `lsmod` en un sistema Ubuntu.
 
-```sh
+```shell-session
 lsmod
 
 Module                  Size  Used by 
@@ -739,7 +739,7 @@ Esta puede ser información crucial al intentar solucionar problemas de hardware
 ### Obtener información del módulo
 Si necesita más información sobre un módulo específico, use el comando `modinfo`, como se muestra en el Listado 3.7.
 
-```sh
+```shell-session
 $ modinfo bluetooth
 filename:       /lib/modules/3.13.0–63-generic/kernel/net/bluetooth/bluetooth.ko
 alias:          net-pf-31 
@@ -767,13 +767,13 @@ El comando `insmod` es el más básico y requiere que especifiques el archivo de
 
 Por ejemplo, los sistemas de escritorio Ubuntu Linux tienen la siguiente carpeta para los controladores de hardware Bluetooth:
 
-```sh
+```shell-session
 /lib/modules/3.13.0–63-generic/kernel/drivers/bluetooth
 ```
 
 Esta carpeta es para el kernel de Linux actualmente instalado en el sistema: 3.13.0–63. Dentro de esa carpeta hay muchos archivos de módulos de controladores de dispositivos diferentes para varios tipos de sistemas Bluetooth:
 
-```sh
+```shell-session
 ls -l total 420
 -rw-r--r--1 root root 23220 Aug 14 19:07 ath3k.ko
 -rw-r--r--1 root root 14028 Aug 14 19:07 bcm203x.ko
@@ -794,7 +794,7 @@ ls -l total 420
 
 Cada archivo `.ko` es un archivo de módulo de controlador de dispositivo independiente que puede instalar en el kernel 3.13.0–63. Para instalar el módulo, simplemente especifique el nombre del archivo en la línea de comando de `insmod`. Algunos módulos también requieren parámetros, que también debes especificar en la línea de comando:
 
-```sh
+```shell-session
 sudo insmod /lib/modules/3.13.0–49-generic/kernel/drivers/bluetooth/
 btusb.ko 
 password:
@@ -972,7 +972,7 @@ Command line options available for the modprobe command:
 
 Como puede ver, el comando `modprobe` es una herramienta con todas las funciones en sí misma. Quizás la característica más útil es que le permite instalar módulos según el nombre del módulo y no tener que enumerar el nombre de archivo completo del módulo:
 
-```sh
+```shell-session
 sudo modprobe -iv btusb
 insmod /lib/modules/3.13.0–63-generic/kernel/drivers/bluetooth/btusb.ko
 ```
@@ -983,7 +983,7 @@ Normalmente, no hace daño instalar un módulo en el sistema si el dispositivo d
 
 Sin embargo, su amigo el comando `modprobe` también puede eliminar módulos por usted, por lo que realmente no necesita memorizar otro comando. En su lugar, simplemente use la opción `–r` con el comando `modprobe`:
 
-```sh
+```shell-session
 sudo modprobe -rv btusb
 rmmod btusb
 ```
@@ -1167,7 +1167,7 @@ Command line options available for the lspci command:
 
 La salida del comando `lspci` sin ninguna opción muestra todos los dispositivos conectados al sistema, como se muestra en el Listado 3.8.
 
-```sh
+```shell-session
 lspci
 
 00:00.0 Host bridge: Intel Corporation 440FX—82441FX PMC [Natoma] (rev 02)
@@ -1232,7 +1232,7 @@ Print version information on standard output, then exit successfully.
 
 La salida básica de `lsusb` se muestra en el Listado 3.9.
 
-```sh
+```shell-session
 lsusb
 Bus 001 Device 004: ID 1908:1320 GEMBIRD PhotoFrame PF-15–1
 Bus 001 Device 003: ID 80ee:0022 VirtualBox
@@ -1262,14 +1262,14 @@ Si algo sale mal con el kernel, hay algunas herramientas disponibles para ayudar
 ### Mostrando la versión del kernel
 Antes de poder solucionar muchos problemas, querrá saber qué versión del kernel está iniciando su sistema. El comando `uname` puede proporcionar bastante información útil aquí. De forma predeterminada, el comando `uname` muestra una cadena que no es demasiado útil:
 
-```sh
+```shell-session
 uname
 Linux
 ```
 
 En realidad, este es el nombre del kernel que se está ejecutando. Para obtener mucha más información, utilice la opción `–a`:
 
-```sh
+```shell-session
 uname -a
 Linux ubuntu02 3.13.0–63-generic 103-Ubuntu SMP Fri Aug 14 21:42:59 UTC
 2015 x86_64 x86_64 x86_64 GNU/Linux
@@ -1330,7 +1330,7 @@ El kernel de Linux crea un pseudodirectorio dinámico llamado `/proc` que le per
 
 El sistema de archivos `/proc` contiene información sobre el hardware, como solicitudes de interrupción asignadas (`/proc/interrupts`), puertos de E/S (`/proc/ioports`) y canales de acceso directo a memoria (DMA) (`/proc/dma`). Ver esta información es tan fácil como usar el comando `cat` para mostrar el contenido del archivo. El Listado 3.10 muestra la salida del archivo `/proc/interrupts`.
 
-```sh
+```shell-session
 cat /proc/interrupts
            CPU0
   0:        129    XT-PIC-XT-PIC    timer
@@ -1362,7 +1362,7 @@ MIS:          0
 
 Puede utilizar el comando `lsdev` para mostrar la información de hardware que se encuentra en el sistema de archivos `/proc` en una tabla sencilla, como se muestra en el Listado 3.11. Es posible que tengas que instalar el comando ya que muchas distribuciones de Linux no lo instalan de forma predeterminada.
 
-```sh
+```shell-session
 lsdev
 Device            DMA   IRQ  I/O Ports
 ————————————————————————
@@ -1398,7 +1398,7 @@ vesafb                       03c0–03df
 
 Encontrará información del kernel en la carpeta `/proc/sys/kernel`, que contiene archivos que puede leer para obtener información del kernel y escribir para configurar los parámetros del kernel. Leer los parámetros del kernel es tan fácil como usar el comando `cat`:
 
-```sh
+```shell-session
 cat /proc/sys/kernel/version
 103-Ubuntu SMP Fri Aug 14 21:42:59 UTC 2015
 ```
