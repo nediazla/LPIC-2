@@ -464,7 +464,9 @@ $ route
 
 Kernel IP routing table
 
-Destination     Gateway         Genmask         Flags Metric Ref Use Iface default         192.168.1.254   0.0.0.0         UG    0      0   0   eth0 192.168.1.0     *               255.255.255.0   U     1      0   0   eth0
+Destination     Gateway         Genmask         Flags Metric Ref Use Iface
+default         192.168.1.254   0.0.0.0         UG    0      0   0   eth0
+192.168.1.0     *               255.255.255.0   U     1      0   0   eth0
 
 $
 ```
