@@ -241,3 +241,4 @@ Una vez que su sistema esté conectado a un punto de acceso inalámbrico, el íc
 
 ![](img/6.5.png)
 
+Puede seleccionar la conexión de red que desea configurar (ya sea inalámbrica o por cable) y luego hacer clic en el botón Editar para cambiar la configuración actual. Network Manager le permite especificar los cuatro valores de configuración de red usando la opción de configuración manual, o puede configurar la configuración para usar DHCP para determinar la configuración. Network Manager actualiza automáticamente los archivos de configuración de red apropiados con la configuración actualizada.
