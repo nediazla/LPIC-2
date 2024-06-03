@@ -508,7 +508,8 @@ A medida que su sistema Linux se comunica con otros dispositivos en la red, asig
 ```shell-session
 $ arp
 
-Address          HWtype  HWaddress           Flags Mask            Iface 10.0.2.2         ether   52:54:00:12:35:02   C                     enp0s3
+Address          HWtype  HWaddress           Flags Mask            Iface
+10.0.2.2         ether   52:54:00:12:35:02   C                     enp0s3
 
 $
 ```
