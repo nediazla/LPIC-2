@@ -1,30 +1,7 @@
-[![GitHub sponsors](https://undergroundwires.dev/img/badges/donate/flat.svg)](https://www.buymeacoffee.com/nediazla3)
+# Introducción
 
-Este resumen consta de 12 capítulos, La Parte I, Capítulos 1 a 6, cubre los temas del examen LPIC-2 201. La Parte II, Capítulos 7 a 12, cubre los 202 temas del examen.
-## Cómo está organizado
-### Parte I: El examen LPI 201
+Bienvenido a la guía del examen de certificación LPIC-2. Si estás aquí estudiando este artículo significa que amas Linux y estás entusiasmado por aprender y experimentar cosas nuevas. Así que abróchate el cinturón y prepárate para explorar el mundo Linux.
 
-[Capítulo 1](LPIC-2/content/Charter-1.md): Inicio de un sistema Este capítulo cubre cómo arranca Linux desde el BIOS del sistema. Se analiza el programa del cargador de arranque de Linux y cómo crear un entorno Linux de arranque dual.
+Puedes ver la descripción general de la certificación LPIC-2 [aquí](http://www.lpi.org/our-certifications/lpic-2-overview) y, como probablemente sabes, LPIC-2 consta de dos exámenes: [201](http://www.lpi.org/our-certifications/exam-201-objectives) y [202](http://www.lpi.org/our-certifications/exam-202-objectives). A modo de guía, el examen 201 trata más sobre Linux en sí mismo y te permitirá añadir más herramientas a tu caja de herramientas. En cambio, en el curso 202 comenzaremos a aprender sobre servicios de infraestructura Linux. Hablaremos sobre algunos productos adicionales que nos permitirán usar Linux como un servidor de infraestructura en entornos reales.
 
-[Capítulo 2](LPIC-2/content/Charter-2.md): Mantenimiento del sistema Este capítulo describe cómo instalar y administrar recursos en un sistema Linux. También cubre cómo realizar copias de seguridad de los sistemas Linux y comunicarse con los usuarios del sistema para advertir sobre problemas del sistema o tiempo de inactividad.
-
-[Capítulo 3](LPIC-2/content/Charter-3.md): Dominar el kernel Este capítulo se centra en el núcleo del sistema Linux: el kernel. Le explica cómo instalar un kernel personalizado, así como también cómo crear y mantener los módulos del kernel necesarios para admitir el hardware de su sistema Linux.
-
-[Capítulo 4](LPIC-2/content/Charter-4.md): Administrar el sistema de archivos Este capítulo explora los diferentes sistemas de archivos de Linux y cómo administrarlos y mantenerlos, así como también cómo solucionarlos cuando ocurren problemas.
-
-[Capítulo 5](LPIC-2/content/charter-5.md): Administración de dispositivos de almacenamiento avanzados Este capítulo analiza dos de los métodos de almacenamiento más avanzados utilizados en entornos Linux. Se centra en cómo utilizar dispositivos RAID en Linux, ya sea como dispositivos de hardware o mediante un emulador RAID de software. También demuestra cómo implementar un Administrador de volúmenes lógicos en un entorno Linux.
-
-[Capítulo 6](LPIC-2/content/Charter-6.md): Navegación por los servicios de red Este capítulo analiza en profundidad cómo interactúa Linux en un entorno de red. Cubre cómo utilizar los comandos de la línea de comandos de Linux para configurar una interfaz de red y cómo solucionar problemas básicos de la red.
-### Parte II: El examen LPI 202
-
-[Capítulo 7](): Organización de servicios de correo electrónico Este capítulo examina cómo ejecutar un servidor de correo electrónico de Internet utilizando Linux. Cubre los dos servidores de correo electrónico más populares: sendmail y Postfix, además de explicarle cómo utilizar los paquetes de clientes de correo electrónico de Linux más populares: Courier y Dovecot.
-
-[Capítulo 8](): Dirigir DNS Este capítulo cubre los conceptos básicos del sistema DNS y cómo configurar su servidor Linux para ofrecer servicios DNS en su red.
-
-[Capítulo 9](): Ofreciendo servicios web Este capítulo cubre cómo ejecutar su propio servidor web utilizando un servidor Linux. Explica cómo instalar y administrar el servidor web Apache, el servidor web más popular de Internet. También cubre el servidor web nginx, un servidor web más nuevo y prometedor que está ganando popularidad rápidamente. Además, este capítulo profundiza en los conceptos básicos de Squid, un popular servidor proxy web utilizado por muchas empresas como firewall web para impedir que los usuarios accedan a sitios web inapropiados.
-
-[Capítulo 10](): Compartir archivos Este capítulo analiza cómo utilizar su servidor Linux como servidor de archivos en una red local. Cubre el uso de FTP y NFS para entregar archivos, así como el popular paquete Samba para entregar archivos a clientes de Microsoft Windows en una red.
-
-[Capítulo 11](): Gestión de clientes de red Este capítulo explora cómo utilizar un servidor Linux para proporcionar servicios de red básicos a clientes en una red local. Muestra cómo crear un servidor DHCP para servir direcciones IP dinámicas, cómo crear un servidor LDAP para proporcionar servicios de directorio de red simples y cómo usar PAM para proporcionar servicios de autenticación a aplicaciones locales.
-
-[Capítulo 12](): Configuración de la seguridad del sistema Este capítulo explora algunas formas de utilizar la seguridad de su servidor Linux en un entorno de red. Cubre el uso del programa iptables como firewall, OpenSSH para comunicación remota con clientes y OpenVPN para proporcionar un túnel seguro para que clientes remotos accedan a su red.
+Muy bien, mantengámoslo simple y comencemos... :-)
