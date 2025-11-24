@@ -25,7 +25,7 @@
 
 Like any other moder operating system, liunx has firewall. First lets see how linux firewalling is organized:
 
-![](.gitbook/assets/route-netfilter.jpg)
+![](assets/route-netfilter.jpg)
 
 There is a firewalling functionality which is implemented in linux kernel with netfilter. netfilter is a kernel module and any network traffic which kernel forward to any interface(s), is pass through netfilter. This way netfilter can make decision wether incoming or out going traffic is allowed or not. The major interface to the netfilter module is iptables. iptables has been around for a long time and it let us to do any advanced configuration on linux firewalls.
 
@@ -41,7 +41,7 @@ iptables works with tables! There are at present three tables:
 
 Within tables there are chains.chains are used to define what kind of packet follow shoud be filtered exactly.
 
-![](.gitbook/assets/route-iptables.jpg)
+![](assets/route-iptables.jpg)
 
 * **PREROUTING:** configured to block, redirect or allow th packet to the next chain.Commonly, used to redirect the packet to another address or/and port. (DNAT-Destination NAT).  If destination is local ( this machine) sent to INPUT chain. If bound for another network, sent to the FORWARD chain.
 * INPUT: Configured to be blocked, logged or sent to the local system to be handled by the appropriate client, application or service.
@@ -419,7 +419,7 @@ If our firewall has alot of rules, iptables log is used with iptables-save and i
 
 ### Port Redirection
 
-Sometimes we may want to forward one service’s traffic to another port . Lets do this by an example:![](.gitbook/assets/route-portforward.jpg)
+Sometimes we may want to forward one service’s traffic to another port . Lets do this by an example:![](assets/route-portforward.jpg)
 
 Here we use two CentOS system, one as a web server which runs on port 80 and the other one as a web client. Every thing is working on port 80 smothly :
 
@@ -427,7 +427,7 @@ Here we use two CentOS system, one as a web server which runs on port 80 and the
 [root@centos7-1 ~]# elinks http://192.168.10.133
 ```
 
-![](.gitbook/assets/route-ipfwsen1.jpg)
+![](assets/route-ipfwsen1.jpg)
 
 but we want to do something whith iptables which redirect requests from port 8080 to port 80 this way clients from CentOS2 should be able to visit out site on port 8080:
 
@@ -442,7 +442,7 @@ and check the result from CentOS7-2:
 [root@centos7-2 ~]# elinks http://192.168.10.133:8080
 ```
 
-![](.gitbook/assets/route-ipfw2.jpg)
+![](assets/route-ipfw2.jpg)
 
 ### ip6tables
 

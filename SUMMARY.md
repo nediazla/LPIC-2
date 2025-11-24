@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Introduction](README.md)
+* [Introduction](LPIC-2/README.md)
 * [200.1. Measure and Troubleshoot Resource Usage](2001-measure-and-troubleshoot-resource-usage.md)
 * [200.2. Predict Future Resource Needs](2002-predict-future-resource-needs.md)
 * [201.1. Kernel Components](2011-kernel-components.md)
